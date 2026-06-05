@@ -26,8 +26,22 @@ func (s *Server) Ask(req *aiv1.AskRequest, stream aiv1.Ai_AskServer) error {
 	return s.agent.Run(stream.Context(), req, emit)
 }
 
+func (s *Server) Model(_ context.Context, _ *aiv1.ModelRequest) (*aiv1.ModelResponse, error) {
+	return &aiv1.ModelResponse{Name: s.agent.ModelName()}, nil
+}
+
+func (s *Server) SetProvider(_ context.Context, req *aiv1.SetProviderRequest) (*aiv1.ModelResponse, error) {
+	name, err := s.agent.SetProvider(req.GetProvider())
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &aiv1.ModelResponse{Name: name}, nil
+}
+
 func (s *Server) Generate(ctx context.Context, req *aiv1.GenerateRequest) (*aiv1.GenerateResponse, error) {
-	text, err := s.agent.Generate(ctx, req.GetSystem(), req.GetPrompt(), req.GetTemperature(), int(req.GetMaxTokens()))
+	text, err := s.agent.Generate(ctx, req.GetSystem(), req.GetPrompt(), req.GetTemperature(), int(req.GetMaxTokens()), req.GetDir())
 
 	if err != nil {
 		return nil, err

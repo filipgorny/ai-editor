@@ -12,6 +12,7 @@ import (
 
 	aiv1 "github.com/filipgorny/ai-architect/proto/ai/v1"
 	eventsv1 "github.com/filipgorny/ai-architect/proto/events/v1"
+	filerv1 "github.com/filipgorny/ai-architect/proto/filer/v1"
 	gatewayv1 "github.com/filipgorny/ai-architect/proto/gateway/v1"
 	"github.com/filipgorny/ai-architect/services/gateway/internal/config"
 	"github.com/filipgorny/ai-architect/services/gateway/internal/server"
@@ -55,10 +56,19 @@ func main() {
 
 	defer eventsConn.Close()
 
+	filerConn, err := dial(cfg.FilerAddr)
+
+	if err != nil {
+		log.Fatalf("filer client: %v", err)
+	}
+
+	defer filerConn.Close()
+
 	srv := server.New(
 		gatewayv1.NewGatewayClient(designerConn),
 		aiv1.NewAiClient(aiConn),
 		eventsv1.NewEventsClient(eventsConn),
+		filerv1.NewFilerClient(filerConn),
 	)
 
 	lis, err := net.Listen("tcp", cfg.Addr)
@@ -70,8 +80,8 @@ func main() {
 	gs := grpc.NewServer()
 	gatewayv1.RegisterGatewayServer(gs, srv)
 
-	log.Printf("gateway: nasłuch gRPC na %s | designer=%s ai=%s events=%s",
-		cfg.Addr, cfg.DesignerAddr, cfg.AIAddr, cfg.EventsAddr)
+	log.Printf("gateway: nasłuch gRPC na %s | designer=%s ai=%s events=%s filer=%s",
+		cfg.Addr, cfg.DesignerAddr, cfg.AIAddr, cfg.EventsAddr, cfg.FilerAddr)
 
 	if err := gs.Serve(lis); err != nil {
 		log.Fatalf("serve: %v", err)

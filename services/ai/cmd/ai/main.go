@@ -42,7 +42,7 @@ func main() {
 	defer conn.Close()
 
 	events := eventsv1.NewEventsClient(conn)
-	ag := agent.New(provider, events)
+	ag := agent.New(provider, cfg.LLM, events)
 
 	lis, err := net.Listen("tcp", cfg.Addr)
 

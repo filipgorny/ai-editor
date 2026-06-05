@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v7.34.1
-// source: proto/gateway/v1/gateway.proto
+// source: gateway/v1/gateway.proto
 
 package gatewayv1
 
@@ -21,6 +21,1062 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type GraphStateRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`   // scene key (e.g. project/app root dir)
+	Data          string                 `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"` // JSON: viewport + node positions
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GraphStateRequest) Reset() {
+	*x = GraphStateRequest{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GraphStateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GraphStateRequest) ProtoMessage() {}
+
+func (x *GraphStateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GraphStateRequest.ProtoReflect.Descriptor instead.
+func (*GraphStateRequest) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *GraphStateRequest) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *GraphStateRequest) GetData() string {
+	if x != nil {
+		return x.Data
+	}
+	return ""
+}
+
+type GraphStateKey struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GraphStateKey) Reset() {
+	*x = GraphStateKey{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GraphStateKey) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GraphStateKey) ProtoMessage() {}
+
+func (x *GraphStateKey) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GraphStateKey.ProtoReflect.Descriptor instead.
+func (*GraphStateKey) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *GraphStateKey) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+type GraphStateResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Data          string                 `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GraphStateResponse) Reset() {
+	*x = GraphStateResponse{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GraphStateResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GraphStateResponse) ProtoMessage() {}
+
+func (x *GraphStateResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GraphStateResponse.ProtoReflect.Descriptor instead.
+func (*GraphStateResponse) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GraphStateResponse) GetData() string {
+	if x != nil {
+		return x.Data
+	}
+	return ""
+}
+
+type DirEntry struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Path          string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	Dir           bool                   `protobuf:"varint,3,opt,name=dir,proto3" json:"dir,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DirEntry) Reset() {
+	*x = DirEntry{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DirEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DirEntry) ProtoMessage() {}
+
+func (x *DirEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DirEntry.ProtoReflect.Descriptor instead.
+func (*DirEntry) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *DirEntry) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *DirEntry) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *DirEntry) GetDir() bool {
+	if x != nil {
+		return x.Dir
+	}
+	return false
+}
+
+type DirListing struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Path          string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	Parent        string                 `protobuf:"bytes,2,opt,name=parent,proto3" json:"parent,omitempty"`
+	Entries       []*DirEntry            `protobuf:"bytes,3,rep,name=entries,proto3" json:"entries,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DirListing) Reset() {
+	*x = DirListing{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DirListing) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DirListing) ProtoMessage() {}
+
+func (x *DirListing) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DirListing.ProtoReflect.Descriptor instead.
+func (*DirListing) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *DirListing) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *DirListing) GetParent() string {
+	if x != nil {
+		return x.Parent
+	}
+	return ""
+}
+
+func (x *DirListing) GetEntries() []*DirEntry {
+	if x != nil {
+		return x.Entries
+	}
+	return nil
+}
+
+type FoundProject struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Path          string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	Kind          string                 `protobuf:"bytes,3,opt,name=kind,proto3" json:"kind,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FoundProject) Reset() {
+	*x = FoundProject{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FoundProject) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FoundProject) ProtoMessage() {}
+
+func (x *FoundProject) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FoundProject.ProtoReflect.Descriptor instead.
+func (*FoundProject) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *FoundProject) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *FoundProject) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *FoundProject) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+type FoundProjects struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Projects      []*FoundProject        `protobuf:"bytes,1,rep,name=projects,proto3" json:"projects,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FoundProjects) Reset() {
+	*x = FoundProjects{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FoundProjects) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FoundProjects) ProtoMessage() {}
+
+func (x *FoundProjects) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FoundProjects.ProtoReflect.Descriptor instead.
+func (*FoundProjects) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *FoundProjects) GetProjects() []*FoundProject {
+	if x != nil {
+		return x.Projects
+	}
+	return nil
+}
+
+type Conventions struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Convention    string                 `protobuf:"bytes,1,opt,name=convention,proto3" json:"convention,omitempty"` // "dash" | "camel"
+	Extension     string                 `protobuf:"bytes,2,opt,name=extension,proto3" json:"extension,omitempty"`   // np. "ts"
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Conventions) Reset() {
+	*x = Conventions{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Conventions) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Conventions) ProtoMessage() {}
+
+func (x *Conventions) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Conventions.ProtoReflect.Descriptor instead.
+func (*Conventions) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *Conventions) GetConvention() string {
+	if x != nil {
+		return x.Convention
+	}
+	return ""
+}
+
+func (x *Conventions) GetExtension() string {
+	if x != nil {
+		return x.Extension
+	}
+	return ""
+}
+
+type FilePath struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Path          string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FilePath) Reset() {
+	*x = FilePath{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FilePath) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FilePath) ProtoMessage() {}
+
+func (x *FilePath) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FilePath.ProtoReflect.Descriptor instead.
+func (*FilePath) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *FilePath) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+type FileContent struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Content       string                 `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FileContent) Reset() {
+	*x = FileContent{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FileContent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FileContent) ProtoMessage() {}
+
+func (x *FileContent) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FileContent.ProtoReflect.Descriptor instead.
+func (*FileContent) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *FileContent) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+type FileResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Path          string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	Ok            bool                   `protobuf:"varint,2,opt,name=ok,proto3" json:"ok,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FileResult) Reset() {
+	*x = FileResult{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FileResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FileResult) ProtoMessage() {}
+
+func (x *FileResult) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FileResult.ProtoReflect.Descriptor instead.
+func (*FileResult) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *FileResult) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *FileResult) GetOk() bool {
+	if x != nil {
+		return x.Ok
+	}
+	return false
+}
+
+type SaveRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Path          string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	Content       string                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SaveRequest) Reset() {
+	*x = SaveRequest{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SaveRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SaveRequest) ProtoMessage() {}
+
+func (x *SaveRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SaveRequest.ProtoReflect.Descriptor instead.
+func (*SaveRequest) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *SaveRequest) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *SaveRequest) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+type CreateRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Dir           string                 `protobuf:"bytes,1,opt,name=dir,proto3" json:"dir,omitempty"`
+	File          string                 `protobuf:"bytes,2,opt,name=file,proto3" json:"file,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateRequest) Reset() {
+	*x = CreateRequest{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateRequest) ProtoMessage() {}
+
+func (x *CreateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateRequest.ProtoReflect.Descriptor instead.
+func (*CreateRequest) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *CreateRequest) GetDir() string {
+	if x != nil {
+		return x.Dir
+	}
+	return ""
+}
+
+func (x *CreateRequest) GetFile() string {
+	if x != nil {
+		return x.File
+	}
+	return ""
+}
+
+func (x *CreateRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type CreateFolderRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Dir           string                 `protobuf:"bytes,1,opt,name=dir,proto3" json:"dir,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateFolderRequest) Reset() {
+	*x = CreateFolderRequest{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateFolderRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateFolderRequest) ProtoMessage() {}
+
+func (x *CreateFolderRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateFolderRequest.ProtoReflect.Descriptor instead.
+func (*CreateFolderRequest) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *CreateFolderRequest) GetDir() string {
+	if x != nil {
+		return x.Dir
+	}
+	return ""
+}
+
+func (x *CreateFolderRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type RenameRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OldPath       string                 `protobuf:"bytes,1,opt,name=old_path,json=oldPath,proto3" json:"old_path,omitempty"`
+	FileBase      string                 `protobuf:"bytes,2,opt,name=file_base,json=fileBase,proto3" json:"file_base,omitempty"`
+	ClassName     string                 `protobuf:"bytes,3,opt,name=class_name,json=className,proto3" json:"class_name,omitempty"`
+	OldName       string                 `protobuf:"bytes,4,opt,name=old_name,json=oldName,proto3" json:"old_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RenameRequest) Reset() {
+	*x = RenameRequest{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RenameRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RenameRequest) ProtoMessage() {}
+
+func (x *RenameRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RenameRequest.ProtoReflect.Descriptor instead.
+func (*RenameRequest) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *RenameRequest) GetOldPath() string {
+	if x != nil {
+		return x.OldPath
+	}
+	return ""
+}
+
+func (x *RenameRequest) GetFileBase() string {
+	if x != nil {
+		return x.FileBase
+	}
+	return ""
+}
+
+func (x *RenameRequest) GetClassName() string {
+	if x != nil {
+		return x.ClassName
+	}
+	return ""
+}
+
+func (x *RenameRequest) GetOldName() string {
+	if x != nil {
+		return x.OldName
+	}
+	return ""
+}
+
+type MoveRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OldPath       string                 `protobuf:"bytes,1,opt,name=old_path,json=oldPath,proto3" json:"old_path,omitempty"`
+	TargetDir     string                 `protobuf:"bytes,2,opt,name=target_dir,json=targetDir,proto3" json:"target_dir,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MoveRequest) Reset() {
+	*x = MoveRequest{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MoveRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MoveRequest) ProtoMessage() {}
+
+func (x *MoveRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MoveRequest.ProtoReflect.Descriptor instead.
+func (*MoveRequest) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *MoveRequest) GetOldPath() string {
+	if x != nil {
+		return x.OldPath
+	}
+	return ""
+}
+
+func (x *MoveRequest) GetTargetDir() string {
+	if x != nil {
+		return x.TargetDir
+	}
+	return ""
+}
+
+type ResolveRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	From          string                 `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty"`
+	Spec          string                 `protobuf:"bytes,2,opt,name=spec,proto3" json:"spec,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResolveRequest) Reset() {
+	*x = ResolveRequest{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResolveRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResolveRequest) ProtoMessage() {}
+
+func (x *ResolveRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResolveRequest.ProtoReflect.Descriptor instead.
+func (*ResolveRequest) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *ResolveRequest) GetFrom() string {
+	if x != nil {
+		return x.From
+	}
+	return ""
+}
+
+func (x *ResolveRequest) GetSpec() string {
+	if x != nil {
+		return x.Spec
+	}
+	return ""
+}
+
+type AiAgentRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Prompt        string                 `protobuf:"bytes,1,opt,name=prompt,proto3" json:"prompt,omitempty"`
+	Dir           string                 `protobuf:"bytes,2,opt,name=dir,proto3" json:"dir,omitempty"` // domyślny katalog (ostatnio otwarty folder)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiAgentRequest) Reset() {
+	*x = AiAgentRequest{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiAgentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiAgentRequest) ProtoMessage() {}
+
+func (x *AiAgentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiAgentRequest.ProtoReflect.Descriptor instead.
+func (*AiAgentRequest) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *AiAgentRequest) GetPrompt() string {
+	if x != nil {
+		return x.Prompt
+	}
+	return ""
+}
+
+func (x *AiAgentRequest) GetDir() string {
+	if x != nil {
+		return x.Dir
+	}
+	return ""
+}
+
+type FileOp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Op            string                 `protobuf:"bytes,1,opt,name=op,proto3" json:"op,omitempty"`     // create_file | write | delete | rename | move | mkdir
+	Path          string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"` // wynikowa ścieżka
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FileOp) Reset() {
+	*x = FileOp{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FileOp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FileOp) ProtoMessage() {}
+
+func (x *FileOp) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FileOp.ProtoReflect.Descriptor instead.
+func (*FileOp) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *FileOp) GetOp() string {
+	if x != nil {
+		return x.Op
+	}
+	return ""
+}
+
+func (x *FileOp) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+type AiAgentResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Ops           []*FileOp              `protobuf:"bytes,1,rep,name=ops,proto3" json:"ops,omitempty"`                           // wykonane operacje
+	OpenPath      string                 `protobuf:"bytes,2,opt,name=open_path,json=openPath,proto3" json:"open_path,omitempty"` // plik do otwarcia w edytorze (np. nowo utworzony)
+	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`                   // krótkie podsumowanie po polsku
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiAgentResponse) Reset() {
+	*x = AiAgentResponse{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiAgentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiAgentResponse) ProtoMessage() {}
+
+func (x *AiAgentResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiAgentResponse.ProtoReflect.Descriptor instead.
+func (*AiAgentResponse) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *AiAgentResponse) GetOps() []*FileOp {
+	if x != nil {
+		return x.Ops
+	}
+	return nil
+}
+
+func (x *AiAgentResponse) GetOpenPath() string {
+	if x != nil {
+		return x.OpenPath
+	}
+	return ""
+}
+
+func (x *AiAgentResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 type AiEditRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
@@ -32,7 +1088,7 @@ type AiEditRequest struct {
 
 func (x *AiEditRequest) Reset() {
 	*x = AiEditRequest{}
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[0]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -44,7 +1100,7 @@ func (x *AiEditRequest) String() string {
 func (*AiEditRequest) ProtoMessage() {}
 
 func (x *AiEditRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[0]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -57,7 +1113,7 @@ func (x *AiEditRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AiEditRequest.ProtoReflect.Descriptor instead.
 func (*AiEditRequest) Descriptor() ([]byte, []int) {
-	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{0}
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *AiEditRequest) GetCode() string {
@@ -90,7 +1146,7 @@ type AiEditResponse struct {
 
 func (x *AiEditResponse) Reset() {
 	*x = AiEditResponse{}
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[1]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -102,7 +1158,7 @@ func (x *AiEditResponse) String() string {
 func (*AiEditResponse) ProtoMessage() {}
 
 func (x *AiEditResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[1]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -115,12 +1171,352 @@ func (x *AiEditResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AiEditResponse.ProtoReflect.Descriptor instead.
 func (*AiEditResponse) Descriptor() ([]byte, []int) {
-	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{1}
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *AiEditResponse) GetCode() string {
 	if x != nil {
 		return x.Code
+	}
+	return ""
+}
+
+type AiModelResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiModelResponse) Reset() {
+	*x = AiModelResponse{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiModelResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiModelResponse) ProtoMessage() {}
+
+func (x *AiModelResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiModelResponse.ProtoReflect.Descriptor instead.
+func (*AiModelResponse) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *AiModelResponse) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type AiProviderRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Provider      string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiProviderRequest) Reset() {
+	*x = AiProviderRequest{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiProviderRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiProviderRequest) ProtoMessage() {}
+
+func (x *AiProviderRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiProviderRequest.ProtoReflect.Descriptor instead.
+func (*AiProviderRequest) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *AiProviderRequest) GetProvider() string {
+	if x != nil {
+		return x.Provider
+	}
+	return ""
+}
+
+type AiReviewRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	File          string                 `protobuf:"bytes,2,opt,name=file,proto3" json:"file,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiReviewRequest) Reset() {
+	*x = AiReviewRequest{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiReviewRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiReviewRequest) ProtoMessage() {}
+
+func (x *AiReviewRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiReviewRequest.ProtoReflect.Descriptor instead.
+func (*AiReviewRequest) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *AiReviewRequest) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
+func (x *AiReviewRequest) GetFile() string {
+	if x != nil {
+		return x.File
+	}
+	return ""
+}
+
+type Remark struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Line          int32                  `protobuf:"varint,1,opt,name=line,proto3" json:"line,omitempty"`
+	Text          string                 `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Remark) Reset() {
+	*x = Remark{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Remark) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Remark) ProtoMessage() {}
+
+func (x *Remark) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Remark.ProtoReflect.Descriptor instead.
+func (*Remark) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *Remark) GetLine() int32 {
+	if x != nil {
+		return x.Line
+	}
+	return 0
+}
+
+func (x *Remark) GetText() string {
+	if x != nil {
+		return x.Text
+	}
+	return ""
+}
+
+type AiReviewResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Remarks       []*Remark              `protobuf:"bytes,1,rep,name=remarks,proto3" json:"remarks,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiReviewResponse) Reset() {
+	*x = AiReviewResponse{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiReviewResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiReviewResponse) ProtoMessage() {}
+
+func (x *AiReviewResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiReviewResponse.ProtoReflect.Descriptor instead.
+func (*AiReviewResponse) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *AiReviewResponse) GetRemarks() []*Remark {
+	if x != nil {
+		return x.Remarks
+	}
+	return nil
+}
+
+type AiCompleteRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Prefix        string                 `protobuf:"bytes,1,opt,name=prefix,proto3" json:"prefix,omitempty"` // kod przed kursorem
+	Suffix        string                 `protobuf:"bytes,2,opt,name=suffix,proto3" json:"suffix,omitempty"` // kod po kursorze
+	File          string                 `protobuf:"bytes,3,opt,name=file,proto3" json:"file,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiCompleteRequest) Reset() {
+	*x = AiCompleteRequest{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiCompleteRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiCompleteRequest) ProtoMessage() {}
+
+func (x *AiCompleteRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiCompleteRequest.ProtoReflect.Descriptor instead.
+func (*AiCompleteRequest) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *AiCompleteRequest) GetPrefix() string {
+	if x != nil {
+		return x.Prefix
+	}
+	return ""
+}
+
+func (x *AiCompleteRequest) GetSuffix() string {
+	if x != nil {
+		return x.Suffix
+	}
+	return ""
+}
+
+func (x *AiCompleteRequest) GetFile() string {
+	if x != nil {
+		return x.File
+	}
+	return ""
+}
+
+type AiCompleteResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Text          string                 `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"` // tekst do wstawienia w miejscu kursora
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiCompleteResponse) Reset() {
+	*x = AiCompleteResponse{}
+	mi := &file_gateway_v1_gateway_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiCompleteResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiCompleteResponse) ProtoMessage() {}
+
+func (x *AiCompleteResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_v1_gateway_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiCompleteResponse.ProtoReflect.Descriptor instead.
+func (*AiCompleteResponse) Descriptor() ([]byte, []int) {
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *AiCompleteResponse) GetText() string {
+	if x != nil {
+		return x.Text
 	}
 	return ""
 }
@@ -139,7 +1535,7 @@ type EventInput struct {
 
 func (x *EventInput) Reset() {
 	*x = EventInput{}
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[2]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -151,7 +1547,7 @@ func (x *EventInput) String() string {
 func (*EventInput) ProtoMessage() {}
 
 func (x *EventInput) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[2]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -164,7 +1560,7 @@ func (x *EventInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EventInput.ProtoReflect.Descriptor instead.
 func (*EventInput) Descriptor() ([]byte, []int) {
-	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{2}
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *EventInput) GetType() string {
@@ -225,7 +1621,7 @@ type Event struct {
 
 func (x *Event) Reset() {
 	*x = Event{}
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[3]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -237,7 +1633,7 @@ func (x *Event) String() string {
 func (*Event) ProtoMessage() {}
 
 func (x *Event) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[3]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -250,7 +1646,7 @@ func (x *Event) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Event.ProtoReflect.Descriptor instead.
 func (*Event) Descriptor() ([]byte, []int) {
-	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{3}
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *Event) GetId() string {
@@ -321,7 +1717,7 @@ type EventQuery struct {
 
 func (x *EventQuery) Reset() {
 	*x = EventQuery{}
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[4]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -333,7 +1729,7 @@ func (x *EventQuery) String() string {
 func (*EventQuery) ProtoMessage() {}
 
 func (x *EventQuery) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[4]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -346,7 +1742,7 @@ func (x *EventQuery) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EventQuery.ProtoReflect.Descriptor instead.
 func (*EventQuery) Descriptor() ([]byte, []int) {
-	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{4}
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *EventQuery) GetFile() string {
@@ -386,7 +1782,7 @@ type EventList struct {
 
 func (x *EventList) Reset() {
 	*x = EventList{}
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[5]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -398,7 +1794,7 @@ func (x *EventList) String() string {
 func (*EventList) ProtoMessage() {}
 
 func (x *EventList) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[5]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -411,7 +1807,7 @@ func (x *EventList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EventList.ProtoReflect.Descriptor instead.
 func (*EventList) Descriptor() ([]byte, []int) {
-	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{5}
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *EventList) GetEvents() []*Event {
@@ -429,7 +1825,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[6]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -441,7 +1837,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[6]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -454,7 +1850,7 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{6}
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{33}
 }
 
 type ScanRequest struct {
@@ -466,7 +1862,7 @@ type ScanRequest struct {
 
 func (x *ScanRequest) Reset() {
 	*x = ScanRequest{}
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[7]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -478,7 +1874,7 @@ func (x *ScanRequest) String() string {
 func (*ScanRequest) ProtoMessage() {}
 
 func (x *ScanRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[7]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -491,7 +1887,7 @@ func (x *ScanRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScanRequest.ProtoReflect.Descriptor instead.
 func (*ScanRequest) Descriptor() ([]byte, []int) {
-	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{7}
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *ScanRequest) GetPath() string {
@@ -510,7 +1906,7 @@ type ScanAppRequest struct {
 
 func (x *ScanAppRequest) Reset() {
 	*x = ScanAppRequest{}
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[8]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -522,7 +1918,7 @@ func (x *ScanAppRequest) String() string {
 func (*ScanAppRequest) ProtoMessage() {}
 
 func (x *ScanAppRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[8]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -535,7 +1931,7 @@ func (x *ScanAppRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScanAppRequest.ProtoReflect.Descriptor instead.
 func (*ScanAppRequest) Descriptor() ([]byte, []int) {
-	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{8}
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *ScanAppRequest) GetAppId() int64 {
@@ -554,7 +1950,7 @@ type AppGraphRequest struct {
 
 func (x *AppGraphRequest) Reset() {
 	*x = AppGraphRequest{}
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[9]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -566,7 +1962,7 @@ func (x *AppGraphRequest) String() string {
 func (*AppGraphRequest) ProtoMessage() {}
 
 func (x *AppGraphRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[9]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -579,7 +1975,7 @@ func (x *AppGraphRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AppGraphRequest.ProtoReflect.Descriptor instead.
 func (*AppGraphRequest) Descriptor() ([]byte, []int) {
-	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{9}
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *AppGraphRequest) GetAppId() int64 {
@@ -604,7 +2000,7 @@ type Progress struct {
 
 func (x *Progress) Reset() {
 	*x = Progress{}
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[10]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -616,7 +2012,7 @@ func (x *Progress) String() string {
 func (*Progress) ProtoMessage() {}
 
 func (x *Progress) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[10]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -629,7 +2025,7 @@ func (x *Progress) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Progress.ProtoReflect.Descriptor instead.
 func (*Progress) Descriptor() ([]byte, []int) {
-	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{10}
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *Progress) GetMessage() string {
@@ -683,7 +2079,7 @@ type GraphRequest struct {
 
 func (x *GraphRequest) Reset() {
 	*x = GraphRequest{}
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[11]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -695,7 +2091,7 @@ func (x *GraphRequest) String() string {
 func (*GraphRequest) ProtoMessage() {}
 
 func (x *GraphRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[11]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -708,7 +2104,7 @@ func (x *GraphRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GraphRequest.ProtoReflect.Descriptor instead.
 func (*GraphRequest) Descriptor() ([]byte, []int) {
-	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{11}
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *GraphRequest) GetProjectId() int64 {
@@ -737,7 +2133,7 @@ type Node struct {
 
 func (x *Node) Reset() {
 	*x = Node{}
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[12]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -749,7 +2145,7 @@ func (x *Node) String() string {
 func (*Node) ProtoMessage() {}
 
 func (x *Node) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[12]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -762,7 +2158,7 @@ func (x *Node) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Node.ProtoReflect.Descriptor instead.
 func (*Node) Descriptor() ([]byte, []int) {
-	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{12}
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *Node) GetId() string {
@@ -847,7 +2243,7 @@ type Edge struct {
 
 func (x *Edge) Reset() {
 	*x = Edge{}
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[13]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -859,7 +2255,7 @@ func (x *Edge) String() string {
 func (*Edge) ProtoMessage() {}
 
 func (x *Edge) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[13]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -872,7 +2268,7 @@ func (x *Edge) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Edge.ProtoReflect.Descriptor instead.
 func (*Edge) Descriptor() ([]byte, []int) {
-	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{13}
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *Edge) GetFrom() string {
@@ -908,7 +2304,7 @@ type Graph struct {
 
 func (x *Graph) Reset() {
 	*x = Graph{}
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[14]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -920,7 +2316,7 @@ func (x *Graph) String() string {
 func (*Graph) ProtoMessage() {}
 
 func (x *Graph) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[14]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -933,7 +2329,7 @@ func (x *Graph) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Graph.ProtoReflect.Descriptor instead.
 func (*Graph) Descriptor() ([]byte, []int) {
-	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{14}
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *Graph) GetProjectId() int64 {
@@ -976,7 +2372,7 @@ type Project struct {
 
 func (x *Project) Reset() {
 	*x = Project{}
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[15]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -988,7 +2384,7 @@ func (x *Project) String() string {
 func (*Project) ProtoMessage() {}
 
 func (x *Project) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[15]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1001,7 +2397,7 @@ func (x *Project) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Project.ProtoReflect.Descriptor instead.
 func (*Project) Descriptor() ([]byte, []int) {
-	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{15}
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *Project) GetId() int64 {
@@ -1041,7 +2437,7 @@ type Projects struct {
 
 func (x *Projects) Reset() {
 	*x = Projects{}
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[16]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1053,7 +2449,7 @@ func (x *Projects) String() string {
 func (*Projects) ProtoMessage() {}
 
 func (x *Projects) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[16]
+	mi := &file_gateway_v1_gateway_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1066,7 +2462,7 @@ func (x *Projects) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Projects.ProtoReflect.Descriptor instead.
 func (*Projects) Descriptor() ([]byte, []int) {
-	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{16}
+	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *Projects) GetProjects() []*Project {
@@ -1076,18 +2472,104 @@ func (x *Projects) GetProjects() []*Project {
 	return nil
 }
 
-var File_proto_gateway_v1_gateway_proto protoreflect.FileDescriptor
+var File_gateway_v1_gateway_proto protoreflect.FileDescriptor
 
-const file_proto_gateway_v1_gateway_proto_rawDesc = "" +
+const file_gateway_v1_gateway_proto_rawDesc = "" +
 	"\n" +
-	"\x1eproto/gateway/v1/gateway.proto\x12\n" +
-	"gateway.v1\"O\n" +
+	"\x18gateway/v1/gateway.proto\x12\n" +
+	"gateway.v1\"9\n" +
+	"\x11GraphStateRequest\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x12\n" +
+	"\x04data\x18\x02 \x01(\tR\x04data\"!\n" +
+	"\rGraphStateKey\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\"(\n" +
+	"\x12GraphStateResponse\x12\x12\n" +
+	"\x04data\x18\x01 \x01(\tR\x04data\"D\n" +
+	"\bDirEntry\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
+	"\x04path\x18\x02 \x01(\tR\x04path\x12\x10\n" +
+	"\x03dir\x18\x03 \x01(\bR\x03dir\"h\n" +
+	"\n" +
+	"DirListing\x12\x12\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\x12\x16\n" +
+	"\x06parent\x18\x02 \x01(\tR\x06parent\x12.\n" +
+	"\aentries\x18\x03 \x03(\v2\x14.gateway.v1.DirEntryR\aentries\"J\n" +
+	"\fFoundProject\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
+	"\x04path\x18\x02 \x01(\tR\x04path\x12\x12\n" +
+	"\x04kind\x18\x03 \x01(\tR\x04kind\"E\n" +
+	"\rFoundProjects\x124\n" +
+	"\bprojects\x18\x01 \x03(\v2\x18.gateway.v1.FoundProjectR\bprojects\"K\n" +
+	"\vConventions\x12\x1e\n" +
+	"\n" +
+	"convention\x18\x01 \x01(\tR\n" +
+	"convention\x12\x1c\n" +
+	"\textension\x18\x02 \x01(\tR\textension\"\x1e\n" +
+	"\bFilePath\x12\x12\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\"'\n" +
+	"\vFileContent\x12\x18\n" +
+	"\acontent\x18\x01 \x01(\tR\acontent\"0\n" +
+	"\n" +
+	"FileResult\x12\x12\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\x12\x0e\n" +
+	"\x02ok\x18\x02 \x01(\bR\x02ok\";\n" +
+	"\vSaveRequest\x12\x12\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\x12\x18\n" +
+	"\acontent\x18\x02 \x01(\tR\acontent\"I\n" +
+	"\rCreateRequest\x12\x10\n" +
+	"\x03dir\x18\x01 \x01(\tR\x03dir\x12\x12\n" +
+	"\x04file\x18\x02 \x01(\tR\x04file\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\";\n" +
+	"\x13CreateFolderRequest\x12\x10\n" +
+	"\x03dir\x18\x01 \x01(\tR\x03dir\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"\x81\x01\n" +
+	"\rRenameRequest\x12\x19\n" +
+	"\bold_path\x18\x01 \x01(\tR\aoldPath\x12\x1b\n" +
+	"\tfile_base\x18\x02 \x01(\tR\bfileBase\x12\x1d\n" +
+	"\n" +
+	"class_name\x18\x03 \x01(\tR\tclassName\x12\x19\n" +
+	"\bold_name\x18\x04 \x01(\tR\aoldName\"G\n" +
+	"\vMoveRequest\x12\x19\n" +
+	"\bold_path\x18\x01 \x01(\tR\aoldPath\x12\x1d\n" +
+	"\n" +
+	"target_dir\x18\x02 \x01(\tR\ttargetDir\"8\n" +
+	"\x0eResolveRequest\x12\x12\n" +
+	"\x04from\x18\x01 \x01(\tR\x04from\x12\x12\n" +
+	"\x04spec\x18\x02 \x01(\tR\x04spec\":\n" +
+	"\x0eAiAgentRequest\x12\x16\n" +
+	"\x06prompt\x18\x01 \x01(\tR\x06prompt\x12\x10\n" +
+	"\x03dir\x18\x02 \x01(\tR\x03dir\",\n" +
+	"\x06FileOp\x12\x0e\n" +
+	"\x02op\x18\x01 \x01(\tR\x02op\x12\x12\n" +
+	"\x04path\x18\x02 \x01(\tR\x04path\"n\n" +
+	"\x0fAiAgentResponse\x12$\n" +
+	"\x03ops\x18\x01 \x03(\v2\x12.gateway.v1.FileOpR\x03ops\x12\x1b\n" +
+	"\topen_path\x18\x02 \x01(\tR\bopenPath\x12\x18\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\"O\n" +
 	"\rAiEditRequest\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12\x16\n" +
 	"\x06prompt\x18\x02 \x01(\tR\x06prompt\x12\x12\n" +
 	"\x04file\x18\x03 \x01(\tR\x04file\"$\n" +
 	"\x0eAiEditResponse\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\"\x8e\x01\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\"%\n" +
+	"\x0fAiModelResponse\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"/\n" +
+	"\x11AiProviderRequest\x12\x1a\n" +
+	"\bprovider\x18\x01 \x01(\tR\bprovider\"9\n" +
+	"\x0fAiReviewRequest\x12\x12\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\x12\x12\n" +
+	"\x04file\x18\x02 \x01(\tR\x04file\"0\n" +
+	"\x06Remark\x12\x12\n" +
+	"\x04line\x18\x01 \x01(\x05R\x04line\x12\x12\n" +
+	"\x04text\x18\x02 \x01(\tR\x04text\"@\n" +
+	"\x10AiReviewResponse\x12,\n" +
+	"\aremarks\x18\x01 \x03(\v2\x12.gateway.v1.RemarkR\aremarks\"W\n" +
+	"\x11AiCompleteRequest\x12\x16\n" +
+	"\x06prefix\x18\x01 \x01(\tR\x06prefix\x12\x16\n" +
+	"\x06suffix\x18\x02 \x01(\tR\x06suffix\x12\x12\n" +
+	"\x04file\x18\x03 \x01(\tR\x04file\"(\n" +
+	"\x12AiCompleteResponse\x12\x12\n" +
+	"\x04text\x18\x01 \x01(\tR\x04text\"\x8e\x01\n" +
 	"\n" +
 	"EventInput\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\tR\x04type\x12\x14\n" +
@@ -1161,7 +2643,7 @@ const file_proto_gateway_v1_gateway_proto_rawDesc = "" +
 	"\bgit_path\x18\x03 \x01(\tR\agitPath\x12\x12\n" +
 	"\x04kind\x18\x04 \x01(\tR\x04kind\";\n" +
 	"\bProjects\x12/\n" +
-	"\bprojects\x18\x01 \x03(\v2\x13.gateway.v1.ProjectR\bprojects2\xeb\x03\n" +
+	"\bprojects\x18\x01 \x03(\v2\x13.gateway.v1.ProjectR\bprojects2\xd5\r\n" +
 	"\aGateway\x127\n" +
 	"\x04Scan\x12\x17.gateway.v1.ScanRequest\x1a\x14.gateway.v1.Progress0\x01\x127\n" +
 	"\bGetGraph\x12\x18.gateway.v1.GraphRequest\x1a\x11.gateway.v1.Graph\x12=\n" +
@@ -1169,90 +2651,182 @@ const file_proto_gateway_v1_gateway_proto_rawDesc = "" +
 	"\vGetAppGraph\x12\x1b.gateway.v1.AppGraphRequest\x1a\x11.gateway.v1.Graph\x127\n" +
 	"\fListProjects\x12\x11.gateway.v1.Empty\x1a\x14.gateway.v1.Projects\x12?\n" +
 	"\x06AiEdit\x12\x19.gateway.v1.AiEditRequest\x1a\x1a.gateway.v1.AiEditResponse\x129\n" +
+	"\aAiModel\x12\x11.gateway.v1.Empty\x1a\x1b.gateway.v1.AiModelResponse\x12K\n" +
+	"\rAiSetProvider\x12\x1d.gateway.v1.AiProviderRequest\x1a\x1b.gateway.v1.AiModelResponse\x12E\n" +
+	"\bAiReview\x12\x1b.gateway.v1.AiReviewRequest\x1a\x1c.gateway.v1.AiReviewResponse\x12K\n" +
+	"\n" +
+	"AiComplete\x12\x1d.gateway.v1.AiCompleteRequest\x1a\x1e.gateway.v1.AiCompleteResponse\x129\n" +
 	"\fPublishEvent\x12\x16.gateway.v1.EventInput\x1a\x11.gateway.v1.Event\x12;\n" +
 	"\n" +
-	"ListEvents\x12\x16.gateway.v1.EventQuery\x1a\x15.gateway.v1.EventListB?Z=github.com/filipgorny/ai-architect/proto/gateway/v1;gatewayv1b\x06proto3"
+	"ListEvents\x12\x16.gateway.v1.EventQuery\x1a\x15.gateway.v1.EventList\x129\n" +
+	"\bReadFile\x12\x14.gateway.v1.FilePath\x1a\x17.gateway.v1.FileContent\x12;\n" +
+	"\bSaveFile\x12\x17.gateway.v1.SaveRequest\x1a\x16.gateway.v1.FileResult\x12?\n" +
+	"\n" +
+	"CreateFile\x12\x19.gateway.v1.CreateRequest\x1a\x16.gateway.v1.FileResult\x12G\n" +
+	"\fCreateFolder\x12\x1f.gateway.v1.CreateFolderRequest\x1a\x16.gateway.v1.FileResult\x12?\n" +
+	"\n" +
+	"RenameFile\x12\x19.gateway.v1.RenameRequest\x1a\x16.gateway.v1.FileResult\x12;\n" +
+	"\bMoveFile\x12\x17.gateway.v1.MoveRequest\x1a\x16.gateway.v1.FileResult\x12:\n" +
+	"\n" +
+	"DeletePath\x12\x14.gateway.v1.FilePath\x1a\x16.gateway.v1.FileResult\x12C\n" +
+	"\rResolveImport\x12\x1a.gateway.v1.ResolveRequest\x1a\x16.gateway.v1.FileResult\x124\n" +
+	"\aHomeDir\x12\x11.gateway.v1.Empty\x1a\x16.gateway.v1.FileResult\x127\n" +
+	"\aListDir\x12\x14.gateway.v1.FilePath\x1a\x16.gateway.v1.DirListing\x12?\n" +
+	"\fFindProjects\x12\x14.gateway.v1.FilePath\x1a\x19.gateway.v1.FoundProjects\x12B\n" +
+	"\x11DetectConventions\x12\x14.gateway.v1.FilePath\x1a\x17.gateway.v1.Conventions\x12B\n" +
+	"\aAiAgent\x12\x1a.gateway.v1.AiAgentRequest\x1a\x1b.gateway.v1.AiAgentResponse\x12G\n" +
+	"\x0eSaveGraphState\x12\x1d.gateway.v1.GraphStateRequest\x1a\x16.gateway.v1.FileResult\x12J\n" +
+	"\rGetGraphState\x12\x19.gateway.v1.GraphStateKey\x1a\x1e.gateway.v1.GraphStateResponseB?Z=github.com/filipgorny/ai-architect/proto/gateway/v1;gatewayv1b\x06proto3"
 
 var (
-	file_proto_gateway_v1_gateway_proto_rawDescOnce sync.Once
-	file_proto_gateway_v1_gateway_proto_rawDescData []byte
+	file_gateway_v1_gateway_proto_rawDescOnce sync.Once
+	file_gateway_v1_gateway_proto_rawDescData []byte
 )
 
-func file_proto_gateway_v1_gateway_proto_rawDescGZIP() []byte {
-	file_proto_gateway_v1_gateway_proto_rawDescOnce.Do(func() {
-		file_proto_gateway_v1_gateway_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_gateway_v1_gateway_proto_rawDesc), len(file_proto_gateway_v1_gateway_proto_rawDesc)))
+func file_gateway_v1_gateway_proto_rawDescGZIP() []byte {
+	file_gateway_v1_gateway_proto_rawDescOnce.Do(func() {
+		file_gateway_v1_gateway_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_gateway_v1_gateway_proto_rawDesc), len(file_gateway_v1_gateway_proto_rawDesc)))
 	})
-	return file_proto_gateway_v1_gateway_proto_rawDescData
+	return file_gateway_v1_gateway_proto_rawDescData
 }
 
-var file_proto_gateway_v1_gateway_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
-var file_proto_gateway_v1_gateway_proto_goTypes = []any{
-	(*AiEditRequest)(nil),   // 0: gateway.v1.AiEditRequest
-	(*AiEditResponse)(nil),  // 1: gateway.v1.AiEditResponse
-	(*EventInput)(nil),      // 2: gateway.v1.EventInput
-	(*Event)(nil),           // 3: gateway.v1.Event
-	(*EventQuery)(nil),      // 4: gateway.v1.EventQuery
-	(*EventList)(nil),       // 5: gateway.v1.EventList
-	(*Empty)(nil),           // 6: gateway.v1.Empty
-	(*ScanRequest)(nil),     // 7: gateway.v1.ScanRequest
-	(*ScanAppRequest)(nil),  // 8: gateway.v1.ScanAppRequest
-	(*AppGraphRequest)(nil), // 9: gateway.v1.AppGraphRequest
-	(*Progress)(nil),        // 10: gateway.v1.Progress
-	(*GraphRequest)(nil),    // 11: gateway.v1.GraphRequest
-	(*Node)(nil),            // 12: gateway.v1.Node
-	(*Edge)(nil),            // 13: gateway.v1.Edge
-	(*Graph)(nil),           // 14: gateway.v1.Graph
-	(*Project)(nil),         // 15: gateway.v1.Project
-	(*Projects)(nil),        // 16: gateway.v1.Projects
+var file_gateway_v1_gateway_proto_msgTypes = make([]protoimpl.MessageInfo, 44)
+var file_gateway_v1_gateway_proto_goTypes = []any{
+	(*GraphStateRequest)(nil),   // 0: gateway.v1.GraphStateRequest
+	(*GraphStateKey)(nil),       // 1: gateway.v1.GraphStateKey
+	(*GraphStateResponse)(nil),  // 2: gateway.v1.GraphStateResponse
+	(*DirEntry)(nil),            // 3: gateway.v1.DirEntry
+	(*DirListing)(nil),          // 4: gateway.v1.DirListing
+	(*FoundProject)(nil),        // 5: gateway.v1.FoundProject
+	(*FoundProjects)(nil),       // 6: gateway.v1.FoundProjects
+	(*Conventions)(nil),         // 7: gateway.v1.Conventions
+	(*FilePath)(nil),            // 8: gateway.v1.FilePath
+	(*FileContent)(nil),         // 9: gateway.v1.FileContent
+	(*FileResult)(nil),          // 10: gateway.v1.FileResult
+	(*SaveRequest)(nil),         // 11: gateway.v1.SaveRequest
+	(*CreateRequest)(nil),       // 12: gateway.v1.CreateRequest
+	(*CreateFolderRequest)(nil), // 13: gateway.v1.CreateFolderRequest
+	(*RenameRequest)(nil),       // 14: gateway.v1.RenameRequest
+	(*MoveRequest)(nil),         // 15: gateway.v1.MoveRequest
+	(*ResolveRequest)(nil),      // 16: gateway.v1.ResolveRequest
+	(*AiAgentRequest)(nil),      // 17: gateway.v1.AiAgentRequest
+	(*FileOp)(nil),              // 18: gateway.v1.FileOp
+	(*AiAgentResponse)(nil),     // 19: gateway.v1.AiAgentResponse
+	(*AiEditRequest)(nil),       // 20: gateway.v1.AiEditRequest
+	(*AiEditResponse)(nil),      // 21: gateway.v1.AiEditResponse
+	(*AiModelResponse)(nil),     // 22: gateway.v1.AiModelResponse
+	(*AiProviderRequest)(nil),   // 23: gateway.v1.AiProviderRequest
+	(*AiReviewRequest)(nil),     // 24: gateway.v1.AiReviewRequest
+	(*Remark)(nil),              // 25: gateway.v1.Remark
+	(*AiReviewResponse)(nil),    // 26: gateway.v1.AiReviewResponse
+	(*AiCompleteRequest)(nil),   // 27: gateway.v1.AiCompleteRequest
+	(*AiCompleteResponse)(nil),  // 28: gateway.v1.AiCompleteResponse
+	(*EventInput)(nil),          // 29: gateway.v1.EventInput
+	(*Event)(nil),               // 30: gateway.v1.Event
+	(*EventQuery)(nil),          // 31: gateway.v1.EventQuery
+	(*EventList)(nil),           // 32: gateway.v1.EventList
+	(*Empty)(nil),               // 33: gateway.v1.Empty
+	(*ScanRequest)(nil),         // 34: gateway.v1.ScanRequest
+	(*ScanAppRequest)(nil),      // 35: gateway.v1.ScanAppRequest
+	(*AppGraphRequest)(nil),     // 36: gateway.v1.AppGraphRequest
+	(*Progress)(nil),            // 37: gateway.v1.Progress
+	(*GraphRequest)(nil),        // 38: gateway.v1.GraphRequest
+	(*Node)(nil),                // 39: gateway.v1.Node
+	(*Edge)(nil),                // 40: gateway.v1.Edge
+	(*Graph)(nil),               // 41: gateway.v1.Graph
+	(*Project)(nil),             // 42: gateway.v1.Project
+	(*Projects)(nil),            // 43: gateway.v1.Projects
 }
-var file_proto_gateway_v1_gateway_proto_depIdxs = []int32{
-	3,  // 0: gateway.v1.EventList.events:type_name -> gateway.v1.Event
-	12, // 1: gateway.v1.Graph.nodes:type_name -> gateway.v1.Node
-	13, // 2: gateway.v1.Graph.edges:type_name -> gateway.v1.Edge
-	15, // 3: gateway.v1.Projects.projects:type_name -> gateway.v1.Project
-	7,  // 4: gateway.v1.Gateway.Scan:input_type -> gateway.v1.ScanRequest
-	11, // 5: gateway.v1.Gateway.GetGraph:input_type -> gateway.v1.GraphRequest
-	8,  // 6: gateway.v1.Gateway.ScanApp:input_type -> gateway.v1.ScanAppRequest
-	9,  // 7: gateway.v1.Gateway.GetAppGraph:input_type -> gateway.v1.AppGraphRequest
-	6,  // 8: gateway.v1.Gateway.ListProjects:input_type -> gateway.v1.Empty
-	0,  // 9: gateway.v1.Gateway.AiEdit:input_type -> gateway.v1.AiEditRequest
-	2,  // 10: gateway.v1.Gateway.PublishEvent:input_type -> gateway.v1.EventInput
-	4,  // 11: gateway.v1.Gateway.ListEvents:input_type -> gateway.v1.EventQuery
-	10, // 12: gateway.v1.Gateway.Scan:output_type -> gateway.v1.Progress
-	14, // 13: gateway.v1.Gateway.GetGraph:output_type -> gateway.v1.Graph
-	10, // 14: gateway.v1.Gateway.ScanApp:output_type -> gateway.v1.Progress
-	14, // 15: gateway.v1.Gateway.GetAppGraph:output_type -> gateway.v1.Graph
-	16, // 16: gateway.v1.Gateway.ListProjects:output_type -> gateway.v1.Projects
-	1,  // 17: gateway.v1.Gateway.AiEdit:output_type -> gateway.v1.AiEditResponse
-	3,  // 18: gateway.v1.Gateway.PublishEvent:output_type -> gateway.v1.Event
-	5,  // 19: gateway.v1.Gateway.ListEvents:output_type -> gateway.v1.EventList
-	12, // [12:20] is the sub-list for method output_type
-	4,  // [4:12] is the sub-list for method input_type
-	4,  // [4:4] is the sub-list for extension type_name
-	4,  // [4:4] is the sub-list for extension extendee
-	0,  // [0:4] is the sub-list for field type_name
+var file_gateway_v1_gateway_proto_depIdxs = []int32{
+	3,  // 0: gateway.v1.DirListing.entries:type_name -> gateway.v1.DirEntry
+	5,  // 1: gateway.v1.FoundProjects.projects:type_name -> gateway.v1.FoundProject
+	18, // 2: gateway.v1.AiAgentResponse.ops:type_name -> gateway.v1.FileOp
+	25, // 3: gateway.v1.AiReviewResponse.remarks:type_name -> gateway.v1.Remark
+	30, // 4: gateway.v1.EventList.events:type_name -> gateway.v1.Event
+	39, // 5: gateway.v1.Graph.nodes:type_name -> gateway.v1.Node
+	40, // 6: gateway.v1.Graph.edges:type_name -> gateway.v1.Edge
+	42, // 7: gateway.v1.Projects.projects:type_name -> gateway.v1.Project
+	34, // 8: gateway.v1.Gateway.Scan:input_type -> gateway.v1.ScanRequest
+	38, // 9: gateway.v1.Gateway.GetGraph:input_type -> gateway.v1.GraphRequest
+	35, // 10: gateway.v1.Gateway.ScanApp:input_type -> gateway.v1.ScanAppRequest
+	36, // 11: gateway.v1.Gateway.GetAppGraph:input_type -> gateway.v1.AppGraphRequest
+	33, // 12: gateway.v1.Gateway.ListProjects:input_type -> gateway.v1.Empty
+	20, // 13: gateway.v1.Gateway.AiEdit:input_type -> gateway.v1.AiEditRequest
+	33, // 14: gateway.v1.Gateway.AiModel:input_type -> gateway.v1.Empty
+	23, // 15: gateway.v1.Gateway.AiSetProvider:input_type -> gateway.v1.AiProviderRequest
+	24, // 16: gateway.v1.Gateway.AiReview:input_type -> gateway.v1.AiReviewRequest
+	27, // 17: gateway.v1.Gateway.AiComplete:input_type -> gateway.v1.AiCompleteRequest
+	29, // 18: gateway.v1.Gateway.PublishEvent:input_type -> gateway.v1.EventInput
+	31, // 19: gateway.v1.Gateway.ListEvents:input_type -> gateway.v1.EventQuery
+	8,  // 20: gateway.v1.Gateway.ReadFile:input_type -> gateway.v1.FilePath
+	11, // 21: gateway.v1.Gateway.SaveFile:input_type -> gateway.v1.SaveRequest
+	12, // 22: gateway.v1.Gateway.CreateFile:input_type -> gateway.v1.CreateRequest
+	13, // 23: gateway.v1.Gateway.CreateFolder:input_type -> gateway.v1.CreateFolderRequest
+	14, // 24: gateway.v1.Gateway.RenameFile:input_type -> gateway.v1.RenameRequest
+	15, // 25: gateway.v1.Gateway.MoveFile:input_type -> gateway.v1.MoveRequest
+	8,  // 26: gateway.v1.Gateway.DeletePath:input_type -> gateway.v1.FilePath
+	16, // 27: gateway.v1.Gateway.ResolveImport:input_type -> gateway.v1.ResolveRequest
+	33, // 28: gateway.v1.Gateway.HomeDir:input_type -> gateway.v1.Empty
+	8,  // 29: gateway.v1.Gateway.ListDir:input_type -> gateway.v1.FilePath
+	8,  // 30: gateway.v1.Gateway.FindProjects:input_type -> gateway.v1.FilePath
+	8,  // 31: gateway.v1.Gateway.DetectConventions:input_type -> gateway.v1.FilePath
+	17, // 32: gateway.v1.Gateway.AiAgent:input_type -> gateway.v1.AiAgentRequest
+	0,  // 33: gateway.v1.Gateway.SaveGraphState:input_type -> gateway.v1.GraphStateRequest
+	1,  // 34: gateway.v1.Gateway.GetGraphState:input_type -> gateway.v1.GraphStateKey
+	37, // 35: gateway.v1.Gateway.Scan:output_type -> gateway.v1.Progress
+	41, // 36: gateway.v1.Gateway.GetGraph:output_type -> gateway.v1.Graph
+	37, // 37: gateway.v1.Gateway.ScanApp:output_type -> gateway.v1.Progress
+	41, // 38: gateway.v1.Gateway.GetAppGraph:output_type -> gateway.v1.Graph
+	43, // 39: gateway.v1.Gateway.ListProjects:output_type -> gateway.v1.Projects
+	21, // 40: gateway.v1.Gateway.AiEdit:output_type -> gateway.v1.AiEditResponse
+	22, // 41: gateway.v1.Gateway.AiModel:output_type -> gateway.v1.AiModelResponse
+	22, // 42: gateway.v1.Gateway.AiSetProvider:output_type -> gateway.v1.AiModelResponse
+	26, // 43: gateway.v1.Gateway.AiReview:output_type -> gateway.v1.AiReviewResponse
+	28, // 44: gateway.v1.Gateway.AiComplete:output_type -> gateway.v1.AiCompleteResponse
+	30, // 45: gateway.v1.Gateway.PublishEvent:output_type -> gateway.v1.Event
+	32, // 46: gateway.v1.Gateway.ListEvents:output_type -> gateway.v1.EventList
+	9,  // 47: gateway.v1.Gateway.ReadFile:output_type -> gateway.v1.FileContent
+	10, // 48: gateway.v1.Gateway.SaveFile:output_type -> gateway.v1.FileResult
+	10, // 49: gateway.v1.Gateway.CreateFile:output_type -> gateway.v1.FileResult
+	10, // 50: gateway.v1.Gateway.CreateFolder:output_type -> gateway.v1.FileResult
+	10, // 51: gateway.v1.Gateway.RenameFile:output_type -> gateway.v1.FileResult
+	10, // 52: gateway.v1.Gateway.MoveFile:output_type -> gateway.v1.FileResult
+	10, // 53: gateway.v1.Gateway.DeletePath:output_type -> gateway.v1.FileResult
+	10, // 54: gateway.v1.Gateway.ResolveImport:output_type -> gateway.v1.FileResult
+	10, // 55: gateway.v1.Gateway.HomeDir:output_type -> gateway.v1.FileResult
+	4,  // 56: gateway.v1.Gateway.ListDir:output_type -> gateway.v1.DirListing
+	6,  // 57: gateway.v1.Gateway.FindProjects:output_type -> gateway.v1.FoundProjects
+	7,  // 58: gateway.v1.Gateway.DetectConventions:output_type -> gateway.v1.Conventions
+	19, // 59: gateway.v1.Gateway.AiAgent:output_type -> gateway.v1.AiAgentResponse
+	10, // 60: gateway.v1.Gateway.SaveGraphState:output_type -> gateway.v1.FileResult
+	2,  // 61: gateway.v1.Gateway.GetGraphState:output_type -> gateway.v1.GraphStateResponse
+	35, // [35:62] is the sub-list for method output_type
+	8,  // [8:35] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
-func init() { file_proto_gateway_v1_gateway_proto_init() }
-func file_proto_gateway_v1_gateway_proto_init() {
-	if File_proto_gateway_v1_gateway_proto != nil {
+func init() { file_gateway_v1_gateway_proto_init() }
+func file_gateway_v1_gateway_proto_init() {
+	if File_gateway_v1_gateway_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_gateway_v1_gateway_proto_rawDesc), len(file_proto_gateway_v1_gateway_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_gateway_v1_gateway_proto_rawDesc), len(file_gateway_v1_gateway_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   17,
+			NumMessages:   44,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_proto_gateway_v1_gateway_proto_goTypes,
-		DependencyIndexes: file_proto_gateway_v1_gateway_proto_depIdxs,
-		MessageInfos:      file_proto_gateway_v1_gateway_proto_msgTypes,
+		GoTypes:           file_gateway_v1_gateway_proto_goTypes,
+		DependencyIndexes: file_gateway_v1_gateway_proto_depIdxs,
+		MessageInfos:      file_gateway_v1_gateway_proto_msgTypes,
 	}.Build()
-	File_proto_gateway_v1_gateway_proto = out.File
-	file_proto_gateway_v1_gateway_proto_goTypes = nil
-	file_proto_gateway_v1_gateway_proto_depIdxs = nil
+	File_gateway_v1_gateway_proto = out.File
+	file_gateway_v1_gateway_proto_goTypes = nil
+	file_gateway_v1_gateway_proto_depIdxs = nil
 }

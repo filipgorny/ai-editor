@@ -26,7 +26,7 @@ func New(dsn string) (*Store, error) {
 		return nil, err
 	}
 
-	if err := db.AutoMigrate(&Project{}, &App{}, &Element{}, &File{}); err != nil {
+	if err := db.AutoMigrate(&Project{}, &App{}, &Element{}, &File{}, &GraphState{}); err != nil {
 		return nil, err
 	}
 

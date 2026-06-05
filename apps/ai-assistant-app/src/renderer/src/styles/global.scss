@@ -26,13 +26,67 @@ body {
   fill: $muted;
 }
 
-// Krawędzie nieinteraktywne — by ich „strefa kliknięcia" nie blokowała przewijania.
-.react-flow__edge {
-  pointer-events: none;
+// Krawędzie klikalne (klik kreski folder→plik = przepięcie do innego folderu).
+// Przewijanie to teraz zoom kółkiem, więc strefa kliknięcia nie blokuje panningu.
+.react-flow__edgeupdater {
+  pointer-events: all;
+  cursor: grab;
+}
+
+// Mignięcie węzłem raz po przesunięciu (np. po wyszukaniu).
+@keyframes rf-flash {
+  0%,
+  100% {
+    filter: none;
+  }
+  35% {
+    filter: brightness(1.9) drop-shadow(0 0 10px #ffffff);
+  }
+}
+
+.react-flow__node.rf-flash {
+  animation: rf-flash 0.7s ease 1;
 }
 
 .react-flow__controls button {
   background: $panel;
   border-bottom: 1px solid $border;
   color: #e6edf3;
+}
+
+// Ghost-uwagi (ESLint / AI) jako komiksowy dymek po PRAWEJ od linii (nie zawija).
+.cm-ghost-bubble {
+  display: inline-block;
+  margin-left: 22px;
+  padding: 0 8px 0 10px;
+  border-radius: 12px;
+  border: 1px solid currentColor;
+  background: #000;
+  font-size: 13px;
+  font-style: normal;
+  line-height: 1.5;
+  position: relative;
+  vertical-align: middle;
+  white-space: nowrap;
+  pointer-events: auto; // cały dymek klikalny → zamyka
+  cursor: pointer;
+}
+
+.cm-ghost-bubble:hover {
+  filter: brightness(1.25);
+}
+
+.cm-ghost-bubble::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent;
+  border-right-color: currentColor;
+}
+
+.cm-ghost-x {
+  color: #8b949e;
+  font-weight: 700;
 }

@@ -1,4 +1,5 @@
 import { Handle, Position } from 'reactflow'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 import { Controller, Node } from '../model'
 import { colors, kindColor } from '../styles/tokens'
@@ -79,6 +80,7 @@ const frameworkIcon: Record<string, string> = {
 
 // NodeCard renderuje domenowy Node jako klocek grafu.
 export default function NodeCard({ data }: { data: Node }) {
+  const { t } = useTranslation()
   const openFile = useEditor()
   const color = kindColor[data.kind] ?? colors.muted
   const route = data instanceof Controller ? data.route.toString() : ''
@@ -101,7 +103,7 @@ export default function NodeCard({ data }: { data: Node }) {
           {data.functions.map((fn) => (
             <Fn
               key={fn.name}
-              title="Otwórz w edytorze"
+              title={t('graph.openInEditor')}
               onClick={(e) => {
                 e.stopPropagation()
 

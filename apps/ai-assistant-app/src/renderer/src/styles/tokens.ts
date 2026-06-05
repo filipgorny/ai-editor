@@ -19,6 +19,6 @@ export const kindColor: Record<string, string> = {
   controller: '#58a6ff',
   service: '#3fb950',
   component: '#61dafb',
-  class: '#e3b341',
-  function: '#ff7b72'
+  class: '#f85149',
+  function: '#ffa657'
 }

@@ -1,4 +1,5 @@
 import { Dialog, LinearProgress } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 import { ScanProgress } from '../model'
 import { colors } from '../styles/tokens'
@@ -68,18 +69,20 @@ export default function ScanModal({
   log: string[]
   error: string
 }) {
+  const { t } = useTranslation()
+
   return (
     <Dialog open={open} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: colors.panel, backgroundImage: 'none' } }}>
-      <Title>Skanowanie projektu…</Title>
+      <Title>{t('scan.title')}</Title>
       <Body>
         <LinearProgress color={error ? 'error' : 'primary'} sx={{ mb: 2, borderRadius: 1 }} />
 
-        <Label>Czytam plik:</Label>
+        <Label>{t('scan.reading')}</Label>
         <CurrentFile>{progress.currentFile || '—'}</CurrentFile>
 
         <Counters>
-          <Counter>pliki: {progress.filesDone}</Counter>
-          <Counter>encje: {progress.entitiesDone}</Counter>
+          <Counter>{t('scan.files')} {progress.filesDone}</Counter>
+          <Counter>{t('scan.entities')} {progress.entitiesDone}</Counter>
         </Counters>
 
         <Log>

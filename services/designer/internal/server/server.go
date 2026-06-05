@@ -27,6 +27,26 @@ func New(scanner scannerv1.ScannerClient, st *store.Store, gb *graph.Builder) *S
 	return &Server{scanner: scanner, store: st, graph: gb}
 }
 
+// SaveGraphState persists per-scene graph UI state (viewport/positions) in Postgres.
+func (s *Server) SaveGraphState(ctx context.Context, req *gatewayv1.GraphStateRequest) (*gatewayv1.FileResult, error) {
+	if err := s.store.SaveGraphState(ctx, req.GetKey(), req.GetData()); err != nil {
+		return nil, err
+	}
+
+	return &gatewayv1.FileResult{Path: req.GetKey(), Ok: true}, nil
+}
+
+// GetGraphState loads the saved graph UI state for a scene key.
+func (s *Server) GetGraphState(ctx context.Context, req *gatewayv1.GraphStateKey) (*gatewayv1.GraphStateResponse, error) {
+	data, err := s.store.GetGraphState(ctx, req.GetKey())
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &gatewayv1.GraphStateResponse{Data: data}, nil
+}
+
 // Scan: skan wierzchni — zapisuje projekt i jego aplikacje (serwisy).
 func (s *Server) Scan(req *gatewayv1.ScanRequest, out gatewayv1.Gateway_ScanServer) error {
 	ctx := out.Context()

@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package filer.v1;
+
+option go_package = "github.com/filipgorny/ai-architect/proto/filer/v1;filerv1";
+
+// Filer to serwis zarządzający plikami projektu (jedyne miejsce dotykające fs
+// po stronie backendu). Gateway pośredniczy — Electron nie rusza fs.
+service Filer {
+  rpc Read(PathReq) returns (Content);
+  rpc Save(SaveReq) returns (Result);
+  rpc Create(CreateReq) returns (Result);
+  rpc Mkdir(MkdirReq) returns (Result);
+  rpc Rename(RenameReq) returns (Result);
+  rpc Move(MoveReq) returns (Result);
+  rpc Delete(PathReq) returns (Result);
+  rpc Resolve(ResolveReq) returns (Result);
+
+  // Przeglądanie dysku i szukanie projektów (działa też w kontenerze z wolumenem).
+  rpc Home(Empty) returns (Result);
+  rpc ListDir(PathReq) returns (DirListing);
+  rpc FindProjects(PathReq) returns (ProjectList);
+
+  // Conventions wykrywa konwencję nazw plików (dash/camel) i rozszerzenie (język)
+  // na podstawie plików w katalogu (i jeden poziom wyżej).
+  rpc Conventions(PathReq) returns (ConventionInfo);
+}
+
+message ConventionInfo {
+  string convention = 1; // "dash" | "camel"
+  string extension = 2;  // np. "ts"
+}
+
+message Empty {}
+
+message Entry {
+  string name = 1;
+  string path = 2;
+  bool dir = 3;
+}
+
+message DirListing {
+  string path = 1;
+  string parent = 2;
+  repeated Entry entries = 3;
+}
+
+message ProjectFound {
+  string name = 1;
+  string path = 2;
+  string kind = 3; // node | go | git | …
+}
+
+message ProjectList {
+  repeated ProjectFound projects = 1;
+}
+
+message PathReq {
+  string path = 1;
+}
+
+message Content {
+  string content = 1;
+}
+
+message Result {
+  string path = 1;
+  bool ok = 2;
+}
+
+message SaveReq {
+  string path = 1;
+  string content = 2;
+}
+
+message CreateReq {
+  string dir = 1;
+  string file = 2;
+  string name = 3;
+  string content = 4; // gdy puste, filer wstawia szkielet klasy wg rozszerzenia
+}
+
+message MkdirReq {
+  string dir = 1;
+  string name = 2;
+}
+
+message RenameReq {
+  string old_path = 1;
+  string file_base = 2;
+  string class_name = 3;
+  string old_name = 4;
+}
+
+message MoveReq {
+  string old_path = 1;
+  string target_dir = 2;
+}
+
+message ResolveReq {
+  string from = 1;
+  string spec = 2;
+}

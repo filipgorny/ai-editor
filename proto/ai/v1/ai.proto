@@ -12,6 +12,20 @@ service Ai {
   // Generate to proste wywołanie LLM — wszystko inne (np. opis plików w
   // scannerze) idzie przez ten serwis, by LLM był w jednym miejscu.
   rpc Generate(GenerateRequest) returns (GenerateResponse);
+  // Model zwraca nazwę aktualnie używanego modelu.
+  rpc Model(ModelRequest) returns (ModelResponse);
+  // SetProvider podmienia dostawcę LLM w locie (np. ollama → claude headless).
+  rpc SetProvider(SetProviderRequest) returns (ModelResponse);
+}
+
+message ModelRequest {}
+
+message SetProviderRequest {
+  string provider = 1; // "ollama" | "claude" | "openai"
+}
+
+message ModelResponse {
+  string name = 1;
 }
 
 message GenerateRequest {
@@ -19,6 +33,7 @@ message GenerateRequest {
   string prompt = 2;
   double temperature = 3;
   int32 max_tokens = 4;
+  string dir = 5; // katalog roboczy (cwd) dla dostawców CLI (Claude headless)
 }
 
 message GenerateResponse {

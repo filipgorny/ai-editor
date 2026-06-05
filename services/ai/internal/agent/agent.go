@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/filipgorny/ai-architect/llm"
 	aiv1 "github.com/filipgorny/ai-architect/proto/ai/v1"
@@ -16,15 +17,47 @@ import (
 
 type Emit func(*aiv1.AskEvent) error
 
-// Agent łączy LLM ze skillami (narzędziami).
+// Agent łączy LLM ze skillami (narzędziami). Dostawcę można podmienić w locie
+// (SetProvider) — np. Ollama → Claude headless — bez restartu serwisu.
 type Agent struct {
+	mu       sync.RWMutex
 	llm      llm.Provider
+	cfg      llm.Config
 	events   eventsv1.EventsClient
 	maxSteps int
 }
 
-func New(provider llm.Provider, events eventsv1.EventsClient) *Agent {
-	return &Agent{llm: provider, events: events, maxSteps: 6}
+func New(provider llm.Provider, cfg llm.Config, events eventsv1.EventsClient) *Agent {
+	return &Agent{llm: provider, cfg: cfg, events: events, maxSteps: 6}
+}
+
+// prov zwraca bieżącego dostawcę (bezpiecznie przy podmianie).
+func (a *Agent) prov() llm.Provider {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	return a.llm
+}
+
+// SetProvider podmienia dostawcę LLM (np. "ollama" | "claude"), zachowując
+// pozostałą konfigurację (model/host). Zwraca nazwę nowego dostawcy.
+func (a *Agent) SetProvider(provider string) (string, error) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	cfg := a.cfg
+	cfg.Provider = provider
+
+	p, err := llm.New(cfg)
+
+	if err != nil {
+		return "", err
+	}
+
+	a.llm = p
+	a.cfg = cfg
+
+	return p.Name(), nil
 }
 
 const toolsDesc = `Masz narzędzia (skille):
@@ -47,7 +80,7 @@ func (a *Agent) Run(ctx context.Context, req *aiv1.AskRequest, emit Emit) error 
 	}
 
 	// 1) Plan przed wykonaniem.
-	plan, err := a.llm.Generate(ctx, llm.Request{
+	plan, err := a.prov().Generate(ctx, llm.Request{
 		System:      "Jesteś agentem-asystentem kodu. Ułóż zwięzły plan (numerowane kroki) realizacji zadania. Zwróć sam plan.",
 		Prompt:      req.GetPrompt() + "\n" + ctxInfo,
 		Temperature: 0.2,
@@ -66,7 +99,7 @@ func (a *Agent) Run(ctx context.Context, req *aiv1.AskRequest, emit Emit) error 
 	var history strings.Builder
 
 	for step := 0; step < a.maxSteps; step++ {
-		decision, err := a.llm.Generate(ctx, llm.Request{
+		decision, err := a.prov().Generate(ctx, llm.Request{
 			System:      toolsDesc,
 			Prompt:      fmt.Sprintf("Zadanie: %s\n%sDotychczasowe wyniki:\n%s\nNastępna akcja (JSON):", req.GetPrompt(), ctxInfo, history.String()),
 			Temperature: 0.1,
@@ -99,7 +132,7 @@ func (a *Agent) Run(ctx context.Context, req *aiv1.AskRequest, emit Emit) error 
 	}
 
 	// 3) Odpowiedź końcowa.
-	final, err := a.llm.Generate(ctx, llm.Request{
+	final, err := a.prov().Generate(ctx, llm.Request{
 		System:      finalSystem(req.GetEdit()),
 		Prompt:      fmt.Sprintf("Zadanie: %s\n%sZebrane informacje:\n%s\nOdpowiedź:", req.GetPrompt(), ctxInfo, history.String()),
 		Temperature: 0.2,
@@ -113,13 +146,19 @@ func (a *Agent) Run(ctx context.Context, req *aiv1.AskRequest, emit Emit) error 
 	return emit(answerEvent(final))
 }
 
+// ModelName zwraca nazwę używanego modelu LLM.
+func (a *Agent) ModelName() string {
+	return a.prov().Name()
+}
+
 // Generate to proste wywołanie LLM (bez agenta) — jedyna droga do LLM w systemie.
-func (a *Agent) Generate(ctx context.Context, system, prompt string, temperature float64, maxTokens int) (string, error) {
-	return a.llm.Generate(ctx, llm.Request{
+func (a *Agent) Generate(ctx context.Context, system, prompt string, temperature float64, maxTokens int, dir string) (string, error) {
+	return a.prov().Generate(ctx, llm.Request{
 		System:      system,
 		Prompt:      prompt,
 		Temperature: temperature,
 		MaxTokens:   maxTokens,
+		Dir:         dir,
 	})
 }
 

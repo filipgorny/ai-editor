@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             v7.34.1
-// source: proto/gateway/v1/gateway.proto
+// source: gateway/v1/gateway.proto
 
 package gatewayv1
 
@@ -19,14 +19,33 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Gateway_Scan_FullMethodName         = "/gateway.v1.Gateway/Scan"
-	Gateway_GetGraph_FullMethodName     = "/gateway.v1.Gateway/GetGraph"
-	Gateway_ScanApp_FullMethodName      = "/gateway.v1.Gateway/ScanApp"
-	Gateway_GetAppGraph_FullMethodName  = "/gateway.v1.Gateway/GetAppGraph"
-	Gateway_ListProjects_FullMethodName = "/gateway.v1.Gateway/ListProjects"
-	Gateway_AiEdit_FullMethodName       = "/gateway.v1.Gateway/AiEdit"
-	Gateway_PublishEvent_FullMethodName = "/gateway.v1.Gateway/PublishEvent"
-	Gateway_ListEvents_FullMethodName   = "/gateway.v1.Gateway/ListEvents"
+	Gateway_Scan_FullMethodName              = "/gateway.v1.Gateway/Scan"
+	Gateway_GetGraph_FullMethodName          = "/gateway.v1.Gateway/GetGraph"
+	Gateway_ScanApp_FullMethodName           = "/gateway.v1.Gateway/ScanApp"
+	Gateway_GetAppGraph_FullMethodName       = "/gateway.v1.Gateway/GetAppGraph"
+	Gateway_ListProjects_FullMethodName      = "/gateway.v1.Gateway/ListProjects"
+	Gateway_AiEdit_FullMethodName            = "/gateway.v1.Gateway/AiEdit"
+	Gateway_AiModel_FullMethodName           = "/gateway.v1.Gateway/AiModel"
+	Gateway_AiSetProvider_FullMethodName     = "/gateway.v1.Gateway/AiSetProvider"
+	Gateway_AiReview_FullMethodName          = "/gateway.v1.Gateway/AiReview"
+	Gateway_AiComplete_FullMethodName        = "/gateway.v1.Gateway/AiComplete"
+	Gateway_PublishEvent_FullMethodName      = "/gateway.v1.Gateway/PublishEvent"
+	Gateway_ListEvents_FullMethodName        = "/gateway.v1.Gateway/ListEvents"
+	Gateway_ReadFile_FullMethodName          = "/gateway.v1.Gateway/ReadFile"
+	Gateway_SaveFile_FullMethodName          = "/gateway.v1.Gateway/SaveFile"
+	Gateway_CreateFile_FullMethodName        = "/gateway.v1.Gateway/CreateFile"
+	Gateway_CreateFolder_FullMethodName      = "/gateway.v1.Gateway/CreateFolder"
+	Gateway_RenameFile_FullMethodName        = "/gateway.v1.Gateway/RenameFile"
+	Gateway_MoveFile_FullMethodName          = "/gateway.v1.Gateway/MoveFile"
+	Gateway_DeletePath_FullMethodName        = "/gateway.v1.Gateway/DeletePath"
+	Gateway_ResolveImport_FullMethodName     = "/gateway.v1.Gateway/ResolveImport"
+	Gateway_HomeDir_FullMethodName           = "/gateway.v1.Gateway/HomeDir"
+	Gateway_ListDir_FullMethodName           = "/gateway.v1.Gateway/ListDir"
+	Gateway_FindProjects_FullMethodName      = "/gateway.v1.Gateway/FindProjects"
+	Gateway_DetectConventions_FullMethodName = "/gateway.v1.Gateway/DetectConventions"
+	Gateway_AiAgent_FullMethodName           = "/gateway.v1.Gateway/AiAgent"
+	Gateway_SaveGraphState_FullMethodName    = "/gateway.v1.Gateway/SaveGraphState"
+	Gateway_GetGraphState_FullMethodName     = "/gateway.v1.Gateway/GetGraphState"
 )
 
 // GatewayClient is the client API for Gateway service.
@@ -50,9 +69,37 @@ type GatewayClient interface {
 	ListProjects(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Projects, error)
 	// AiEdit zmienia kod wg polecenia (proxy do serwisu ai → LLM).
 	AiEdit(ctx context.Context, in *AiEditRequest, opts ...grpc.CallOption) (*AiEditResponse, error)
+	// AiModel zwraca nazwę aktualnie używanego modelu (proxy do ai).
+	AiModel(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*AiModelResponse, error)
+	// AiSetProvider przełącza dostawcę LLM w serwisie ai (proxy).
+	AiSetProvider(ctx context.Context, in *AiProviderRequest, opts ...grpc.CallOption) (*AiModelResponse, error)
+	// AiReview zwraca uwagi recenzenta do kodu (per linia) — proxy do ai.
+	AiReview(ctx context.Context, in *AiReviewRequest, opts ...grpc.CallOption) (*AiReviewResponse, error)
+	// AiComplete zwraca podpowiedź autouzupełniania (Copilot) w miejscu kursora.
+	AiComplete(ctx context.Context, in *AiCompleteRequest, opts ...grpc.CallOption) (*AiCompleteResponse, error)
 	// PublishEvent / ListEvents — eventy powiązane z plikiem/nodem (proxy do events).
 	PublishEvent(ctx context.Context, in *EventInput, opts ...grpc.CallOption) (*Event, error)
 	ListEvents(ctx context.Context, in *EventQuery, opts ...grpc.CallOption) (*EventList, error)
+	// --- Operacje na plikach (wykonywane PRZEZ gateway; Electron nie rusza fs) ---
+	ReadFile(ctx context.Context, in *FilePath, opts ...grpc.CallOption) (*FileContent, error)
+	SaveFile(ctx context.Context, in *SaveRequest, opts ...grpc.CallOption) (*FileResult, error)
+	CreateFile(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*FileResult, error)
+	CreateFolder(ctx context.Context, in *CreateFolderRequest, opts ...grpc.CallOption) (*FileResult, error)
+	RenameFile(ctx context.Context, in *RenameRequest, opts ...grpc.CallOption) (*FileResult, error)
+	MoveFile(ctx context.Context, in *MoveRequest, opts ...grpc.CallOption) (*FileResult, error)
+	DeletePath(ctx context.Context, in *FilePath, opts ...grpc.CallOption) (*FileResult, error)
+	ResolveImport(ctx context.Context, in *ResolveRequest, opts ...grpc.CallOption) (*FileResult, error)
+	// Przeglądanie dysku i szukanie projektów (przez filer; działa też w Dockerze).
+	HomeDir(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FileResult, error)
+	ListDir(ctx context.Context, in *FilePath, opts ...grpc.CallOption) (*DirListing, error)
+	FindProjects(ctx context.Context, in *FilePath, opts ...grpc.CallOption) (*FoundProjects, error)
+	// Wykrycie konwencji nazw plików i rozszerzenia katalogu (przez filer).
+	DetectConventions(ctx context.Context, in *FilePath, opts ...grpc.CallOption) (*Conventions, error)
+	// AiAgent: ai planuje operacje na plikach/folderach (JSON), gateway je WYKONUJE.
+	AiAgent(ctx context.Context, in *AiAgentRequest, opts ...grpc.CallOption) (*AiAgentResponse, error)
+	// Graph state (viewport/layout) persisted in Postgres by the designer.
+	SaveGraphState(ctx context.Context, in *GraphStateRequest, opts ...grpc.CallOption) (*FileResult, error)
+	GetGraphState(ctx context.Context, in *GraphStateKey, opts ...grpc.CallOption) (*GraphStateResponse, error)
 }
 
 type gatewayClient struct {
@@ -141,6 +188,46 @@ func (c *gatewayClient) AiEdit(ctx context.Context, in *AiEditRequest, opts ...g
 	return out, nil
 }
 
+func (c *gatewayClient) AiModel(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*AiModelResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AiModelResponse)
+	err := c.cc.Invoke(ctx, Gateway_AiModel_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) AiSetProvider(ctx context.Context, in *AiProviderRequest, opts ...grpc.CallOption) (*AiModelResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AiModelResponse)
+	err := c.cc.Invoke(ctx, Gateway_AiSetProvider_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) AiReview(ctx context.Context, in *AiReviewRequest, opts ...grpc.CallOption) (*AiReviewResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AiReviewResponse)
+	err := c.cc.Invoke(ctx, Gateway_AiReview_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) AiComplete(ctx context.Context, in *AiCompleteRequest, opts ...grpc.CallOption) (*AiCompleteResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AiCompleteResponse)
+	err := c.cc.Invoke(ctx, Gateway_AiComplete_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *gatewayClient) PublishEvent(ctx context.Context, in *EventInput, opts ...grpc.CallOption) (*Event, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Event)
@@ -155,6 +242,156 @@ func (c *gatewayClient) ListEvents(ctx context.Context, in *EventQuery, opts ...
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(EventList)
 	err := c.cc.Invoke(ctx, Gateway_ListEvents_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) ReadFile(ctx context.Context, in *FilePath, opts ...grpc.CallOption) (*FileContent, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileContent)
+	err := c.cc.Invoke(ctx, Gateway_ReadFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) SaveFile(ctx context.Context, in *SaveRequest, opts ...grpc.CallOption) (*FileResult, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileResult)
+	err := c.cc.Invoke(ctx, Gateway_SaveFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) CreateFile(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*FileResult, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileResult)
+	err := c.cc.Invoke(ctx, Gateway_CreateFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) CreateFolder(ctx context.Context, in *CreateFolderRequest, opts ...grpc.CallOption) (*FileResult, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileResult)
+	err := c.cc.Invoke(ctx, Gateway_CreateFolder_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) RenameFile(ctx context.Context, in *RenameRequest, opts ...grpc.CallOption) (*FileResult, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileResult)
+	err := c.cc.Invoke(ctx, Gateway_RenameFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) MoveFile(ctx context.Context, in *MoveRequest, opts ...grpc.CallOption) (*FileResult, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileResult)
+	err := c.cc.Invoke(ctx, Gateway_MoveFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) DeletePath(ctx context.Context, in *FilePath, opts ...grpc.CallOption) (*FileResult, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileResult)
+	err := c.cc.Invoke(ctx, Gateway_DeletePath_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) ResolveImport(ctx context.Context, in *ResolveRequest, opts ...grpc.CallOption) (*FileResult, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileResult)
+	err := c.cc.Invoke(ctx, Gateway_ResolveImport_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) HomeDir(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FileResult, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileResult)
+	err := c.cc.Invoke(ctx, Gateway_HomeDir_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) ListDir(ctx context.Context, in *FilePath, opts ...grpc.CallOption) (*DirListing, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DirListing)
+	err := c.cc.Invoke(ctx, Gateway_ListDir_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) FindProjects(ctx context.Context, in *FilePath, opts ...grpc.CallOption) (*FoundProjects, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FoundProjects)
+	err := c.cc.Invoke(ctx, Gateway_FindProjects_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) DetectConventions(ctx context.Context, in *FilePath, opts ...grpc.CallOption) (*Conventions, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Conventions)
+	err := c.cc.Invoke(ctx, Gateway_DetectConventions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) AiAgent(ctx context.Context, in *AiAgentRequest, opts ...grpc.CallOption) (*AiAgentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AiAgentResponse)
+	err := c.cc.Invoke(ctx, Gateway_AiAgent_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) SaveGraphState(ctx context.Context, in *GraphStateRequest, opts ...grpc.CallOption) (*FileResult, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileResult)
+	err := c.cc.Invoke(ctx, Gateway_SaveGraphState_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) GetGraphState(ctx context.Context, in *GraphStateKey, opts ...grpc.CallOption) (*GraphStateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GraphStateResponse)
+	err := c.cc.Invoke(ctx, Gateway_GetGraphState_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -182,9 +419,37 @@ type GatewayServer interface {
 	ListProjects(context.Context, *Empty) (*Projects, error)
 	// AiEdit zmienia kod wg polecenia (proxy do serwisu ai → LLM).
 	AiEdit(context.Context, *AiEditRequest) (*AiEditResponse, error)
+	// AiModel zwraca nazwę aktualnie używanego modelu (proxy do ai).
+	AiModel(context.Context, *Empty) (*AiModelResponse, error)
+	// AiSetProvider przełącza dostawcę LLM w serwisie ai (proxy).
+	AiSetProvider(context.Context, *AiProviderRequest) (*AiModelResponse, error)
+	// AiReview zwraca uwagi recenzenta do kodu (per linia) — proxy do ai.
+	AiReview(context.Context, *AiReviewRequest) (*AiReviewResponse, error)
+	// AiComplete zwraca podpowiedź autouzupełniania (Copilot) w miejscu kursora.
+	AiComplete(context.Context, *AiCompleteRequest) (*AiCompleteResponse, error)
 	// PublishEvent / ListEvents — eventy powiązane z plikiem/nodem (proxy do events).
 	PublishEvent(context.Context, *EventInput) (*Event, error)
 	ListEvents(context.Context, *EventQuery) (*EventList, error)
+	// --- Operacje na plikach (wykonywane PRZEZ gateway; Electron nie rusza fs) ---
+	ReadFile(context.Context, *FilePath) (*FileContent, error)
+	SaveFile(context.Context, *SaveRequest) (*FileResult, error)
+	CreateFile(context.Context, *CreateRequest) (*FileResult, error)
+	CreateFolder(context.Context, *CreateFolderRequest) (*FileResult, error)
+	RenameFile(context.Context, *RenameRequest) (*FileResult, error)
+	MoveFile(context.Context, *MoveRequest) (*FileResult, error)
+	DeletePath(context.Context, *FilePath) (*FileResult, error)
+	ResolveImport(context.Context, *ResolveRequest) (*FileResult, error)
+	// Przeglądanie dysku i szukanie projektów (przez filer; działa też w Dockerze).
+	HomeDir(context.Context, *Empty) (*FileResult, error)
+	ListDir(context.Context, *FilePath) (*DirListing, error)
+	FindProjects(context.Context, *FilePath) (*FoundProjects, error)
+	// Wykrycie konwencji nazw plików i rozszerzenia katalogu (przez filer).
+	DetectConventions(context.Context, *FilePath) (*Conventions, error)
+	// AiAgent: ai planuje operacje na plikach/folderach (JSON), gateway je WYKONUJE.
+	AiAgent(context.Context, *AiAgentRequest) (*AiAgentResponse, error)
+	// Graph state (viewport/layout) persisted in Postgres by the designer.
+	SaveGraphState(context.Context, *GraphStateRequest) (*FileResult, error)
+	GetGraphState(context.Context, *GraphStateKey) (*GraphStateResponse, error)
 	mustEmbedUnimplementedGatewayServer()
 }
 
@@ -213,11 +478,68 @@ func (UnimplementedGatewayServer) ListProjects(context.Context, *Empty) (*Projec
 func (UnimplementedGatewayServer) AiEdit(context.Context, *AiEditRequest) (*AiEditResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AiEdit not implemented")
 }
+func (UnimplementedGatewayServer) AiModel(context.Context, *Empty) (*AiModelResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AiModel not implemented")
+}
+func (UnimplementedGatewayServer) AiSetProvider(context.Context, *AiProviderRequest) (*AiModelResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AiSetProvider not implemented")
+}
+func (UnimplementedGatewayServer) AiReview(context.Context, *AiReviewRequest) (*AiReviewResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AiReview not implemented")
+}
+func (UnimplementedGatewayServer) AiComplete(context.Context, *AiCompleteRequest) (*AiCompleteResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AiComplete not implemented")
+}
 func (UnimplementedGatewayServer) PublishEvent(context.Context, *EventInput) (*Event, error) {
 	return nil, status.Error(codes.Unimplemented, "method PublishEvent not implemented")
 }
 func (UnimplementedGatewayServer) ListEvents(context.Context, *EventQuery) (*EventList, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListEvents not implemented")
+}
+func (UnimplementedGatewayServer) ReadFile(context.Context, *FilePath) (*FileContent, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReadFile not implemented")
+}
+func (UnimplementedGatewayServer) SaveFile(context.Context, *SaveRequest) (*FileResult, error) {
+	return nil, status.Error(codes.Unimplemented, "method SaveFile not implemented")
+}
+func (UnimplementedGatewayServer) CreateFile(context.Context, *CreateRequest) (*FileResult, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateFile not implemented")
+}
+func (UnimplementedGatewayServer) CreateFolder(context.Context, *CreateFolderRequest) (*FileResult, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateFolder not implemented")
+}
+func (UnimplementedGatewayServer) RenameFile(context.Context, *RenameRequest) (*FileResult, error) {
+	return nil, status.Error(codes.Unimplemented, "method RenameFile not implemented")
+}
+func (UnimplementedGatewayServer) MoveFile(context.Context, *MoveRequest) (*FileResult, error) {
+	return nil, status.Error(codes.Unimplemented, "method MoveFile not implemented")
+}
+func (UnimplementedGatewayServer) DeletePath(context.Context, *FilePath) (*FileResult, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeletePath not implemented")
+}
+func (UnimplementedGatewayServer) ResolveImport(context.Context, *ResolveRequest) (*FileResult, error) {
+	return nil, status.Error(codes.Unimplemented, "method ResolveImport not implemented")
+}
+func (UnimplementedGatewayServer) HomeDir(context.Context, *Empty) (*FileResult, error) {
+	return nil, status.Error(codes.Unimplemented, "method HomeDir not implemented")
+}
+func (UnimplementedGatewayServer) ListDir(context.Context, *FilePath) (*DirListing, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListDir not implemented")
+}
+func (UnimplementedGatewayServer) FindProjects(context.Context, *FilePath) (*FoundProjects, error) {
+	return nil, status.Error(codes.Unimplemented, "method FindProjects not implemented")
+}
+func (UnimplementedGatewayServer) DetectConventions(context.Context, *FilePath) (*Conventions, error) {
+	return nil, status.Error(codes.Unimplemented, "method DetectConventions not implemented")
+}
+func (UnimplementedGatewayServer) AiAgent(context.Context, *AiAgentRequest) (*AiAgentResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AiAgent not implemented")
+}
+func (UnimplementedGatewayServer) SaveGraphState(context.Context, *GraphStateRequest) (*FileResult, error) {
+	return nil, status.Error(codes.Unimplemented, "method SaveGraphState not implemented")
+}
+func (UnimplementedGatewayServer) GetGraphState(context.Context, *GraphStateKey) (*GraphStateResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetGraphState not implemented")
 }
 func (UnimplementedGatewayServer) mustEmbedUnimplementedGatewayServer() {}
 func (UnimplementedGatewayServer) testEmbeddedByValue()                 {}
@@ -334,6 +656,78 @@ func _Gateway_AiEdit_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Gateway_AiModel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).AiModel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_AiModel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).AiModel(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_AiSetProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AiProviderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).AiSetProvider(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_AiSetProvider_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).AiSetProvider(ctx, req.(*AiProviderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_AiReview_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AiReviewRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).AiReview(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_AiReview_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).AiReview(ctx, req.(*AiReviewRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_AiComplete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AiCompleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).AiComplete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_AiComplete_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).AiComplete(ctx, req.(*AiCompleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Gateway_PublishEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(EventInput)
 	if err := dec(in); err != nil {
@@ -370,6 +764,276 @@ func _Gateway_ListEvents_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Gateway_ReadFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FilePath)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).ReadFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_ReadFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).ReadFile(ctx, req.(*FilePath))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_SaveFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SaveRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).SaveFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_SaveFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).SaveFile(ctx, req.(*SaveRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_CreateFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).CreateFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_CreateFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).CreateFile(ctx, req.(*CreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_CreateFolder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateFolderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).CreateFolder(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_CreateFolder_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).CreateFolder(ctx, req.(*CreateFolderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_RenameFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RenameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).RenameFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_RenameFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).RenameFile(ctx, req.(*RenameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_MoveFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MoveRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).MoveFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_MoveFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).MoveFile(ctx, req.(*MoveRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_DeletePath_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FilePath)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).DeletePath(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_DeletePath_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).DeletePath(ctx, req.(*FilePath))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_ResolveImport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResolveRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).ResolveImport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_ResolveImport_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).ResolveImport(ctx, req.(*ResolveRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_HomeDir_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).HomeDir(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_HomeDir_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).HomeDir(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_ListDir_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FilePath)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).ListDir(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_ListDir_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).ListDir(ctx, req.(*FilePath))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_FindProjects_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FilePath)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).FindProjects(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_FindProjects_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).FindProjects(ctx, req.(*FilePath))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_DetectConventions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FilePath)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).DetectConventions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_DetectConventions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).DetectConventions(ctx, req.(*FilePath))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_AiAgent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AiAgentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).AiAgent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_AiAgent_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).AiAgent(ctx, req.(*AiAgentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_SaveGraphState_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GraphStateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).SaveGraphState(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_SaveGraphState_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).SaveGraphState(ctx, req.(*GraphStateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_GetGraphState_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GraphStateKey)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).GetGraphState(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_GetGraphState_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).GetGraphState(ctx, req.(*GraphStateKey))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Gateway_ServiceDesc is the grpc.ServiceDesc for Gateway service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -394,12 +1058,88 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Gateway_AiEdit_Handler,
 		},
 		{
+			MethodName: "AiModel",
+			Handler:    _Gateway_AiModel_Handler,
+		},
+		{
+			MethodName: "AiSetProvider",
+			Handler:    _Gateway_AiSetProvider_Handler,
+		},
+		{
+			MethodName: "AiReview",
+			Handler:    _Gateway_AiReview_Handler,
+		},
+		{
+			MethodName: "AiComplete",
+			Handler:    _Gateway_AiComplete_Handler,
+		},
+		{
 			MethodName: "PublishEvent",
 			Handler:    _Gateway_PublishEvent_Handler,
 		},
 		{
 			MethodName: "ListEvents",
 			Handler:    _Gateway_ListEvents_Handler,
+		},
+		{
+			MethodName: "ReadFile",
+			Handler:    _Gateway_ReadFile_Handler,
+		},
+		{
+			MethodName: "SaveFile",
+			Handler:    _Gateway_SaveFile_Handler,
+		},
+		{
+			MethodName: "CreateFile",
+			Handler:    _Gateway_CreateFile_Handler,
+		},
+		{
+			MethodName: "CreateFolder",
+			Handler:    _Gateway_CreateFolder_Handler,
+		},
+		{
+			MethodName: "RenameFile",
+			Handler:    _Gateway_RenameFile_Handler,
+		},
+		{
+			MethodName: "MoveFile",
+			Handler:    _Gateway_MoveFile_Handler,
+		},
+		{
+			MethodName: "DeletePath",
+			Handler:    _Gateway_DeletePath_Handler,
+		},
+		{
+			MethodName: "ResolveImport",
+			Handler:    _Gateway_ResolveImport_Handler,
+		},
+		{
+			MethodName: "HomeDir",
+			Handler:    _Gateway_HomeDir_Handler,
+		},
+		{
+			MethodName: "ListDir",
+			Handler:    _Gateway_ListDir_Handler,
+		},
+		{
+			MethodName: "FindProjects",
+			Handler:    _Gateway_FindProjects_Handler,
+		},
+		{
+			MethodName: "DetectConventions",
+			Handler:    _Gateway_DetectConventions_Handler,
+		},
+		{
+			MethodName: "AiAgent",
+			Handler:    _Gateway_AiAgent_Handler,
+		},
+		{
+			MethodName: "SaveGraphState",
+			Handler:    _Gateway_SaveGraphState_Handler,
+		},
+		{
+			MethodName: "GetGraphState",
+			Handler:    _Gateway_GetGraphState_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
@@ -414,5 +1154,5 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "proto/gateway/v1/gateway.proto",
+	Metadata: "gateway/v1/gateway.proto",
 }

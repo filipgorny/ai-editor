@@ -11,8 +11,31 @@ declare global {
       startScan(path: string): void
       startScanApp(appId: number): void
       readFile(absPath: string): Promise<string>
+      resolveImport(from: string, spec: string): Promise<string>
+      createFile(dir: string, file: string, name: string): Promise<string>
+      createFolder(dir: string, name: string): Promise<string>
+      moveFile(oldPath: string, targetDir: string): Promise<string>
+      deleteFile(path: string): Promise<boolean>
+      aiAgent(
+        prompt: string,
+        dir: string
+      ): Promise<{ ops: { op: string; path: string }[]; openPath: string; message: string }>
+      fsHome(): Promise<string>
+      fsList(path: string): Promise<unknown>
+      fsFind(path: string): Promise<unknown>
+      fsConventions(path: string): Promise<{ convention: string; extension: string }>
+      saveViewport(key: string, vp: { x: number; y: number; zoom: number }): Promise<boolean>
+      getViewport(key: string): Promise<{ x: number; y: number; zoom: number } | null>
+      getSettings(): Promise<{ provider: string }>
+      setSettings(s: { provider: string }): Promise<boolean>
+      aiSetProvider(provider: string): Promise<string>
+      renameFile(oldPath: string, fileBase: string, className: string, oldName: string): Promise<string>
       saveFile(path: string, content: string): Promise<boolean>
       aiEdit(code: string, prompt: string, file: string): Promise<string>
+      aiModel(): Promise<string>
+      aiComplete(prefix: string, suffix: string, file: string): Promise<string>
+      aiReview(code: string, file: string): Promise<{ line: number; text: string }[]>
+      lintFile(code: string, file: string): Promise<{ line: number; text: string; severity: number }[]>
       publishEvent(ev: {
         type: string
         title?: string

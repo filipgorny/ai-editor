@@ -14,6 +14,7 @@ type Request struct {
 	Prompt      string
 	Temperature float64
 	MaxTokens   int
+	Dir         string // katalog roboczy (cwd) — używany m.in. przez Claude headless
 }
 
 // Provider to dowolny backend generujący tekst (Ollama, OpenAI, ...).
@@ -45,6 +46,9 @@ func New(cfg Config) (Provider, error) {
 
 	case "openai":
 		return NewOpenAI(cfg.BaseURL, cfg.APIKey, cfg.Model), nil
+
+	case "claude", "claude-headless":
+		return NewClaude(cfg.Model), nil
 
 	default:
 		return nil, fmt.Errorf("llm: nieznany dostawca %q", cfg.Provider)

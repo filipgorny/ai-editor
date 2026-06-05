@@ -21,9 +21,143 @@ service Gateway {
   rpc ListProjects(Empty) returns (Projects);
   // AiEdit zmienia kod wg polecenia (proxy do serwisu ai → LLM).
   rpc AiEdit(AiEditRequest) returns (AiEditResponse);
+  // AiModel zwraca nazwę aktualnie używanego modelu (proxy do ai).
+  rpc AiModel(Empty) returns (AiModelResponse);
+  // AiSetProvider przełącza dostawcę LLM w serwisie ai (proxy).
+  rpc AiSetProvider(AiProviderRequest) returns (AiModelResponse);
+  // AiReview zwraca uwagi recenzenta do kodu (per linia) — proxy do ai.
+  rpc AiReview(AiReviewRequest) returns (AiReviewResponse);
+  // AiComplete zwraca podpowiedź autouzupełniania (Copilot) w miejscu kursora.
+  rpc AiComplete(AiCompleteRequest) returns (AiCompleteResponse);
   // PublishEvent / ListEvents — eventy powiązane z plikiem/nodem (proxy do events).
   rpc PublishEvent(EventInput) returns (Event);
   rpc ListEvents(EventQuery) returns (EventList);
+
+  // --- Operacje na plikach (wykonywane PRZEZ gateway; Electron nie rusza fs) ---
+  rpc ReadFile(FilePath) returns (FileContent);
+  rpc SaveFile(SaveRequest) returns (FileResult);
+  rpc CreateFile(CreateRequest) returns (FileResult);
+  rpc CreateFolder(CreateFolderRequest) returns (FileResult);
+  rpc RenameFile(RenameRequest) returns (FileResult);
+  rpc MoveFile(MoveRequest) returns (FileResult);
+  rpc DeletePath(FilePath) returns (FileResult);
+  rpc ResolveImport(ResolveRequest) returns (FileResult);
+
+  // Przeglądanie dysku i szukanie projektów (przez filer; działa też w Dockerze).
+  rpc HomeDir(Empty) returns (FileResult);
+  rpc ListDir(FilePath) returns (DirListing);
+  rpc FindProjects(FilePath) returns (FoundProjects);
+  // Wykrycie konwencji nazw plików i rozszerzenia katalogu (przez filer).
+  rpc DetectConventions(FilePath) returns (Conventions);
+
+  // AiAgent: ai planuje operacje na plikach/folderach (JSON), gateway je WYKONUJE.
+  rpc AiAgent(AiAgentRequest) returns (AiAgentResponse);
+
+  // Graph state (viewport/layout) persisted in Postgres by the designer.
+  rpc SaveGraphState(GraphStateRequest) returns (FileResult);
+  rpc GetGraphState(GraphStateKey) returns (GraphStateResponse);
+}
+
+message GraphStateRequest {
+  string key = 1;  // scene key (e.g. project/app root dir)
+  string data = 2; // JSON: viewport + node positions
+}
+
+message GraphStateKey {
+  string key = 1;
+}
+
+message GraphStateResponse {
+  string data = 1;
+}
+
+message DirEntry {
+  string name = 1;
+  string path = 2;
+  bool dir = 3;
+}
+
+message DirListing {
+  string path = 1;
+  string parent = 2;
+  repeated DirEntry entries = 3;
+}
+
+message FoundProject {
+  string name = 1;
+  string path = 2;
+  string kind = 3;
+}
+
+message FoundProjects {
+  repeated FoundProject projects = 1;
+}
+
+message Conventions {
+  string convention = 1; // "dash" | "camel"
+  string extension = 2;  // np. "ts"
+}
+
+message FilePath {
+  string path = 1;
+}
+
+message FileContent {
+  string content = 1;
+}
+
+message FileResult {
+  string path = 1;
+  bool ok = 2;
+}
+
+message SaveRequest {
+  string path = 1;
+  string content = 2;
+}
+
+message CreateRequest {
+  string dir = 1;
+  string file = 2;
+  string name = 3;
+}
+
+message CreateFolderRequest {
+  string dir = 1;
+  string name = 2;
+}
+
+message RenameRequest {
+  string old_path = 1;
+  string file_base = 2;
+  string class_name = 3;
+  string old_name = 4;
+}
+
+message MoveRequest {
+  string old_path = 1;
+  string target_dir = 2;
+}
+
+message ResolveRequest {
+  string from = 1;
+  string spec = 2;
+}
+
+message AiAgentRequest {
+  string prompt = 1;
+  string dir = 2; // domyślny katalog (ostatnio otwarty folder)
+}
+
+message FileOp {
+  string op = 1;   // create_file | write | delete | rename | move | mkdir
+  string path = 2; // wynikowa ścieżka
+}
+
+message AiAgentResponse {
+  repeated FileOp ops = 1; // wykonane operacje
+  string open_path = 2;    // plik do otwarcia w edytorze (np. nowo utworzony)
+  string message = 3;      // krótkie podsumowanie po polsku
 }
 
 message AiEditRequest {
@@ -34,6 +168,38 @@ message AiEditRequest {
 
 message AiEditResponse {
   string code = 1;
+}
+
+message AiModelResponse {
+  string name = 1;
+}
+
+message AiProviderRequest {
+  string provider = 1;
+}
+
+message AiReviewRequest {
+  string code = 1;
+  string file = 2;
+}
+
+message Remark {
+  int32 line = 1;
+  string text = 2;
+}
+
+message AiReviewResponse {
+  repeated Remark remarks = 1;
+}
+
+message AiCompleteRequest {
+  string prefix = 1; // kod przed kursorem
+  string suffix = 2; // kod po kursorze
+  string file = 3;
+}
+
+message AiCompleteResponse {
+  string text = 1; // tekst do wstawienia w miejscu kursora
 }
 
 message EventInput {

@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             v7.34.1
-// source: proto/ai/v1/ai.proto
+// source: ai/v1/ai.proto
 
 package aiv1
 
@@ -19,8 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Ai_Ask_FullMethodName      = "/ai.v1.Ai/Ask"
-	Ai_Generate_FullMethodName = "/ai.v1.Ai/Generate"
+	Ai_Ask_FullMethodName         = "/ai.v1.Ai/Ask"
+	Ai_Generate_FullMethodName    = "/ai.v1.Ai/Generate"
+	Ai_Model_FullMethodName       = "/ai.v1.Ai/Model"
+	Ai_SetProvider_FullMethodName = "/ai.v1.Ai/SetProvider"
 )
 
 // AiClient is the client API for Ai service.
@@ -35,6 +37,10 @@ type AiClient interface {
 	// Generate to proste wywołanie LLM — wszystko inne (np. opis plików w
 	// scannerze) idzie przez ten serwis, by LLM był w jednym miejscu.
 	Generate(ctx context.Context, in *GenerateRequest, opts ...grpc.CallOption) (*GenerateResponse, error)
+	// Model zwraca nazwę aktualnie używanego modelu.
+	Model(ctx context.Context, in *ModelRequest, opts ...grpc.CallOption) (*ModelResponse, error)
+	// SetProvider podmienia dostawcę LLM w locie (np. ollama → claude headless).
+	SetProvider(ctx context.Context, in *SetProviderRequest, opts ...grpc.CallOption) (*ModelResponse, error)
 }
 
 type aiClient struct {
@@ -74,6 +80,26 @@ func (c *aiClient) Generate(ctx context.Context, in *GenerateRequest, opts ...gr
 	return out, nil
 }
 
+func (c *aiClient) Model(ctx context.Context, in *ModelRequest, opts ...grpc.CallOption) (*ModelResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ModelResponse)
+	err := c.cc.Invoke(ctx, Ai_Model_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aiClient) SetProvider(ctx context.Context, in *SetProviderRequest, opts ...grpc.CallOption) (*ModelResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ModelResponse)
+	err := c.cc.Invoke(ctx, Ai_SetProvider_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AiServer is the server API for Ai service.
 // All implementations must embed UnimplementedAiServer
 // for forward compatibility.
@@ -86,6 +112,10 @@ type AiServer interface {
 	// Generate to proste wywołanie LLM — wszystko inne (np. opis plików w
 	// scannerze) idzie przez ten serwis, by LLM był w jednym miejscu.
 	Generate(context.Context, *GenerateRequest) (*GenerateResponse, error)
+	// Model zwraca nazwę aktualnie używanego modelu.
+	Model(context.Context, *ModelRequest) (*ModelResponse, error)
+	// SetProvider podmienia dostawcę LLM w locie (np. ollama → claude headless).
+	SetProvider(context.Context, *SetProviderRequest) (*ModelResponse, error)
 	mustEmbedUnimplementedAiServer()
 }
 
@@ -101,6 +131,12 @@ func (UnimplementedAiServer) Ask(*AskRequest, grpc.ServerStreamingServer[AskEven
 }
 func (UnimplementedAiServer) Generate(context.Context, *GenerateRequest) (*GenerateResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Generate not implemented")
+}
+func (UnimplementedAiServer) Model(context.Context, *ModelRequest) (*ModelResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Model not implemented")
+}
+func (UnimplementedAiServer) SetProvider(context.Context, *SetProviderRequest) (*ModelResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetProvider not implemented")
 }
 func (UnimplementedAiServer) mustEmbedUnimplementedAiServer() {}
 func (UnimplementedAiServer) testEmbeddedByValue()            {}
@@ -152,6 +188,42 @@ func _Ai_Generate_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Ai_Model_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ModelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AiServer).Model(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Ai_Model_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AiServer).Model(ctx, req.(*ModelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ai_SetProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetProviderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AiServer).SetProvider(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Ai_SetProvider_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AiServer).SetProvider(ctx, req.(*SetProviderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Ai_ServiceDesc is the grpc.ServiceDesc for Ai service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -163,6 +235,14 @@ var Ai_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "Generate",
 			Handler:    _Ai_Generate_Handler,
 		},
+		{
+			MethodName: "Model",
+			Handler:    _Ai_Model_Handler,
+		},
+		{
+			MethodName: "SetProvider",
+			Handler:    _Ai_SetProvider_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
@@ -171,5 +251,5 @@ var Ai_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "proto/ai/v1/ai.proto",
+	Metadata: "ai/v1/ai.proto",
 }

@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v7.34.1
-// source: proto/ai/v1/ai.proto
+// source: ai/v1/ai.proto
 
 package aiv1
 
@@ -21,19 +21,144 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type ModelRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ModelRequest) Reset() {
+	*x = ModelRequest{}
+	mi := &file_ai_v1_ai_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ModelRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ModelRequest) ProtoMessage() {}
+
+func (x *ModelRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_v1_ai_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ModelRequest.ProtoReflect.Descriptor instead.
+func (*ModelRequest) Descriptor() ([]byte, []int) {
+	return file_ai_v1_ai_proto_rawDescGZIP(), []int{0}
+}
+
+type SetProviderRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Provider      string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"` // "ollama" | "claude" | "openai"
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetProviderRequest) Reset() {
+	*x = SetProviderRequest{}
+	mi := &file_ai_v1_ai_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetProviderRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetProviderRequest) ProtoMessage() {}
+
+func (x *SetProviderRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_v1_ai_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetProviderRequest.ProtoReflect.Descriptor instead.
+func (*SetProviderRequest) Descriptor() ([]byte, []int) {
+	return file_ai_v1_ai_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *SetProviderRequest) GetProvider() string {
+	if x != nil {
+		return x.Provider
+	}
+	return ""
+}
+
+type ModelResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ModelResponse) Reset() {
+	*x = ModelResponse{}
+	mi := &file_ai_v1_ai_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ModelResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ModelResponse) ProtoMessage() {}
+
+func (x *ModelResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_v1_ai_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ModelResponse.ProtoReflect.Descriptor instead.
+func (*ModelResponse) Descriptor() ([]byte, []int) {
+	return file_ai_v1_ai_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ModelResponse) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
 type GenerateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	System        string                 `protobuf:"bytes,1,opt,name=system,proto3" json:"system,omitempty"`
 	Prompt        string                 `protobuf:"bytes,2,opt,name=prompt,proto3" json:"prompt,omitempty"`
 	Temperature   float64                `protobuf:"fixed64,3,opt,name=temperature,proto3" json:"temperature,omitempty"`
 	MaxTokens     int32                  `protobuf:"varint,4,opt,name=max_tokens,json=maxTokens,proto3" json:"max_tokens,omitempty"`
+	Dir           string                 `protobuf:"bytes,5,opt,name=dir,proto3" json:"dir,omitempty"` // katalog roboczy (cwd) dla dostawców CLI (Claude headless)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GenerateRequest) Reset() {
 	*x = GenerateRequest{}
-	mi := &file_proto_ai_v1_ai_proto_msgTypes[0]
+	mi := &file_ai_v1_ai_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -45,7 +170,7 @@ func (x *GenerateRequest) String() string {
 func (*GenerateRequest) ProtoMessage() {}
 
 func (x *GenerateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_ai_v1_ai_proto_msgTypes[0]
+	mi := &file_ai_v1_ai_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -58,7 +183,7 @@ func (x *GenerateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateRequest.ProtoReflect.Descriptor instead.
 func (*GenerateRequest) Descriptor() ([]byte, []int) {
-	return file_proto_ai_v1_ai_proto_rawDescGZIP(), []int{0}
+	return file_ai_v1_ai_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *GenerateRequest) GetSystem() string {
@@ -89,6 +214,13 @@ func (x *GenerateRequest) GetMaxTokens() int32 {
 	return 0
 }
 
+func (x *GenerateRequest) GetDir() string {
+	if x != nil {
+		return x.Dir
+	}
+	return ""
+}
+
 type GenerateResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Text          string                 `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
@@ -98,7 +230,7 @@ type GenerateResponse struct {
 
 func (x *GenerateResponse) Reset() {
 	*x = GenerateResponse{}
-	mi := &file_proto_ai_v1_ai_proto_msgTypes[1]
+	mi := &file_ai_v1_ai_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -110,7 +242,7 @@ func (x *GenerateResponse) String() string {
 func (*GenerateResponse) ProtoMessage() {}
 
 func (x *GenerateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_ai_v1_ai_proto_msgTypes[1]
+	mi := &file_ai_v1_ai_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -123,7 +255,7 @@ func (x *GenerateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateResponse.ProtoReflect.Descriptor instead.
 func (*GenerateResponse) Descriptor() ([]byte, []int) {
-	return file_proto_ai_v1_ai_proto_rawDescGZIP(), []int{1}
+	return file_ai_v1_ai_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GenerateResponse) GetText() string {
@@ -146,7 +278,7 @@ type AskRequest struct {
 
 func (x *AskRequest) Reset() {
 	*x = AskRequest{}
-	mi := &file_proto_ai_v1_ai_proto_msgTypes[2]
+	mi := &file_ai_v1_ai_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -158,7 +290,7 @@ func (x *AskRequest) String() string {
 func (*AskRequest) ProtoMessage() {}
 
 func (x *AskRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_ai_v1_ai_proto_msgTypes[2]
+	mi := &file_ai_v1_ai_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -171,7 +303,7 @@ func (x *AskRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AskRequest.ProtoReflect.Descriptor instead.
 func (*AskRequest) Descriptor() ([]byte, []int) {
-	return file_proto_ai_v1_ai_proto_rawDescGZIP(), []int{2}
+	return file_ai_v1_ai_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *AskRequest) GetPrompt() string {
@@ -220,7 +352,7 @@ type ToolCall struct {
 
 func (x *ToolCall) Reset() {
 	*x = ToolCall{}
-	mi := &file_proto_ai_v1_ai_proto_msgTypes[3]
+	mi := &file_ai_v1_ai_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -232,7 +364,7 @@ func (x *ToolCall) String() string {
 func (*ToolCall) ProtoMessage() {}
 
 func (x *ToolCall) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_ai_v1_ai_proto_msgTypes[3]
+	mi := &file_ai_v1_ai_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -245,7 +377,7 @@ func (x *ToolCall) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ToolCall.ProtoReflect.Descriptor instead.
 func (*ToolCall) Descriptor() ([]byte, []int) {
-	return file_proto_ai_v1_ai_proto_rawDescGZIP(), []int{3}
+	return file_ai_v1_ai_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ToolCall) GetName() string {
@@ -283,7 +415,7 @@ type AskEvent struct {
 
 func (x *AskEvent) Reset() {
 	*x = AskEvent{}
-	mi := &file_proto_ai_v1_ai_proto_msgTypes[4]
+	mi := &file_ai_v1_ai_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -295,7 +427,7 @@ func (x *AskEvent) String() string {
 func (*AskEvent) ProtoMessage() {}
 
 func (x *AskEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_ai_v1_ai_proto_msgTypes[4]
+	mi := &file_ai_v1_ai_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -308,7 +440,7 @@ func (x *AskEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AskEvent.ProtoReflect.Descriptor instead.
 func (*AskEvent) Descriptor() ([]byte, []int) {
-	return file_proto_ai_v1_ai_proto_rawDescGZIP(), []int{4}
+	return file_ai_v1_ai_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *AskEvent) GetEvent() isAskEvent_Event {
@@ -367,17 +499,23 @@ func (*AskEvent_Tool) isAskEvent_Event() {}
 
 func (*AskEvent_Answer) isAskEvent_Event() {}
 
-var File_proto_ai_v1_ai_proto protoreflect.FileDescriptor
+var File_ai_v1_ai_proto protoreflect.FileDescriptor
 
-const file_proto_ai_v1_ai_proto_rawDesc = "" +
+const file_ai_v1_ai_proto_rawDesc = "" +
 	"\n" +
-	"\x14proto/ai/v1/ai.proto\x12\x05ai.v1\"\x82\x01\n" +
+	"\x0eai/v1/ai.proto\x12\x05ai.v1\"\x0e\n" +
+	"\fModelRequest\"0\n" +
+	"\x12SetProviderRequest\x12\x1a\n" +
+	"\bprovider\x18\x01 \x01(\tR\bprovider\"#\n" +
+	"\rModelResponse\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"\x94\x01\n" +
 	"\x0fGenerateRequest\x12\x16\n" +
 	"\x06system\x18\x01 \x01(\tR\x06system\x12\x16\n" +
 	"\x06prompt\x18\x02 \x01(\tR\x06prompt\x12 \n" +
 	"\vtemperature\x18\x03 \x01(\x01R\vtemperature\x12\x1d\n" +
 	"\n" +
-	"max_tokens\x18\x04 \x01(\x05R\tmaxTokens\"&\n" +
+	"max_tokens\x18\x04 \x01(\x05R\tmaxTokens\x12\x10\n" +
+	"\x03dir\x18\x05 \x01(\tR\x03dir\"&\n" +
 	"\x10GenerateResponse\x12\x12\n" +
 	"\x04text\x18\x01 \x01(\tR\x04text\"|\n" +
 	"\n" +
@@ -395,50 +533,59 @@ const file_proto_ai_v1_ai_proto_rawDesc = "" +
 	"\x04plan\x18\x01 \x01(\tH\x00R\x04plan\x12%\n" +
 	"\x04tool\x18\x02 \x01(\v2\x0f.ai.v1.ToolCallH\x00R\x04tool\x12\x18\n" +
 	"\x06answer\x18\x03 \x01(\tH\x00R\x06answerB\a\n" +
-	"\x05event2n\n" +
+	"\x05event2\xe2\x01\n" +
 	"\x02Ai\x12+\n" +
 	"\x03Ask\x12\x11.ai.v1.AskRequest\x1a\x0f.ai.v1.AskEvent0\x01\x12;\n" +
-	"\bGenerate\x12\x16.ai.v1.GenerateRequest\x1a\x17.ai.v1.GenerateResponseB5Z3github.com/filipgorny/ai-architect/proto/ai/v1;aiv1b\x06proto3"
+	"\bGenerate\x12\x16.ai.v1.GenerateRequest\x1a\x17.ai.v1.GenerateResponse\x122\n" +
+	"\x05Model\x12\x13.ai.v1.ModelRequest\x1a\x14.ai.v1.ModelResponse\x12>\n" +
+	"\vSetProvider\x12\x19.ai.v1.SetProviderRequest\x1a\x14.ai.v1.ModelResponseB5Z3github.com/filipgorny/ai-architect/proto/ai/v1;aiv1b\x06proto3"
 
 var (
-	file_proto_ai_v1_ai_proto_rawDescOnce sync.Once
-	file_proto_ai_v1_ai_proto_rawDescData []byte
+	file_ai_v1_ai_proto_rawDescOnce sync.Once
+	file_ai_v1_ai_proto_rawDescData []byte
 )
 
-func file_proto_ai_v1_ai_proto_rawDescGZIP() []byte {
-	file_proto_ai_v1_ai_proto_rawDescOnce.Do(func() {
-		file_proto_ai_v1_ai_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_ai_v1_ai_proto_rawDesc), len(file_proto_ai_v1_ai_proto_rawDesc)))
+func file_ai_v1_ai_proto_rawDescGZIP() []byte {
+	file_ai_v1_ai_proto_rawDescOnce.Do(func() {
+		file_ai_v1_ai_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_ai_v1_ai_proto_rawDesc), len(file_ai_v1_ai_proto_rawDesc)))
 	})
-	return file_proto_ai_v1_ai_proto_rawDescData
+	return file_ai_v1_ai_proto_rawDescData
 }
 
-var file_proto_ai_v1_ai_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
-var file_proto_ai_v1_ai_proto_goTypes = []any{
-	(*GenerateRequest)(nil),  // 0: ai.v1.GenerateRequest
-	(*GenerateResponse)(nil), // 1: ai.v1.GenerateResponse
-	(*AskRequest)(nil),       // 2: ai.v1.AskRequest
-	(*ToolCall)(nil),         // 3: ai.v1.ToolCall
-	(*AskEvent)(nil),         // 4: ai.v1.AskEvent
+var file_ai_v1_ai_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_ai_v1_ai_proto_goTypes = []any{
+	(*ModelRequest)(nil),       // 0: ai.v1.ModelRequest
+	(*SetProviderRequest)(nil), // 1: ai.v1.SetProviderRequest
+	(*ModelResponse)(nil),      // 2: ai.v1.ModelResponse
+	(*GenerateRequest)(nil),    // 3: ai.v1.GenerateRequest
+	(*GenerateResponse)(nil),   // 4: ai.v1.GenerateResponse
+	(*AskRequest)(nil),         // 5: ai.v1.AskRequest
+	(*ToolCall)(nil),           // 6: ai.v1.ToolCall
+	(*AskEvent)(nil),           // 7: ai.v1.AskEvent
 }
-var file_proto_ai_v1_ai_proto_depIdxs = []int32{
-	3, // 0: ai.v1.AskEvent.tool:type_name -> ai.v1.ToolCall
-	2, // 1: ai.v1.Ai.Ask:input_type -> ai.v1.AskRequest
-	0, // 2: ai.v1.Ai.Generate:input_type -> ai.v1.GenerateRequest
-	4, // 3: ai.v1.Ai.Ask:output_type -> ai.v1.AskEvent
-	1, // 4: ai.v1.Ai.Generate:output_type -> ai.v1.GenerateResponse
-	3, // [3:5] is the sub-list for method output_type
-	1, // [1:3] is the sub-list for method input_type
+var file_ai_v1_ai_proto_depIdxs = []int32{
+	6, // 0: ai.v1.AskEvent.tool:type_name -> ai.v1.ToolCall
+	5, // 1: ai.v1.Ai.Ask:input_type -> ai.v1.AskRequest
+	3, // 2: ai.v1.Ai.Generate:input_type -> ai.v1.GenerateRequest
+	0, // 3: ai.v1.Ai.Model:input_type -> ai.v1.ModelRequest
+	1, // 4: ai.v1.Ai.SetProvider:input_type -> ai.v1.SetProviderRequest
+	7, // 5: ai.v1.Ai.Ask:output_type -> ai.v1.AskEvent
+	4, // 6: ai.v1.Ai.Generate:output_type -> ai.v1.GenerateResponse
+	2, // 7: ai.v1.Ai.Model:output_type -> ai.v1.ModelResponse
+	2, // 8: ai.v1.Ai.SetProvider:output_type -> ai.v1.ModelResponse
+	5, // [5:9] is the sub-list for method output_type
+	1, // [1:5] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_proto_ai_v1_ai_proto_init() }
-func file_proto_ai_v1_ai_proto_init() {
-	if File_proto_ai_v1_ai_proto != nil {
+func init() { file_ai_v1_ai_proto_init() }
+func file_ai_v1_ai_proto_init() {
+	if File_ai_v1_ai_proto != nil {
 		return
 	}
-	file_proto_ai_v1_ai_proto_msgTypes[4].OneofWrappers = []any{
+	file_ai_v1_ai_proto_msgTypes[7].OneofWrappers = []any{
 		(*AskEvent_Plan)(nil),
 		(*AskEvent_Tool)(nil),
 		(*AskEvent_Answer)(nil),
@@ -447,17 +594,17 @@ func file_proto_ai_v1_ai_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_ai_v1_ai_proto_rawDesc), len(file_proto_ai_v1_ai_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ai_v1_ai_proto_rawDesc), len(file_ai_v1_ai_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_proto_ai_v1_ai_proto_goTypes,
-		DependencyIndexes: file_proto_ai_v1_ai_proto_depIdxs,
-		MessageInfos:      file_proto_ai_v1_ai_proto_msgTypes,
+		GoTypes:           file_ai_v1_ai_proto_goTypes,
+		DependencyIndexes: file_ai_v1_ai_proto_depIdxs,
+		MessageInfos:      file_ai_v1_ai_proto_msgTypes,
 	}.Build()
-	File_proto_ai_v1_ai_proto = out.File
-	file_proto_ai_v1_ai_proto_goTypes = nil
-	file_proto_ai_v1_ai_proto_depIdxs = nil
+	File_ai_v1_ai_proto = out.File
+	file_ai_v1_ai_proto_goTypes = nil
+	file_ai_v1_ai_proto_depIdxs = nil
 }
