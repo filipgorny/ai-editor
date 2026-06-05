@@ -1,0 +1,38 @@
+@use 'variables' as *;
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: $bg;
+  color: #e6edf3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Inter, system-ui, sans-serif;
+}
+
+// React Flow — dopasowanie do ciemnego motywu
+.react-flow__attribution {
+  display: none;
+}
+
+.react-flow__edge-text {
+  fill: $muted;
+}
+
+// Krawędzie nieinteraktywne — by ich „strefa kliknięcia" nie blokowała przewijania.
+.react-flow__edge {
+  pointer-events: none;
+}
+
+.react-flow__controls button {
+  background: $panel;
+  border-bottom: 1px solid $border;
+  color: #e6edf3;
+}

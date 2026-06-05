@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ai-architect-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-architect}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-architect}
+      POSTGRES_DB: ${POSTGRES_DB:-architect}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-architect} -d ${POSTGRES_DB:-architect}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: ai-architect-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  scanner:
+    build:
+      context: .
+      dockerfile: services/scanner/Dockerfile
+    container_name: ai-architect-scanner
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SCANNER_ADDR: 0.0.0.0:50051
+      DATABASE_URL: postgres://${POSTGRES_USER:-architect}:${POSTGRES_PASSWORD:-architect}@postgres:5432/${POSTGRES_DB:-architect}?sslmode=disable
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5-coder:14b}
+    extra_hosts:
+      # dostęp do natywnego ollama na hoście
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${SCANNER_PORT:-50051}:50051"
+    volumes:
+      # montujemy $HOME pod TĄ SAMĄ ścieżką, by ścieżki z hosta (z Electrona)
+      # zgadzały się 1:1 wewnątrz kontenera
+      - "${HOME}:${HOME}:ro"
+
+volumes:
+  postgres-data:
+  redis-data:

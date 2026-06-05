@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package events.v1;
+
+option go_package = "github.com/filipgorny/ai-architect/proto/events/v1;eventsv1";
+
+// Events przechowuje zdarzenia (w Redis) powiązane z plikiem lub nodem grafu.
+service Events {
+  rpc Publish(Event) returns (Event);        // zwraca z nadanym id
+  rpc List(ListRequest) returns (EventList); // filtr po file / node / app
+}
+
+message Event {
+  string id = 1;
+  string type = 2;      // note | change | ai-edit | scan | ...
+  string title = 3;
+  string body = 4;
+  int64 app_id = 5;
+  string file = 6;      // powiązanie z plikiem (ścieżka)
+  string node_id = 7;   // powiązanie z nodem (np. "controller:UsersController")
+  int64 created_at = 8; // unix sekundy
+}
+
+message ListRequest {
+  string file = 1;
+  string node_id = 2;
+  int64 app_id = 3;
+  int32 limit = 4;
+}
+
+message EventList {
+  repeated Event events = 1;
+}

@@ -1,0 +1,135 @@
+syntax = "proto3";
+
+package gateway.v1;
+
+option go_package = "github.com/filipgorny/ai-architect/proto/gateway/v1;gatewayv1";
+
+// Gateway to BFF dla aplikacji Electron: proxuje skanowanie do serwisu scanner
+// i serwuje graf zależności z bazy. API jest celowo proste i samodzielne
+// (bez importów), by Electron ładował je przez @grpc/proto-loader.
+service Gateway {
+  // Scan uruchamia skan wierzchni (proxy do scannera) i strumieniuje postęp.
+  rpc Scan(ScanRequest) returns (stream Progress);
+  // GetGraph zwraca graf projektu: dla monorepo — serwisy (aplikacje) jako węzły,
+  // dla pojedynczej app — jej encje. (0 = ostatni przeskanowany).
+  rpc GetGraph(GraphRequest) returns (Graph);
+  // ScanApp robi głęboki skan jednej aplikacji (po app_id) i strumieniuje postęp.
+  rpc ScanApp(ScanAppRequest) returns (stream Progress);
+  // GetAppGraph zwraca wewnętrzny graf jednej aplikacji (klasy/kontrolery/serwisy).
+  rpc GetAppGraph(AppGraphRequest) returns (Graph);
+  // ListProjects zwraca przeskanowane projekty.
+  rpc ListProjects(Empty) returns (Projects);
+  // AiEdit zmienia kod wg polecenia (proxy do serwisu ai → LLM).
+  rpc AiEdit(AiEditRequest) returns (AiEditResponse);
+  // PublishEvent / ListEvents — eventy powiązane z plikiem/nodem (proxy do events).
+  rpc PublishEvent(EventInput) returns (Event);
+  rpc ListEvents(EventQuery) returns (EventList);
+}
+
+message AiEditRequest {
+  string code = 1;
+  string prompt = 2;
+  string file = 3;
+}
+
+message AiEditResponse {
+  string code = 1;
+}
+
+message EventInput {
+  string type = 1;
+  string title = 2;
+  string body = 3;
+  int64 app_id = 4;
+  string file = 5;
+  string node_id = 6;
+}
+
+message Event {
+  string id = 1;
+  string type = 2;
+  string title = 3;
+  string body = 4;
+  int64 app_id = 5;
+  string file = 6;
+  string node_id = 7;
+  int64 created_at = 8;
+}
+
+message EventQuery {
+  string file = 1;
+  string node_id = 2;
+  int64 app_id = 3;
+  int32 limit = 4;
+}
+
+message EventList {
+  repeated Event events = 1;
+}
+
+message Empty {}
+
+message ScanRequest {
+  string path = 1;
+}
+
+message ScanAppRequest {
+  int64 app_id = 1;
+}
+
+message AppGraphRequest {
+  int64 app_id = 1;
+}
+
+// Progress to uproszczone zdarzenie dla UI (modal z progress barem).
+message Progress {
+  string message = 1;       // log do konsoli
+  string current_file = 2;  // nazwa aktualnie czytanego pliku
+  int32 files_done = 3;     // ile plików już opisano
+  int32 entities_done = 4;  // ile encji już wyciągnięto
+  bool done = 5;            // koniec skanowania
+  int64 project_id = 6;     // ustawione przy zdarzeniu projektu / na końcu
+}
+
+message GraphRequest {
+  int64 project_id = 1; // 0 = ostatni przeskanowany projekt
+}
+
+// Node to klocek grafu: moduł, kontroler lub serwis, z listą funkcji.
+message Node {
+  string id = 1;                 // np. "controller:UsersController"
+  string kind = 2;               // "module" | "controller" | "service"
+  string name = 3;
+  string file = 4;
+  string app = 5;                // nazwa aplikacji (workspace)
+  repeated string functions = 6; // metody do wypisania w klocku
+  string route = 7;              // ścieżka kontrolera (puste dla module/service)
+  int64 app_id = 8;             // dla węzłów-serwisów (kind="service") w grafie monorepo
+  string framework = 9;        // framework aplikacji (dla węzłów-serwisów)
+  string abs_file = 10;        // absolutna ścieżka pliku (do otwarcia w edytorze)
+}
+
+// Edge to połączenie kreską między bytami.
+message Edge {
+  string from = 1;
+  string to = 2;
+  string label = 3; // "import" | "controller" | "provider" | "injects"
+}
+
+message Graph {
+  int64 project_id = 1;
+  string folder = 2;
+  repeated Node nodes = 3;
+  repeated Edge edges = 4;
+}
+
+message Project {
+  int64 id = 1;
+  string folder = 2;
+  string git_path = 3;
+  string kind = 4;
+}
+
+message Projects {
+  repeated Project projects = 1;
+}

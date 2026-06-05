@@ -1,0 +1,138 @@
+syntax = "proto3";
+
+package scanner.v1;
+
+option go_package = "github.com/filipgorny/ai-architect/proto/scanner/v1;scannerv1";
+
+// Scanner skanuje katalog projektu, rozpoznaje jego typ i framework, ekstrahuje
+// encje (przez pluginy), opisuje pliki modelem LLM i strumieniuje zdarzenia
+// (logi + encje) z powrotem do klienta TUI.
+service Scanner {
+  // Scan robi skan wierzchni: rozpoznaje typ projektu i wylicza aplikacje
+  // (dla monorepo BEZ głębokiej analizy — to robi ScanApp na żądanie).
+  rpc Scan(ScanRequest) returns (stream ScanEvent);
+  // ScanApp robi głęboki skan pojedynczej aplikacji: ekstrakcja encji (klasy,
+  // kontrolery, serwisy, moduły) i zapis pod jej app_id.
+  rpc ScanApp(ScanAppRequest) returns (stream ScanEvent);
+}
+
+message ScanRequest {
+  // Ścieżka do pojedynczej aplikacji ALBO do monorepo.
+  string path = 1;
+}
+
+message ScanAppRequest {
+  int64 app_id = 1;
+  string path = 2; // absolutna ścieżka katalogu aplikacji
+}
+
+enum Level {
+  LEVEL_UNSPECIFIED = 0;
+  INFO = 1;
+  WARN = 2;
+  ERROR = 3;
+}
+
+// LogLine to wolnotekstowy log pokazywany w konsoli TUI.
+message LogLine {
+  Level level = 1;
+  string message = 2;
+}
+
+// ProjectDetected emitowane po rozpoznaniu skanowanego roota (app lub monorepo).
+message ProjectDetected {
+  int64 project_id = 1;
+  string folder = 2;
+  string git_path = 3;
+  string kind = 4; // "typescript-app" | "monorepo"
+}
+
+// AppDetected emitowane dla każdej aplikacji (root przy pojedynczej app, albo
+// każdy workspace w monorepo) wraz z rozpoznanym frameworkiem i dostępnością pluginu.
+message AppDetected {
+  int64 app_id = 1;
+  int64 project_id = 2;
+  string name = 3;
+  string path = 4;      // względem roota projektu
+  string framework = 5; // "nestjs" | "" gdy nierozpoznany
+  bool has_plugin = 6;
+}
+
+message Module {
+  int64 id = 1;
+  int64 app_id = 2;
+  string name = 3;
+  string file = 4;
+  repeated string imports = 5;
+  repeated string controllers = 6;
+  repeated string providers = 7;
+}
+
+message Controller {
+  int64 id = 1;
+  int64 app_id = 2;
+  string name = 3;
+  string file = 4;
+  string route = 5;
+  repeated string methods = 6;      // funkcje (klocek w grafie)
+  repeated string dependencies = 7; // wstrzykiwane typy (krawędzie grafu)
+}
+
+message Service {
+  int64 id = 1;
+  int64 app_id = 2;
+  string name = 3;
+  string file = 4;
+  repeated string methods = 5;
+  repeated string dependencies = 6;
+}
+
+message Component {
+  int64 id = 1;
+  int64 app_id = 2;
+  string name = 3;
+  string file = 4;
+  repeated string renders = 5; // renderowane komponenty (krawędzie grafu)
+}
+
+// FileDescribed emitowane po opisaniu pliku przez LLM i zapisaniu do files.
+message FileDescribed {
+  int64 file_id = 1;
+  int64 app_id = 2;
+  string path = 3;
+  string description = 4;
+}
+
+message ScanDone {
+  int32 apps_scanned = 1;
+  int32 files_scanned = 2;
+  int32 entities_scanned = 3;
+}
+
+// Link to skierowana krawędź do innego bytu (po nazwie) z etykietą relacji.
+message Link {
+  string target = 1;
+  string label = 2;
+}
+
+// Element to byt-matka: moduł/kontroler/serwis/komponent/klasa/funkcja.
+message Element {
+  string framework = 1; // plugin źródłowy (nestjs|react)
+  string kind = 2;      // module|controller|service|component|class|function
+  string name = 3;
+  string file = 4;
+  string route = 5;
+  repeated string functions = 6;
+  repeated Link links = 7;
+}
+
+message ScanEvent {
+  oneof event {
+    LogLine log = 1;
+    ProjectDetected project = 2;
+    AppDetected app = 3;
+    FileDescribed file = 7;
+    ScanDone done = 8;
+    Element element = 10;
+  }
+}

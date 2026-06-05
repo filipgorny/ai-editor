@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package ai.v1;
+
+option go_package = "github.com/filipgorny/ai-architect/proto/ai/v1;aiv1";
+
+// Ai to agent ze skillami (czytanie pliku, sprawdzanie eventów). PLANUJE przed
+// wykonaniem, a postęp (plan, użyte narzędzia, odpowiedź) strumieniuje.
+service Ai {
+  // Ask to agent ze skillami i planowaniem (streaming).
+  rpc Ask(AskRequest) returns (stream AskEvent);
+  // Generate to proste wywołanie LLM — wszystko inne (np. opis plików w
+  // scannerze) idzie przez ten serwis, by LLM był w jednym miejscu.
+  rpc Generate(GenerateRequest) returns (GenerateResponse);
+}
+
+message GenerateRequest {
+  string system = 1;
+  string prompt = 2;
+  double temperature = 3;
+  int32 max_tokens = 4;
+}
+
+message GenerateResponse {
+  string text = 1;
+}
+
+message AskRequest {
+  string prompt = 1;
+  string file = 2;     // kontekst: bieżący plik (absolutna ścieżka)
+  string node_id = 3;  // kontekst: node
+  int64 app_id = 4;
+  bool edit = 5;       // true = zwróć zmodyfikowany kod pliku
+}
+
+message ToolCall {
+  string name = 1;   // read_file | check_events | list_dir
+  string args = 2;
+  string result = 3;
+}
+
+message AskEvent {
+  oneof event {
+    string plan = 1;     // plan przed wykonaniem
+    ToolCall tool = 2;   // użyte narzędzie + wynik
+    string answer = 3;   // końcowa odpowiedź (lub zmodyfikowany kod)
+  }
+}

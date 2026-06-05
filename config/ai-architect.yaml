@@ -1,0 +1,40 @@
+# Wspólny config monorepo ai-architect. Każdy serwis ma własną sekcję.
+# Env nadpisuje (SCANNER_ADDR, DESIGNER_ADDR, GATEWAY_ADDR, AI_ADDR, EVENTS_ADDR,
+# DATABASE_URL, REDIS_ADDR, OLLAMA_HOST, OLLAMA_MODEL, OPENAI_API_KEY).
+#
+# Przepływ: Electron → gateway → designer → {scanner, Postgres}.
+# Cały LLM idzie przez serwis ai. Tylko designer dotyka Postgresa. Eventy w Redis.
+
+scanners:
+  server:
+    addr: 127.0.0.1:50051
+  ai_addr: 127.0.0.1:50071     # opis plików idzie przez serwis ai
+  plugins:                     # scanner uruchamia WSZYSTKIE na każdym serwisie
+    - nestjs
+    - react
+  scan:
+    concurrency: 0             # 0 = wszystkie rdzenie CPU
+    max_files: 0               # 0 = bez limitu
+    describe_files: false      # opis plików (wolne na dużych serwisach)
+
+designer:
+  addr: 127.0.0.1:50081
+  scanner_addr: 127.0.0.1:50051
+  database:
+    url: postgres://architect:architect@localhost:5432/architect?sslmode=disable
+
+gateway:
+  addr: 127.0.0.1:50061
+  designer_addr: 127.0.0.1:50081
+
+ai:
+  addr: 127.0.0.1:50071
+  events_addr: 127.0.0.1:50091
+  llm:
+    provider: ollama           # ollama | openai
+    model: qwen2.5-coder:14b
+    host: http://localhost:11434
+
+events:
+  addr: 127.0.0.1:50091
+  redis_addr: 127.0.0.1:6379

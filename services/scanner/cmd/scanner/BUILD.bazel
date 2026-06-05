@@ -1,0 +1,14 @@
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "scanner_lib",
+    srcs = ["main.go"],
+    importpath = "github.com/filipgorny/ai-architect/services/scanner/cmd/scanner",
+    visibility = ["//visibility:private"],
+)
+
+go_binary(
+    name = "scanner",
+    embed = [":scanner_lib"],
+    visibility = ["//visibility:public"],
+)

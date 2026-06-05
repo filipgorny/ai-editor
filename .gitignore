@@ -1,0 +1,13 @@
+/bazel-*
+/bin/
+*.exe
+*.test
+*.out
+.idea/
+.vscode/
+*.swp
+.DS_Store
+.env
+.env.local
+node_modules
+apps/ai-assistant/out
