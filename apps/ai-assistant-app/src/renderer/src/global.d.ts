@@ -18,7 +18,8 @@ declare global {
       deleteFile(path: string): Promise<boolean>
       aiAgent(
         prompt: string,
-        dir: string
+        dir: string,
+        lang: string
       ): Promise<{ ops: { op: string; path: string }[]; openPath: string; message: string }>
       fsHome(): Promise<string>
       fsList(path: string): Promise<unknown>
@@ -34,7 +35,7 @@ declare global {
       aiEdit(code: string, prompt: string, file: string): Promise<string>
       aiModel(): Promise<string>
       aiComplete(prefix: string, suffix: string, file: string): Promise<string>
-      aiReview(code: string, file: string): Promise<{ line: number; text: string }[]>
+      aiReview(code: string, file: string, lang: string): Promise<{ line: number; text: string }[]>
       lintFile(code: string, file: string): Promise<{ line: number; text: string; severity: number }[]>
       publishEvent(ev: {
         type: string

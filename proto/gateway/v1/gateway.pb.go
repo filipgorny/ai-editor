@@ -916,7 +916,8 @@ func (x *ResolveRequest) GetSpec() string {
 type AiAgentRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Prompt        string                 `protobuf:"bytes,1,opt,name=prompt,proto3" json:"prompt,omitempty"`
-	Dir           string                 `protobuf:"bytes,2,opt,name=dir,proto3" json:"dir,omitempty"` // domyślny katalog (ostatnio otwarty folder)
+	Dir           string                 `protobuf:"bytes,2,opt,name=dir,proto3" json:"dir,omitempty"`   // domyślny katalog (ostatnio otwarty folder)
+	Lang          string                 `protobuf:"bytes,3,opt,name=lang,proto3" json:"lang,omitempty"` // UI language for the AI's wording (e.g. "pl", "en")
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -961,6 +962,13 @@ func (x *AiAgentRequest) GetPrompt() string {
 func (x *AiAgentRequest) GetDir() string {
 	if x != nil {
 		return x.Dir
+	}
+	return ""
+}
+
+func (x *AiAgentRequest) GetLang() string {
+	if x != nil {
+		return x.Lang
 	}
 	return ""
 }
@@ -1273,6 +1281,7 @@ type AiReviewRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
 	File          string                 `protobuf:"bytes,2,opt,name=file,proto3" json:"file,omitempty"`
+	Lang          string                 `protobuf:"bytes,3,opt,name=lang,proto3" json:"lang,omitempty"` // UI language for the AI's wording (e.g. "pl", "en")
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1317,6 +1326,13 @@ func (x *AiReviewRequest) GetCode() string {
 func (x *AiReviewRequest) GetFile() string {
 	if x != nil {
 		return x.File
+	}
+	return ""
+}
+
+func (x *AiReviewRequest) GetLang() string {
+	if x != nil {
+		return x.Lang
 	}
 	return ""
 }
@@ -2535,10 +2551,11 @@ const file_gateway_v1_gateway_proto_rawDesc = "" +
 	"target_dir\x18\x02 \x01(\tR\ttargetDir\"8\n" +
 	"\x0eResolveRequest\x12\x12\n" +
 	"\x04from\x18\x01 \x01(\tR\x04from\x12\x12\n" +
-	"\x04spec\x18\x02 \x01(\tR\x04spec\":\n" +
+	"\x04spec\x18\x02 \x01(\tR\x04spec\"N\n" +
 	"\x0eAiAgentRequest\x12\x16\n" +
 	"\x06prompt\x18\x01 \x01(\tR\x06prompt\x12\x10\n" +
-	"\x03dir\x18\x02 \x01(\tR\x03dir\",\n" +
+	"\x03dir\x18\x02 \x01(\tR\x03dir\x12\x12\n" +
+	"\x04lang\x18\x03 \x01(\tR\x04lang\",\n" +
 	"\x06FileOp\x12\x0e\n" +
 	"\x02op\x18\x01 \x01(\tR\x02op\x12\x12\n" +
 	"\x04path\x18\x02 \x01(\tR\x04path\"n\n" +
@@ -2555,10 +2572,11 @@ const file_gateway_v1_gateway_proto_rawDesc = "" +
 	"\x0fAiModelResponse\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\"/\n" +
 	"\x11AiProviderRequest\x12\x1a\n" +
-	"\bprovider\x18\x01 \x01(\tR\bprovider\"9\n" +
+	"\bprovider\x18\x01 \x01(\tR\bprovider\"M\n" +
 	"\x0fAiReviewRequest\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12\x12\n" +
-	"\x04file\x18\x02 \x01(\tR\x04file\"0\n" +
+	"\x04file\x18\x02 \x01(\tR\x04file\x12\x12\n" +
+	"\x04lang\x18\x03 \x01(\tR\x04lang\"0\n" +
 	"\x06Remark\x12\x12\n" +
 	"\x04line\x18\x01 \x01(\x05R\x04line\x12\x12\n" +
 	"\x04text\x18\x02 \x01(\tR\x04text\"@\n" +

@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { mergeAppGraphs, type RawGraph } from './utils/mergeGraph'
 import styled from 'styled-components'
 import { Button } from '@mui/material'
 import FolderOpenIcon from '@mui/icons-material/FolderOpen'
@@ -13,6 +14,7 @@ import EditorTabs from './components/EditorTabs'
 import FileBrowser from './components/FileBrowser'
 import CodeEditor, { type EditorTarget } from './components/CodeEditor'
 import { EditorContext } from './components/EditorContext'
+import { appBus } from './events'
 import { colors } from './styles/tokens'
 
 const Layout = styled.div`
@@ -65,10 +67,14 @@ type Mode = 'idle' | 'scanning' | 'graph'
 type View = { type: 'project' } | { type: 'app'; appId: number; name: string }
 
 export default function App() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [mode, setMode] = useState<Mode>('idle')
   const [folder, setFolder] = useState('')
-  const [graph, setGraph] = useState<Graph | null>(null)
+  // monorepo graph (raw) + internal graphs of inline-expanded apps; merged below
+  const [rawBase, setRawBase] = useState<RawGraph | null>(null)
+  const [rawApps, setRawApps] = useState<Record<number, RawGraph>>({})
+  const rawAppsRef = useRef<Record<number, RawGraph>>({})
+  const expanding = useRef<number | null>(null) // app being inline-expanded
   const [progress, setProgress] = useState<ScanProgress>(ScanProgress.initial())
   const [log, setLog] = useState<string[]>([])
   const [error, setError] = useState('')
@@ -83,6 +89,7 @@ export default function App() {
   const [vimOn, setVimOn] = useState(true)
   const [copilotOn, setCopilotOn] = useState(true)
   const [editorTheme, setEditorTheme] = useState('Czarny (domyślny)')
+  const [wallpaper, setWallpaper] = useState('') // graph background image url
   const [focusPath, setFocusPath] = useState('')
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [agentBusy, setAgentBusy] = useState(false)
@@ -97,12 +104,28 @@ export default function App() {
   const history = useRef<View[]>([])
   const index = useRef(-1)
 
+  // merged graph: monorepo + expanded apps (apps expand in place like folders)
+  const graph = useMemo(
+    () =>
+      rawBase
+        ? GatewayMapper.graph(
+            mergeAppGraphs(rawBase, rawApps) as unknown as Parameters<typeof GatewayMapper.graph>[0]
+          )
+        : null,
+    [rawBase, rawApps]
+  )
+
+  useEffect(() => {
+    rawAppsRef.current = rawApps
+  }, [rawApps])
+
   // Start aplikacji: automatycznie otwórz ostatnio edytowany projekt.
   useEffect(() => {
     window.api.lastFolder().then((f) => {
       setFolder(f)
 
       if (f) {
+        appBus.emit('project:open', { folder: f })
         scanProject(f)
       }
     })
@@ -113,6 +136,11 @@ export default function App() {
       const p = GatewayMapper.progress(raw)
 
       setProgress(p)
+      appBus.emit('scan:progress', {
+        currentFile: p.currentFile,
+        filesDone: p.filesDone,
+        entitiesDone: p.entitiesDone
+      })
 
       if (p.projectId) {
         scannedProjectId.current = p.projectId
@@ -124,27 +152,46 @@ export default function App() {
     })
 
     const offEnd = window.api.onScanEnd(async () => {
-      const target = pending.current
-
-      // cichy re-skan po operacji: zaktualizuj graf W MIEJSCU (bez historii/modala)
-      if (refreshing.current) {
-        refreshing.current = false
-        await applyView(target, false) // cichy refresh — bez fit/reset rozwinięć
+      // inline-expand: fetch the app's internal graph and merge it under the app node
+      if (expanding.current != null) {
+        const appId = expanding.current
+        expanding.current = null
+        const raw = (await window.api.getAppGraph(appId)) as RawGraph
+        setRawApps((prev) => ({ ...prev, [appId]: raw }))
+        appBus.emit('scan:end', { kind: 'expand' })
 
         return
       }
 
-      if (target.type === 'app') {
-        await pushView(target)
-      } else {
-        history.current = [{ type: 'project' }]
-        index.current = 0
-        syncNav()
-        await applyView({ type: 'project' })
+      // silent refresh after a file op: re-fetch base + all expanded apps in place
+      if (refreshing.current) {
+        refreshing.current = false
+        const base = (await window.api.getGraph(Number(scannedProjectId.current) || 0)) as RawGraph
+        setRawBase(base)
+
+        for (const id of Object.keys(rawAppsRef.current).map(Number)) {
+          const r = (await window.api.getAppGraph(id)) as RawGraph
+          setRawApps((prev) => ({ ...prev, [id]: r }))
+        }
+
+        appBus.emit('scan:end', { kind: 'refresh' })
+
+        return
       }
+
+      // initial project scan → fresh monorepo graph (no apps expanded)
+      const base = (await window.api.getGraph(Number(scannedProjectId.current) || 0)) as RawGraph
+      setRawBase(base)
+      setRawApps({})
+      setMode('graph')
+      setNavKey((n) => n + 1)
+      appBus.emit('scan:end', { kind: 'project' })
     })
 
-    const offError = window.api.onScanError((m) => setError(m))
+    const offError = window.api.onScanError((m) => {
+      setError(m)
+      appBus.emit('scan:error', { message: m })
+    })
 
     return () => {
       offProgress()
@@ -176,23 +223,17 @@ export default function App() {
     setNav({ back: index.current > 0, fwd: index.current < history.current.length - 1 })
   }
 
-  const applyView = async (v: View, nav = true) => {
-    if (v.type === 'app') {
-      const raw = await window.api.getAppGraph(v.appId)
+  // Apps no longer drill into a separate scene — they expand inline. applyView only
+  // re-applies the monorepo (project) graph (used by back/forward).
+  const applyView = async (_v: View, nav = true) => {
+    const raw = (await window.api.getGraph(Number(scannedProjectId.current) || 0)) as RawGraph
 
-      setGraph(GatewayMapper.graph(raw))
-      setTitle(v.name)
-    } else {
-      const raw = await window.api.getGraph(Number(scannedProjectId.current) || 0)
-
-      setGraph(GatewayMapper.graph(raw))
-      setTitle('ai-architect')
-    }
-
+    setRawBase(raw)
+    setTitle('ai-architect')
     setMode('graph')
 
     if (nav) {
-      setNavKey((n) => n + 1) // nawigacja → graf zrobi fit i zresetuje rozwinięcia
+      setNavKey((n) => n + 1)
     }
   }
 
@@ -210,6 +251,7 @@ export default function App() {
 
     index.current--
     syncNav()
+    appBus.emit('nav:back', {})
     await applyView(history.current[index.current])
   }
 
@@ -220,6 +262,7 @@ export default function App() {
 
     index.current++
     syncNav()
+    appBus.emit('nav:forward', {})
     await applyView(history.current[index.current])
   }
 
@@ -237,24 +280,56 @@ export default function App() {
     pending.current = { type: 'project' }
     resetProgress()
     setMode('scanning')
+    appBus.emit('scan:start', { kind: 'project', path })
     window.api.startScan(path)
   }
 
-  // refreshCurrentView CICHO odświeża aktualny widok po mutacji pliku — re-skan
-  // w tle (bez modala, bez odmontowania grafu), graf aktualizuje się W MIEJSCU.
-  const refreshCurrentView = () => {
-    setFsVersion((n) => n + 1) // odśwież też drzewo plików (filer)
-    refreshing.current = true
-    const v = history.current[index.current]
+  // appIdForPath finds the expanded app whose directory contains the given path.
+  const appIdForPath = (path: string): number | null => {
+    for (const [appIdStr, g] of Object.entries(rawAppsRef.current)) {
+      const root = (g.nodes ?? []).find((n) => n.id === 'folder:.')
+      const dir = typeof root?.file === 'string' ? root.file : ''
 
-    if (v && v.type === 'app') {
-      pending.current = v
-      window.api.startScanApp(v.appId)
+      if (dir && path.startsWith(dir)) {
+        return Number(appIdStr)
+      }
+    }
+
+    return null
+  }
+
+  // refreshForPath silently refreshes the graph after a file op. A file inside an
+  // expanded app triggers a deep re-scan of THAT app (so its internals update); a
+  // monorepo-level change re-scans the project. Both update the graph in place.
+  const refreshForPath = (path: string) => {
+    setFsVersion((n) => n + 1) // also refresh the file tree (filer)
+
+    if (expanding.current != null || refreshing.current) {
+      return // a scan is already in flight
+    }
+
+    const appId = appIdForPath(path)
+
+    if (appId != null) {
+      expanding.current = appId // reuse the inline-expand flow: deep-scan + re-merge
+      window.api.startScanApp(appId)
 
       return
     }
 
-    pending.current = { type: 'project' }
+    refreshing.current = true
+    window.api.startScan(folder)
+  }
+
+  // refreshCurrentView — refresh without a specific path (re-scans the project).
+  const refreshCurrentView = () => {
+    setFsVersion((n) => n + 1)
+
+    if (expanding.current != null || refreshing.current) {
+      return
+    }
+
+    refreshing.current = true
     window.api.startScan(folder)
   }
 
@@ -263,6 +338,7 @@ export default function App() {
 
     if (picked) {
       setFolder(picked)
+      appBus.emit('project:open', { folder: picked })
       scanProject(picked)
     }
   }
@@ -270,6 +346,7 @@ export default function App() {
   // openFile otwiera (lub aktywuje) okno edytora; można mieć kilka naraz.
   const openFile = (absFile: string, fn?: string) => {
     lastDir.current = absFile.replace(/[\\/][^\\/]+$/, '') // zapamiętaj folder
+    appBus.emit('editor:open', { path: absFile })
 
     setEditors((prev) =>
       prev.some((e) => e.path === absFile)
@@ -291,6 +368,7 @@ export default function App() {
   }
 
   const closeEditor = (path: string) => {
+    appBus.emit('editor:close', { path })
     setEditors((prev) => prev.filter((e) => e.path !== path))
     setMinimized((prev) => {
       const next = new Set(prev)
@@ -302,6 +380,7 @@ export default function App() {
 
   // Klik w zakładkę: przywróć (jeśli zminimalizowane) i uaktywnij.
   const selectEditor = (path: string) => {
+    appBus.emit('editor:activate', { path })
     setMinimized((prev) => {
       const next = new Set(prev)
       next.delete(path)
@@ -312,6 +391,7 @@ export default function App() {
   }
 
   const minimizeEditor = (path: string) => {
+    appBus.emit('editor:minimize', { path })
     setMinimized((prev) => new Set(prev).add(path))
   }
 
@@ -325,26 +405,33 @@ export default function App() {
     }
 
     setAgentBusy(true)
+    appBus.emit('agent:start', { prompt, dir })
 
     try {
-      const res = await window.api.aiAgent(prompt, dir)
+      const res = await window.api.aiAgent(prompt, dir, i18n.language)
 
       // zawsze pokaż coś w dymku (komunikat, podsumowanie operacji albo info)
-      setAgentReply(
+      const reply =
         res?.message ||
-          (res?.ops?.length ? t('agent.opsDone', { count: res.ops.length }) : t('agent.noOps'))
-      )
+        (res?.ops?.length ? t('agent.opsDone', { count: res.ops.length }) : t('agent.noOps'))
+
+      setAgentReply(reply)
+      appBus.emit('agent:success', { ops: res?.ops?.length ?? 0, message: reply })
 
       if (res?.openPath) {
         openFile(res.openPath)
       }
 
       if (res?.ops?.length) {
-        setFocusPath(res.openPath || res.ops[0].path)
-        refreshCurrentView() // odśwież bieżący widok po operacjach
+        const p = res.openPath || res.ops[0].path
+        setFocusPath(p)
+        refreshForPath(p) // refresh the app/project that the ops touched
       }
     } catch (e) {
-      setAgentReply(t('agent.error', { message: String((e as Error)?.message || e) }))
+      const message = String((e as Error)?.message || e)
+
+      setAgentReply(t('agent.error', { message }))
+      appBus.emit('agent:error', { message })
     } finally {
       setAgentBusy(false)
     }
@@ -362,7 +449,8 @@ export default function App() {
     if (kind === 'folder') {
       const dir = await window.api.createFolder(base, file)
       window.api.publishEvent({ type: 'create', title: t('events.createFolder'), file: dir })
-      refreshCurrentView() // cichy re-skan — element zostaje
+      appBus.emit('folder:create', { path: dir })
+      refreshForPath(dir) // deep-rescan the app that contains the new folder
 
       return
     }
@@ -385,8 +473,9 @@ export default function App() {
 
     openFile(path)
     window.api.publishEvent({ type: 'create', title: t('events.createElement'), file: path })
+    appBus.emit('file:create', { path, kind })
     setFocusPath(path)
-    refreshCurrentView() // cichy re-skan w tle — nowy element zostaje i staje się prawdziwy
+    refreshForPath(path) // deep-rescan the app so the new class appears on the graph
   }
 
   // „Zmień nazwę" — zmień nazwę klasy w kodzie i nazwę pliku, otwórz nowy plik.
@@ -400,8 +489,9 @@ export default function App() {
     if (path) {
       openFile(path)
       window.api.publishEvent({ type: 'rename', title: t('events.rename'), file: path })
+      appBus.emit('file:rename', { from: node.absFile, to: path })
       setFocusPath(path)
-      refreshCurrentView()
+      refreshForPath(path)
     }
   }
 
@@ -413,8 +503,9 @@ export default function App() {
 
     const path = await window.api.moveFile(node.absFile, targetDir)
     window.api.publishEvent({ type: 'move', title: t('events.move'), file: path })
+    appBus.emit('file:move', { from: node.absFile, to: path })
     setFocusPath(path)
-    refreshCurrentView()
+    refreshForPath(path)
   }
 
   // „Usuń element" — usuń plik/folder (przez gateway → filer) i odśwież graf.
@@ -425,27 +516,22 @@ export default function App() {
 
     await window.api.deleteFile(path)
     window.api.publishEvent({ type: 'delete', title: t('events.delete'), file: path })
-    refreshCurrentView()
+    appBus.emit('file:delete', { path })
+    refreshForPath(path)
   }
 
   // Dwuklik w węzeł: serwis → drill-down; encja (klasa/serwis/funkcja) → edytor pliku.
-  const openNode = (node: Node) => {
-    if (mode === 'scanning') {
-      return // unikamy podwójnego skanu (single + double click)
+  // Inline-expand an app: deep-scan it (silent) then merge its internal graph under
+  // the app node. The monorepo graph stays visible the whole time.
+  const expandApp = (appId: number) => {
+    if (rawAppsRef.current[appId] || expanding.current != null) {
+      return // already loaded or a scan is in flight
     }
 
-    if (node instanceof AppNode) {
-      pending.current = { type: 'app', appId: node.appId, name: node.name }
-      resetProgress()
-      setMode('scanning')
-      window.api.startScanApp(node.appId)
-
-      return
-    }
-
-    if (node.absFile) {
-      openFile(node.absFile)
-    }
+    expanding.current = appId
+    appBus.emit('nav:app-expand', { appId })
+    appBus.emit('scan:start', { kind: 'app', appId })
+    window.api.startScanApp(appId)
   }
 
   return (
@@ -478,13 +564,12 @@ export default function App() {
           <GraphView
             graph={graph}
             onNodeClick={(node) => {
-              if (node instanceof AppNode) {
-                openNode(node) // serwis/app → wejdź (drill)
-              } else if (node.absFile) {
-                openFile(node.absFile) // plik → edytor
+              if (node.absFile) {
+                openFile(node.absFile) // file → editor (apps are handled inline by GraphView)
               }
             }}
-            onNodeDoubleClick={openNode}
+            onExpandApp={(appId) => expandApp(appId)}
+            wallpaper={wallpaper}
             onAddElement={addElement}
             onRename={renameElement}
             onMoveFile={moveFile}
@@ -539,6 +624,8 @@ export default function App() {
           onClose={() => setSettingsOpen(false)}
           theme={editorTheme}
           onThemeChange={setEditorTheme}
+          wallpaper={wallpaper}
+          onWallpaperChange={setWallpaper}
         />
       </Layout>
     </EditorContext.Provider>

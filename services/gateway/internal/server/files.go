@@ -152,6 +152,15 @@ type agentPlan struct {
 	Open    string    `json:"open"`
 }
 
+// langInstr returns a "respond in <language>" directive for AI system prompts.
+func langInstr(lang string) string {
+	if lang == "en" {
+		return " Respond strictly in English."
+	}
+
+	return " Odpowiadaj wyłącznie po polsku."
+}
+
 func (p *Proxy) AiAgent(ctx context.Context, req *gatewayv1.AiAgentRequest) (*gatewayv1.AiAgentResponse, error) {
 	system := "Jesteś agentem zarządzającym plikami projektu. Na podstawie polecenia użytkownika " +
 		"zwróć WYŁĄCZNIE JSON (bez markdown) w formacie: " +
@@ -162,7 +171,7 @@ func (p *Proxy) AiAgent(ctx context.Context, req *gatewayv1.AiAgentRequest) (*ga
 		"Wykonuj tylko to, o co prosi użytkownik."
 
 	resp, err := p.ai.Generate(ctx, &aiv1.GenerateRequest{
-		System:    system,
+		System:    system + langInstr(req.GetLang()),
 		Prompt:    "Katalog bazowy: " + req.GetDir() + "\nPolecenie: " + req.GetPrompt(),
 		MaxTokens: 4096,
 		Dir:       req.GetDir(), // cwd dla Claude headless

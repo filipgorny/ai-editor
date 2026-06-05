@@ -21,9 +21,10 @@ const api = {
   deleteFile: (path: string): Promise<boolean> => ipcRenderer.invoke('file:delete', path),
   aiAgent: (
     prompt: string,
-    dir: string
+    dir: string,
+    lang: string
   ): Promise<{ ops: { op: string; path: string }[]; openPath: string; message: string }> =>
-    ipcRenderer.invoke('ai:agent', { prompt, dir }),
+    ipcRenderer.invoke('ai:agent', { prompt, dir, lang }),
   fsHome: (): Promise<string> => ipcRenderer.invoke('fs:home'),
   fsList: (path: string): Promise<unknown> => ipcRenderer.invoke('fs:list', path),
   fsFind: (path: string): Promise<unknown> => ipcRenderer.invoke('fs:find', path),
@@ -45,8 +46,8 @@ const api = {
   aiModel: (): Promise<string> => ipcRenderer.invoke('ai:model'),
   aiComplete: (prefix: string, suffix: string, file: string): Promise<string> =>
     ipcRenderer.invoke('ai:complete', { prefix, suffix, file }),
-  aiReview: (code: string, file: string): Promise<{ line: number; text: string }[]> =>
-    ipcRenderer.invoke('ai:review', { code, file }),
+  aiReview: (code: string, file: string, lang: string): Promise<{ line: number; text: string }[]> =>
+    ipcRenderer.invoke('ai:review', { code, file, lang }),
   lintFile: (code: string, file: string): Promise<{ line: number; text: string; severity: number }[]> =>
     ipcRenderer.invoke('lint:file', { code, file }),
   publishEvent: (ev: {

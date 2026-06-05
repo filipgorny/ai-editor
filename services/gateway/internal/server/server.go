@@ -66,8 +66,8 @@ func (p *Proxy) AiEdit(ctx context.Context, req *gatewayv1.AiEditRequest) (*gate
 func (p *Proxy) AiReview(ctx context.Context, req *gatewayv1.AiReviewRequest) (*gatewayv1.AiReviewResponse, error) {
 	resp, err := p.ai.Generate(ctx, &aiv1.GenerateRequest{
 		System: "Jesteś recenzentem kodu. Wskaż istotne uwagi (bugi, ryzyka, czytelność). " +
-			"Zwróć WYŁĄCZNIE JSON — tablicę obiektów {\"line\": <numer linii>, \"text\": \"<krótka uwaga po polsku>\"}. " +
-			"Bez markdown. Gdy kod jest ok, zwróć [].",
+			"Zwróć WYŁĄCZNIE JSON — tablicę obiektów {\"line\": <numer linii>, \"text\": \"<krótka uwaga>\"}. " +
+			"Bez markdown. Gdy kod jest ok, zwróć []." + langInstr(req.GetLang()),
 		Prompt:    "Plik: " + req.GetFile() + "\n\nKod (z numerami linii):\n" + withLineNumbers(req.GetCode()),
 		MaxTokens: 1200,
 		Dir:       filepath.Dir(req.GetFile()),

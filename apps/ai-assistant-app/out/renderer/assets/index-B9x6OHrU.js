@@ -23841,6 +23841,34 @@ const useTranslation = (ns, props = {}) => {
   }
   return ret;
 };
+const APP_ROOT = "folder:.";
+function mergeAppGraphs(base2, apps) {
+  const nodes = [...base2.nodes ?? []];
+  const edges = [...base2.edges ?? []];
+  const baseNodes = base2.nodes ?? [];
+  for (const [appIdStr, app] of Object.entries(apps)) {
+    const appId = Number(appIdStr);
+    const prefix2 = `a${appId}:`;
+    const baseAppNode = baseNodes.find((n2) => n2.kind === "app" && Number(n2.appId) === appId);
+    if (!baseAppNode) {
+      continue;
+    }
+    for (const n2 of app.nodes ?? []) {
+      if (n2.id === APP_ROOT) {
+        continue;
+      }
+      nodes.push({ ...n2, id: prefix2 + n2.id });
+    }
+    for (const e2 of app.edges ?? []) {
+      if (e2.from === APP_ROOT) {
+        edges.push({ from: baseAppNode.id, to: prefix2 + e2.to, label: "contains" });
+      } else {
+        edges.push({ from: prefix2 + e2.from, to: prefix2 + e2.to, label: e2.label });
+      }
+    }
+  }
+  return { projectId: base2.projectId, folder: base2.folder, nodes, edges };
+}
 var MS = "-ms-";
 var MOZ = "-moz-";
 var WEBKIT = "-webkit-";
@@ -32213,6 +32241,62 @@ function Background({
 }
 Background.displayName = "Background";
 var Background$1 = reactExports.memo(Background);
+class EventBus {
+  handlers = /* @__PURE__ */ new Map();
+  anyHandlers = /* @__PURE__ */ new Set();
+  // on registers a handler and returns an unsubscribe function.
+  on(name2, handler) {
+    let set2 = this.handlers.get(name2);
+    if (!set2) {
+      set2 = /* @__PURE__ */ new Set();
+      this.handlers.set(name2, set2);
+    }
+    set2.add(handler);
+    return () => this.off(name2, handler);
+  }
+  // once — like on, but unsubscribes after the first call.
+  once(name2, handler) {
+    const off2 = this.on(name2, (payload) => {
+      off2();
+      handler(payload);
+    });
+    return off2;
+  }
+  off(name2, handler) {
+    this.handlers.get(name2)?.delete(handler);
+  }
+  // onAny listens to ALL events — the main hook for user scripts.
+  onAny(handler) {
+    this.anyHandlers.add(handler);
+    return () => {
+      this.anyHandlers.delete(handler);
+    };
+  }
+  // emit dispatches an event to its name subscribers and to every onAny handler.
+  emit(name2, payload) {
+    const set2 = this.handlers.get(name2);
+    if (set2) {
+      for (const h2 of [...set2]) {
+        try {
+          h2(payload);
+        } catch (e2) {
+          console.error(`[appBus] handler for "${name2}" threw`, e2);
+        }
+      }
+    }
+    for (const h2 of [...this.anyHandlers]) {
+      try {
+        h2(name2, payload);
+      } catch (e2) {
+        console.error(`[appBus] onAny handler threw on "${name2}"`, e2);
+      }
+    }
+  }
+}
+const appBus = new EventBus();
+if (typeof window !== "undefined") {
+  window.appBus = appBus;
+}
 const EditorContext = reactExports.createContext(() => {
 });
 const useEditor = () => reactExports.useContext(EditorContext);
@@ -32377,6 +32461,32 @@ function ContextMenu({
     }
   );
 }
+function NodeContextMenu({
+  x: x2,
+  y: y2,
+  node: node2,
+  addTargetDir,
+  onAdd: onAdd2,
+  onRename,
+  onDelete,
+  onEdit,
+  onClose
+}) {
+  const { t: t2 } = useTranslation();
+  const isContainer = node2.kind === "folder" || node2.kind === "app";
+  const items = isContainer ? [
+    { label: `🟥  ${t2("graph.class")}`, onClick: () => onAdd2(addTargetDir(node2), "class") },
+    { label: `λ  ${t2("graph.function")}`, onClick: () => onAdd2(addTargetDir(node2), "function") },
+    { label: `📁  ${t2("graph.folder")}`, onClick: () => onAdd2(addTargetDir(node2), "folder") },
+    { label: `✏️  ${t2("graph.rename")}`, onClick: () => onRename(node2) },
+    { label: `🗑️  ${t2("graph.deleteElement")}`, onClick: () => onDelete(node2) }
+  ] : [
+    ...node2.absFile ? [{ label: `📝  ${t2("graph.edit")}`, onClick: () => onEdit(node2) }] : [],
+    { label: `✏️  ${t2("graph.rename")}`, onClick: () => onRename(node2) },
+    { label: `🗑️  ${t2("graph.deleteElement")}`, onClick: () => onDelete(node2) }
+  ];
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(ContextMenu, { x: x2, y: y2, onClose, items });
+}
 const nodeTypes = { entity: NodeCard, temp: TempCard };
 function baseName(path) {
   const file = path.split(/[\\/]/).pop() ?? "";
@@ -32457,6 +32567,7 @@ function GraphView({
   onRename,
   onMoveFile,
   onDelete,
+  onExpandApp,
   focusPath,
   navKey
 }) {
@@ -32467,7 +32578,6 @@ function GraphView({
   const [addName, setAddName] = reactExports.useState("");
   const [addFile, setAddFile] = reactExports.useState("");
   const [addKind, setAddKind] = reactExports.useState("class");
-  const [palette, setPalette] = reactExports.useState(null);
   const addFlowPos = reactExports.useRef(null);
   const [localNodes, setLocalNodes] = reactExports.useState([]);
   const [posOverride, setPosOverride] = reactExports.useState({});
@@ -32568,7 +32678,7 @@ function GraphView({
       }
       visible.add(id2);
       const n2 = byId2.get(id2);
-      if (n2 && n2.kind === "folder" && expanded.has(id2)) {
+      if (n2 && (n2.kind === "folder" || n2.kind === "app") && expanded.has(id2)) {
         for (const c2 of children2.get(id2) ?? []) {
           reveal(c2);
         }
@@ -32702,7 +32812,6 @@ function GraphView({
     setExpanded((prev2) => /* @__PURE__ */ new Set([...prev2, ...ancestors]));
   }, [graph, focusPath, parentOf]);
   const handleClick = (node2) => {
-    setPalette(null);
     setMenu(null);
     if (relink) {
       if (node2.kind === "folder") {
@@ -32714,12 +32823,16 @@ function GraphView({
       setRelink(null);
       return;
     }
-    if (node2.kind === "folder") {
+    if (node2.kind === "folder" || node2.kind === "app") {
       const willExpand = !expanded.has(node2.id);
+      const kids = graph.dependencies().filter((d2) => d2.kind === "contains" && d2.from === node2.id).map((d2) => d2.to);
       if (willExpand) {
-        const kids = graph.dependencies().filter((d2) => d2.kind === "contains" && d2.from === node2.id).map((d2) => d2.to);
+        if (node2.kind === "app" && kids.length === 0 && node2 instanceof AppNode) {
+          onExpandApp?.(node2.appId);
+        }
         focusOnExpand.current = [node2.id, ...kids];
       }
+      appBus.emit("graph:folder-toggle", { id: node2.id, expanded: willExpand });
       setExpanded((prev2) => {
         const next2 = new Set(prev2);
         if (next2.has(node2.id)) {
@@ -32731,6 +32844,7 @@ function GraphView({
       });
       return;
     }
+    appBus.emit("graph:node-click", { id: node2.id, kind: node2.kind });
     onNodeClick?.(node2);
   };
   const searchAndPan = (text) => {
@@ -32776,7 +32890,6 @@ function GraphView({
   };
   const openAdd = (dir, kind = "class") => {
     setMenu(null);
-    setPalette(null);
     setAddName("");
     setAddFile("");
     setAddKind(kind);
@@ -32784,6 +32897,7 @@ function GraphView({
     loadConventions(dir || anyProjectDir());
     setAddOpen(true);
   };
+  const addTargetDir = (node2) => node2.file || folderDir.get(node2.id);
   const removeNode = (node2) => {
     setMenu(null);
     const path = node2.kind === "folder" ? node2.file || folderDir.get(node2.id) : node2.absFile;
@@ -32824,19 +32938,6 @@ function GraphView({
       ref: wrapRef,
       style: { position: "relative", width: "100%", height: "100%" },
       onClick: () => menu && setMenu(null),
-      onDoubleClick: (e2) => {
-        if (e2.target.classList.contains("react-flow__pane")) {
-          const rect = wrapRef.current?.getBoundingClientRect();
-          const vp = flow.current?.getViewport();
-          if (rect && vp) {
-            addFlowPos.current = {
-              x: (e2.clientX - rect.left - vp.x) / vp.zoom,
-              y: (e2.clientY - rect.top - vp.y) / vp.zoom
-            };
-          }
-          setPalette({ x: e2.clientX, y: e2.clientY });
-        }
-      },
       onMouseMove: (e2) => relink && setMouse({ x: e2.clientX, y: e2.clientY }),
       children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -32869,7 +32970,6 @@ function GraphView({
             onInit: (inst) => flow.current = inst,
             onPaneClick: () => {
               setMenu(null);
-              setPalette(null);
               setRelink(null);
             },
             onMoveEnd: (_e2, vp) => {
@@ -32900,6 +33000,7 @@ function GraphView({
               }
               setRelink({ fileNode: file });
               setMouse({ x: e2.clientX, y: e2.clientY });
+              appBus.emit("graph:move-start", { path: file.absFile });
             },
             onEdgeUpdate: (oldEdge, conn) => {
               const a2 = conn.source ? byId.get(conn.source) : void 0;
@@ -32914,14 +33015,14 @@ function GraphView({
               }
             },
             onNodeClick: (_e2, n2) => handleClick(n2.data),
-            onNodeDoubleClick: (_e2, n2) => onNodeDoubleClick?.(n2.data),
+            onNodeDoubleClick: (_e2, n2) => {
+              const node2 = n2.data;
+              appBus.emit("graph:node-dblclick", { id: node2.id, kind: node2.kind });
+              onNodeDoubleClick?.(node2);
+            },
             onNodeContextMenu: (e2, n2) => {
               e2.preventDefault();
               setMenu({ x: e2.clientX, y: e2.clientY, node: n2.data });
-            },
-            onPaneContextMenu: (e2) => {
-              e2.preventDefault();
-              setMenu({ x: e2.clientX, y: e2.clientY, node: null });
             },
             children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(Background$1, { color: "#21262d", gap: 20 }),
@@ -32975,35 +33076,18 @@ function GraphView({
             }
           )
         ] }),
-        palette && /* @__PURE__ */ jsxRuntimeExports.jsx(
-          ContextMenu,
-          {
-            x: palette.x,
-            y: palette.y,
-            onClose: () => setPalette(null),
-            items: [
-              { label: `🟥  ${t2("graph.class")}`, onClick: () => openAdd(rootDir, "class") },
-              { label: `λ  ${t2("graph.function")}`, onClick: () => openAdd(rootDir, "function") },
-              { label: `📁  ${t2("graph.folder")}`, onClick: () => openAdd(rootDir, "folder") }
-            ]
-          }
-        ),
-        menu && /* @__PURE__ */ jsxRuntimeExports.jsx(
-          ContextMenu,
+        menu && menu.node && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          NodeContextMenu,
           {
             x: menu.x,
             y: menu.y,
-            onClose: () => setMenu(null),
-            items: !menu.node ? [{ label: t2("graph.addElement"), onClick: () => openAdd(rootDir) }] : menu.node.kind === "folder" ? [
-              { label: t2("graph.addElement"), onClick: () => openAdd(menu.node.file || folderDir.get(menu.node.id)) },
-              { label: t2("graph.rename"), onClick: () => openRename(menu.node) },
-              { label: t2("graph.deleteElement"), onClick: () => removeNode(menu.node) }
-            ] : [
-              // „Edytuj" jako pierwsza opcja — tylko gdy węzeł ma plik (edytowalny).
-              ...menu.node.absFile ? [{ label: t2("graph.edit"), onClick: () => onNodeClick?.(menu.node) }] : [],
-              { label: t2("graph.rename"), onClick: () => openRename(menu.node) },
-              { label: t2("graph.deleteElement"), onClick: () => removeNode(menu.node) }
-            ]
+            node: menu.node,
+            addTargetDir,
+            onAdd: openAdd,
+            onRename: openRename,
+            onDelete: removeNode,
+            onEdit: (n2) => onNodeClick?.(n2),
+            onClose: () => setMenu(null)
           }
         ),
         findOpen && /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -33020,6 +33104,7 @@ function GraphView({
             },
             onKeyDown: (e2) => {
               if (e2.key === "Enter" && findText.trim().length >= 3) {
+                appBus.emit("graph:search", { query: findText.trim() });
                 searchAndPan(findText);
               }
               if (e2.key === "Escape") {
@@ -55769,6 +55854,7 @@ function SettingsDialog({
   const save = async () => {
     await window.api.setSettings({ provider });
     await window.api.aiSetProvider(provider).catch(() => void 0);
+    appBus.emit("settings:provider-change", { provider });
     onClose();
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Dialog, { open, onClose, maxWidth: "xs", fullWidth: true, children: [
@@ -55781,7 +55867,10 @@ function SettingsDialog({
           label: t2("settings.language"),
           size: "small",
           value: i18n.language,
-          onChange: (e2) => changeLanguage(e2.target.value),
+          onChange: (e2) => {
+            changeLanguage(e2.target.value);
+            appBus.emit("settings:language-change", { lang: e2.target.value });
+          },
           children: languages.map((l2) => /* @__PURE__ */ jsxRuntimeExports.jsx(MenuItem, { value: l2.code, children: l2.label }, l2.code))
         }
       ),
@@ -55806,7 +55895,10 @@ function SettingsDialog({
           label: t2("settings.themeLabel"),
           size: "small",
           value: theme2,
-          onChange: (e2) => onThemeChange(e2.target.value),
+          onChange: (e2) => {
+            onThemeChange(e2.target.value);
+            appBus.emit("settings:theme-change", { theme: e2.target.value });
+          },
           children: themeNames.map((name2) => /* @__PURE__ */ jsxRuntimeExports.jsx(MenuItem, { value: name2, children: name2 }, name2))
         }
       ),
@@ -71294,9 +71386,12 @@ function CodeEditor({
   theme: theme2 = "Czarny (domyślny)",
   root: root2 = ""
 }) {
-  const { t: t2 } = useTranslation();
-  const [pos, setPos] = reactExports.useState({ x: 90 + index * 34, y: 60 + index * 34 });
-  const [size, setSize] = reactExports.useState({ w: Math.round(window.innerWidth * 0.72), h: Math.round(window.innerHeight * 0.8) });
+  const { t: t2, i18n } = useTranslation();
+  const [size, setSize] = reactExports.useState({ w: Math.round(window.innerWidth * 0.5), h: Math.round(window.innerHeight * 0.8) });
+  const [pos, setPos] = reactExports.useState({
+    x: Math.round((window.innerWidth - window.innerWidth * 0.5) / 2) + index * 30,
+    y: Math.round((window.innerHeight - window.innerHeight * 0.8) / 2) + index * 30
+  });
   const startDrag = (e2) => {
     e2.preventDefault();
     e2.stopPropagation();
@@ -71479,6 +71574,7 @@ function CodeEditor({
     }).catch(() => {
       setContent(t2("editor.loadError"));
       setLoading(false);
+      appBus.emit("editor:load-error", { path: target.path });
     });
   }, [target?.path]);
   reactExports.useEffect(() => {
@@ -71577,7 +71673,7 @@ function CodeEditor({
       return;
     }
     const t22 = window.setTimeout(() => {
-      window.api.aiReview(content2, target.path).then((rs) => setReviewRemarks(rs.map((r2) => ({ line: r2.line, text: r2.text, color: "#6e7681", prefix: "‹" })))).catch(() => void 0);
+      window.api.aiReview(content2, target.path, i18n.language).then((rs) => setReviewRemarks(rs.map((r2) => ({ line: r2.line, text: r2.text, color: "#6e7681", prefix: "‹" })))).catch(() => void 0);
     }, 1500);
     return () => window.clearTimeout(t22);
   }, [content2, target?.path]);
@@ -71623,6 +71719,7 @@ function CodeEditor({
     setOriginal(content2);
     setSaved(true);
     window.api.publishEvent({ type: "save", title: t2("events.save"), file: target.path });
+    appBus.emit("editor:save", { path: target.path });
   };
   const handleClose2 = () => {
     if (dirty && !window.confirm(t2("editor.unsavedConfirm"))) {
@@ -71713,6 +71810,7 @@ function CodeEditor({
       setPrompt("");
       if (next2 && next2 !== before) {
         animateDiff(before, next2);
+        appBus.emit("editor:ai-edit", { path: target.path });
       }
     } finally {
       setBusy(false);
@@ -71776,7 +71874,17 @@ function CodeEditor({
                   }
                 ),
                 /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: () => onMinimize?.(), title: t2("editor.minimize"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1, { fontSize: "small" }) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: () => setFullscreen((v2) => !v2), children: fullscreen ? /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$1, { fontSize: "small" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$2, { fontSize: "small" }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  IconButton,
+                  {
+                    size: "small",
+                    onClick: () => {
+                      appBus.emit("editor:fullscreen", { path: target.path, on: !fullscreen });
+                      setFullscreen(!fullscreen);
+                    },
+                    children: fullscreen ? /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$1, { fontSize: "small" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$2, { fontSize: "small" })
+                  }
+                ),
                 /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: handleClose2, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$4, { fontSize: "small" }) })
               ]
             }
@@ -71924,10 +72032,13 @@ const Empty = gt.div`
   text-align: center;
 `;
 function App() {
-  const { t: t2 } = useTranslation();
+  const { t: t2, i18n } = useTranslation();
   const [mode, setMode] = reactExports.useState("idle");
   const [folder, setFolder] = reactExports.useState("");
-  const [graph, setGraph] = reactExports.useState(null);
+  const [rawBase, setRawBase] = reactExports.useState(null);
+  const [rawApps, setRawApps] = reactExports.useState({});
+  const rawAppsRef = reactExports.useRef({});
+  const expanding = reactExports.useRef(null);
   const [progress, setProgress] = reactExports.useState(ScanProgress.initial());
   const [log, setLog] = reactExports.useState([]);
   const [error, setError] = reactExports.useState("");
@@ -71951,10 +72062,20 @@ function App() {
   const scannedProjectId = reactExports.useRef("");
   const history2 = reactExports.useRef([]);
   const index = reactExports.useRef(-1);
+  const graph = reactExports.useMemo(
+    () => rawBase ? GatewayMapper.graph(
+      mergeAppGraphs(rawBase, rawApps)
+    ) : null,
+    [rawBase, rawApps]
+  );
+  reactExports.useEffect(() => {
+    rawAppsRef.current = rawApps;
+  }, [rawApps]);
   reactExports.useEffect(() => {
     window.api.lastFolder().then((f2) => {
       setFolder(f2);
       if (f2) {
+        appBus.emit("project:open", { folder: f2 });
         scanProject(f2);
       }
     });
@@ -71963,6 +72084,11 @@ function App() {
     const offProgress = window.api.onProgress((raw) => {
       const p2 = GatewayMapper.progress(raw);
       setProgress(p2);
+      appBus.emit("scan:progress", {
+        currentFile: p2.currentFile,
+        filesDone: p2.filesDone,
+        entitiesDone: p2.entitiesDone
+      });
       if (p2.projectId) {
         scannedProjectId.current = p2.projectId;
       }
@@ -71971,22 +72097,36 @@ function App() {
       }
     });
     const offEnd = window.api.onScanEnd(async () => {
-      const target = pending.current;
-      if (refreshing.current) {
-        refreshing.current = false;
-        await applyView(target, false);
+      if (expanding.current != null) {
+        const appId = expanding.current;
+        expanding.current = null;
+        const raw = await window.api.getAppGraph(appId);
+        setRawApps((prev2) => ({ ...prev2, [appId]: raw }));
+        appBus.emit("scan:end", { kind: "expand" });
         return;
       }
-      if (target.type === "app") {
-        await pushView(target);
-      } else {
-        history2.current = [{ type: "project" }];
-        index.current = 0;
-        syncNav();
-        await applyView({ type: "project" });
+      if (refreshing.current) {
+        refreshing.current = false;
+        const base22 = await window.api.getGraph(Number(scannedProjectId.current) || 0);
+        setRawBase(base22);
+        for (const id2 of Object.keys(rawAppsRef.current).map(Number)) {
+          const r2 = await window.api.getAppGraph(id2);
+          setRawApps((prev2) => ({ ...prev2, [id2]: r2 }));
+        }
+        appBus.emit("scan:end", { kind: "refresh" });
+        return;
       }
+      const base2 = await window.api.getGraph(Number(scannedProjectId.current) || 0);
+      setRawBase(base2);
+      setRawApps({});
+      setMode("graph");
+      setNavKey((n2) => n2 + 1);
+      appBus.emit("scan:end", { kind: "project" });
     });
-    const offError = window.api.onScanError((m2) => setError(m2));
+    const offError = window.api.onScanError((m2) => {
+      setError(m2);
+      appBus.emit("scan:error", { message: m2 });
+    });
     return () => {
       offProgress();
       offEnd();
@@ -72010,26 +72150,14 @@ function App() {
   const syncNav = () => {
     setNav({ back: index.current > 0, fwd: index.current < history2.current.length - 1 });
   };
-  const applyView = async (v2, nav22 = true) => {
-    if (v2.type === "app") {
-      const raw = await window.api.getAppGraph(v2.appId);
-      setGraph(GatewayMapper.graph(raw));
-      setTitle(v2.name);
-    } else {
-      const raw = await window.api.getGraph(Number(scannedProjectId.current) || 0);
-      setGraph(GatewayMapper.graph(raw));
-      setTitle("ai-architect");
-    }
+  const applyView = async (_v, nav22 = true) => {
+    const raw = await window.api.getGraph(Number(scannedProjectId.current) || 0);
+    setRawBase(raw);
+    setTitle("ai-architect");
     setMode("graph");
     if (nav22) {
       setNavKey((n2) => n2 + 1);
     }
-  };
-  const pushView = async (v2) => {
-    history2.current = [...history2.current.slice(0, index.current + 1), v2];
-    index.current = history2.current.length - 1;
-    syncNav();
-    await applyView(v2);
   };
   const back = async () => {
     if (index.current <= 0) {
@@ -72037,6 +72165,7 @@ function App() {
     }
     index.current--;
     syncNav();
+    appBus.emit("nav:back", {});
     await applyView(history2.current[index.current]);
   };
   const forward = async () => {
@@ -72045,6 +72174,7 @@ function App() {
     }
     index.current++;
     syncNav();
+    appBus.emit("nav:forward", {});
     await applyView(history2.current[index.current]);
   };
   const resetProgress = () => {
@@ -72059,29 +72189,43 @@ function App() {
     pending.current = { type: "project" };
     resetProgress();
     setMode("scanning");
+    appBus.emit("scan:start", { kind: "project", path });
     window.api.startScan(path);
   };
-  const refreshCurrentView = () => {
+  const appIdForPath = (path) => {
+    for (const [appIdStr, g2] of Object.entries(rawAppsRef.current)) {
+      const root2 = (g2.nodes ?? []).find((n2) => n2.id === "folder:.");
+      if (root2?.file && path.startsWith(root2.file)) {
+        return Number(appIdStr);
+      }
+    }
+    return null;
+  };
+  const refreshForPath = (path) => {
     setFsVersion((n2) => n2 + 1);
-    refreshing.current = true;
-    const v2 = history2.current[index.current];
-    if (v2 && v2.type === "app") {
-      pending.current = v2;
-      window.api.startScanApp(v2.appId);
+    if (expanding.current != null || refreshing.current) {
       return;
     }
-    pending.current = { type: "project" };
+    const appId = appIdForPath(path);
+    if (appId != null) {
+      expanding.current = appId;
+      window.api.startScanApp(appId);
+      return;
+    }
+    refreshing.current = true;
     window.api.startScan(folder);
   };
   const pickAndScan = async () => {
     const picked = await window.api.pickFolder();
     if (picked) {
       setFolder(picked);
+      appBus.emit("project:open", { folder: picked });
       scanProject(picked);
     }
   };
   const openFile = (absFile, fn) => {
     lastDir.current = absFile.replace(/[\\/][^\\/]+$/, "");
+    appBus.emit("editor:open", { path: absFile });
     setEditors(
       (prev2) => prev2.some((e2) => e2.path === absFile) ? prev2.map((e2) => e2.path === absFile ? { path: absFile, gotoFn: fn } : e2) : [...prev2, { path: absFile, gotoFn: fn }]
     );
@@ -72096,6 +72240,7 @@ function App() {
     });
   };
   const closeEditor = (path) => {
+    appBus.emit("editor:close", { path });
     setEditors((prev2) => prev2.filter((e2) => e2.path !== path));
     setMinimized((prev2) => {
       const next2 = new Set(prev2);
@@ -72104,6 +72249,7 @@ function App() {
     });
   };
   const selectEditor = (path) => {
+    appBus.emit("editor:activate", { path });
     setMinimized((prev2) => {
       const next2 = new Set(prev2);
       next2.delete(path);
@@ -72112,6 +72258,7 @@ function App() {
     setActiveEditor(path);
   };
   const minimizeEditor = (path) => {
+    appBus.emit("editor:minimize", { path });
     setMinimized((prev2) => new Set(prev2).add(path));
   };
   const runAgent = async (prompt2) => {
@@ -72120,20 +72267,24 @@ function App() {
       return;
     }
     setAgentBusy(true);
+    appBus.emit("agent:start", { prompt: prompt2, dir });
     try {
-      const res = await window.api.aiAgent(prompt2, dir);
-      setAgentReply(
-        res?.message || (res?.ops?.length ? t2("agent.opsDone", { count: res.ops.length }) : t2("agent.noOps"))
-      );
+      const res = await window.api.aiAgent(prompt2, dir, i18n.language);
+      const reply = res?.message || (res?.ops?.length ? t2("agent.opsDone", { count: res.ops.length }) : t2("agent.noOps"));
+      setAgentReply(reply);
+      appBus.emit("agent:success", { ops: res?.ops?.length ?? 0, message: reply });
       if (res?.openPath) {
         openFile(res.openPath);
       }
       if (res?.ops?.length) {
-        setFocusPath(res.openPath || res.ops[0].path);
-        refreshCurrentView();
+        const p2 = res.openPath || res.ops[0].path;
+        setFocusPath(p2);
+        refreshForPath(p2);
       }
     } catch (e2) {
-      setAgentReply(t2("agent.error", { message: String(e2?.message || e2) }));
+      const message = String(e2?.message || e2);
+      setAgentReply(t2("agent.error", { message }));
+      appBus.emit("agent:error", { message });
     } finally {
       setAgentBusy(false);
     }
@@ -72146,7 +72297,8 @@ function App() {
     if (kind === "folder") {
       const dir = await window.api.createFolder(base2, file);
       window.api.publishEvent({ type: "create", title: t2("events.createFolder"), file: dir });
-      refreshCurrentView();
+      appBus.emit("folder:create", { path: dir });
+      refreshForPath(dir);
       return;
     }
     const path = await window.api.createFile(base2, file, name2);
@@ -72160,8 +72312,9 @@ function App() {
     }
     openFile(path);
     window.api.publishEvent({ type: "create", title: t2("events.createElement"), file: path });
+    appBus.emit("file:create", { path, kind });
     setFocusPath(path);
-    refreshCurrentView();
+    refreshForPath(path);
   };
   const renameElement = async (node2, className, fileBase) => {
     if (!node2.absFile) {
@@ -72171,8 +72324,9 @@ function App() {
     if (path) {
       openFile(path);
       window.api.publishEvent({ type: "rename", title: t2("events.rename"), file: path });
+      appBus.emit("file:rename", { from: node2.absFile, to: path });
       setFocusPath(path);
-      refreshCurrentView();
+      refreshForPath(path);
     }
   };
   const moveFile = async (node2, targetDir) => {
@@ -72181,8 +72335,9 @@ function App() {
     }
     const path = await window.api.moveFile(node2.absFile, targetDir);
     window.api.publishEvent({ type: "move", title: t2("events.move"), file: path });
+    appBus.emit("file:move", { from: node2.absFile, to: path });
     setFocusPath(path);
-    refreshCurrentView();
+    refreshForPath(path);
   };
   const deleteElement = async (node2, path) => {
     if (!window.confirm(t2("graph.deleteConfirm", { name: node2.name }))) {
@@ -72190,22 +72345,17 @@ function App() {
     }
     await window.api.deleteFile(path);
     window.api.publishEvent({ type: "delete", title: t2("events.delete"), file: path });
-    refreshCurrentView();
+    appBus.emit("file:delete", { path });
+    refreshForPath(path);
   };
-  const openNode = (node2) => {
-    if (mode === "scanning") {
+  const expandApp = (appId) => {
+    if (rawAppsRef.current[appId] || expanding.current != null) {
       return;
     }
-    if (node2 instanceof AppNode) {
-      pending.current = { type: "app", appId: node2.appId, name: node2.name };
-      resetProgress();
-      setMode("scanning");
-      window.api.startScanApp(node2.appId);
-      return;
-    }
-    if (node2.absFile) {
-      openFile(node2.absFile);
-    }
+    expanding.current = appId;
+    appBus.emit("nav:app-expand", { appId });
+    appBus.emit("scan:start", { kind: "app", appId });
+    window.api.startScanApp(appId);
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsx(EditorContext.Provider, { value: openFile, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Layout, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs(TopBar, { children: [
@@ -72231,13 +72381,11 @@ function App() {
         {
           graph,
           onNodeClick: (node2) => {
-            if (node2 instanceof AppNode) {
-              openNode(node2);
-            } else if (node2.absFile) {
+            if (node2.absFile) {
               openFile(node2.absFile);
             }
           },
-          onNodeDoubleClick: openNode,
+          onExpandApp: (appId) => expandApp(appId),
           onAddElement: addElement,
           onRename: renameElement,
           onMoveFile: moveFile,

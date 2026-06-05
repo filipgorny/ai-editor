@@ -10,12 +10,13 @@ import ReactFlow, {
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { useTranslation } from 'react-i18next'
+import { appBus } from '../events'
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, MenuItem } from '@mui/material'
-import { Graph, Node } from '../model'
+import { AppNode, Graph, Node } from '../model'
 import { kindColor } from '../styles/tokens'
 import NodeCard from './NodeCard'
 import TempCard from './TempCard'
-import ContextMenu from './ContextMenu'
+import NodeContextMenu from './NodeContextMenu'
 
 const nodeTypes = { entity: NodeCard, temp: TempCard }
 
@@ -137,12 +138,16 @@ export default function GraphView({
   onRename,
   onMoveFile,
   onDelete,
+  onExpandApp,
+  wallpaper,
   focusPath,
   navKey
 }: {
   graph: Graph
   onNodeClick?: (node: Node) => void
   onNodeDoubleClick?: (node: Node) => void
+  onExpandApp?: (appId: number) => void
+  wallpaper?: string
   onAddElement?: (name: string, file: string, kind: 'class' | 'function' | 'folder', targetDir?: string) => void
   onRename?: (node: Node, className: string, fileBase: string) => void
   onMoveFile?: (node: Node, targetDir: string) => void
@@ -164,7 +169,6 @@ export default function GraphView({
   const [addFile, setAddFile] = useState('')
   const [addKind, setAddKind] = useState<'class' | 'function' | 'folder'>('class')
   // paleta szybkiego dodawania (dwuklik na płótnie)
-  const [palette, setPalette] = useState<{ x: number; y: number } | null>(null)
   // pozycja (flow) gdzie pojawi się nowy element + węzły optymistyczne (od razu)
   const addFlowPos = useRef<{ x: number; y: number } | null>(null)
   const [localNodes, setLocalNodes] = useState<{ id: string; name: string; kind: string; x: number; y: number }[]>([])
@@ -322,7 +326,8 @@ export default function GraphView({
       visible.add(id)
       const n = byId.get(id)
 
-      if (n && n.kind === 'folder' && expanded.has(id)) {
+      // folders AND apps reveal their children when expanded (apps expand inline)
+      if (n && (n.kind === 'folder' || n.kind === 'app') && expanded.has(id)) {
         for (const c of children.get(id) ?? []) {
           reveal(c)
         }
@@ -517,8 +522,7 @@ export default function GraphView({
 
   // Klik w folder = rozwiń/zwiń; inne węzły → propaguj wyżej.
   const handleClick = (node: Node) => {
-    setPalette(null) // klik w node zamyka paletę/menu dodawania
-    setMenu(null)
+    setMenu(null) // clicking a node closes any open context menu
 
     // Tryb przepinania: klik na folderze = przenieś tam plik; klik gdzie indziej anuluje.
     if (relink) {
@@ -535,19 +539,25 @@ export default function GraphView({
       return
     }
 
-    if (node.kind === 'folder') {
+    // Folders and apps expand/collapse in place. An app loads its internal graph
+    // (onExpandApp) the first time it's expanded — the monorepo stays visible.
+    if (node.kind === 'folder' || node.kind === 'app') {
       const willExpand = !expanded.has(node.id)
+      const kids = graph
+        .dependencies()
+        .filter((d) => d.kind === 'contains' && d.from === node.id)
+        .map((d) => d.to)
 
       if (willExpand) {
-        const kids = graph
-          .dependencies()
-          .filter((d) => d.kind === 'contains' && d.from === node.id)
-          .map((d) => d.to)
+        if (node.kind === 'app' && kids.length === 0 && node instanceof AppNode) {
+          onExpandApp?.(node.appId) // not loaded yet → fetch + merge its internals
+        }
 
-        // po rozwinięciu przesuń widok na pierwsze dziecko
+        // after expanding, move the view to the first child
         focusOnExpand.current = [node.id, ...kids]
       }
 
+      appBus.emit('graph:folder-toggle', { id: node.id, expanded: willExpand })
       setExpanded((prev) => {
         const next = new Set(prev)
 
@@ -563,6 +573,7 @@ export default function GraphView({
       return
     }
 
+    appBus.emit('graph:node-click', { id: node.id, kind: node.kind })
     onNodeClick?.(node)
   }
 
@@ -625,10 +636,9 @@ export default function GraphView({
     return withFile ? withFile.absFile.replace(/[\\/][^\\/]+$/, '') : ''
   }
 
-  // Otwarcie dialogu „Dodaj element".
+  // Open the "Add element" dialog. For folders/apps the target dir is their own.
   const openAdd = (dir?: string, kind: 'class' | 'function' | 'folder' = 'class') => {
     setMenu(null)
-    setPalette(null)
     setAddName('')
     setAddFile('')
     setAddKind(kind)
@@ -636,6 +646,9 @@ export default function GraphView({
     loadConventions(dir || anyProjectDir())
     setAddOpen(true)
   }
+
+  // target directory when adding into a folder/app node
+  const addTargetDir = (node: Node): string | undefined => node.file || folderDir.get(node.id)
 
   // Usuń element — plik (absFile) lub folder (katalog z mapy folderDir).
   const removeNode = (node: Node) => {
@@ -687,24 +700,15 @@ export default function GraphView({
   return (
     <div
       ref={wrapRef}
-      style={{ position: 'relative', width: '100%', height: '100%' }}
-      onClick={() => menu && setMenu(null)}
-      onDoubleClick={(e) => {
-        // dwuklik w puste płótno → paleta dodawania (zapamiętaj pozycję flow)
-        if ((e.target as HTMLElement).classList.contains('react-flow__pane')) {
-          const rect = wrapRef.current?.getBoundingClientRect()
-          const vp = flow.current?.getViewport()
-
-          if (rect && vp) {
-            addFlowPos.current = {
-              x: (e.clientX - rect.left - vp.x) / vp.zoom,
-              y: (e.clientY - rect.top - vp.y) / vp.zoom
-            }
-          }
-
-          setPalette({ x: e.clientX, y: e.clientY })
-        }
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        backgroundImage: wallpaper ? `url("${wallpaper}")` : undefined,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
       }}
+      onClick={() => menu && setMenu(null)}
       onMouseMove={(e) => relink && setMouse({ x: e.clientX, y: e.clientY })}
     >
     <ReactFlow
@@ -738,7 +742,6 @@ export default function GraphView({
       onInit={(inst) => (flow.current = inst)}
       onPaneClick={() => {
         setMenu(null)
-        setPalette(null) // pojedynczy klik chowa paletę / anuluje
         setRelink(null)
       }}
       onMoveEnd={(_e, vp) => {
@@ -777,6 +780,7 @@ export default function GraphView({
 
         setRelink({ fileNode: file })
         setMouse({ x: e.clientX, y: e.clientY })
+        appBus.emit('graph:move-start', { path: file.absFile })
       }}
       onEdgeUpdate={(oldEdge, conn) => {
         // przeciągnięcie końca linii „contains" na inny folder → przenieś plik
@@ -796,14 +800,14 @@ export default function GraphView({
         void oldEdge
       }}
       onNodeClick={(_e, n) => handleClick(n.data as Node)}
-      onNodeDoubleClick={(_e, n) => onNodeDoubleClick?.(n.data as Node)}
+      onNodeDoubleClick={(_e, n) => {
+        const node = n.data as Node
+        appBus.emit('graph:node-dblclick', { id: node.id, kind: node.kind })
+        onNodeDoubleClick?.(node)
+      }}
       onNodeContextMenu={(e, n) => {
         e.preventDefault()
         setMenu({ x: e.clientX, y: e.clientY, node: n.data as Node })
-      }}
-      onPaneContextMenu={(e) => {
-        e.preventDefault()
-        setMenu({ x: e.clientX, y: e.clientY, node: null })
       }}
     >
       <Background color="#21262d" gap={20} />
@@ -853,42 +857,17 @@ export default function GraphView({
       </>
     )}
 
-    {palette && (
-      <ContextMenu
-        x={palette.x}
-        y={palette.y}
-        onClose={() => setPalette(null)}
-        items={[
-          { label: `🟥  ${t('graph.class')}`, onClick: () => openAdd(rootDir, 'class') },
-          { label: `λ  ${t('graph.function')}`, onClick: () => openAdd(rootDir, 'function') },
-          { label: `📁  ${t('graph.folder')}`, onClick: () => openAdd(rootDir, 'folder') }
-        ]}
-      />
-    )}
-
-    {menu && (
-      <ContextMenu
+    {menu && menu.node && (
+      <NodeContextMenu
         x={menu.x}
         y={menu.y}
+        node={menu.node}
+        addTargetDir={addTargetDir}
+        onAdd={openAdd}
+        onRename={openRename}
+        onDelete={removeNode}
+        onEdit={(n) => onNodeClick?.(n)}
         onClose={() => setMenu(null)}
-        items={
-          !menu.node
-            ? [{ label: t('graph.addElement'), onClick: () => openAdd(rootDir) }]
-            : menu.node.kind === 'folder'
-              ? [
-                  { label: t('graph.addElement'), onClick: () => openAdd(menu.node!.file || folderDir.get(menu.node!.id)) },
-                  { label: t('graph.rename'), onClick: () => openRename(menu.node!) },
-                  { label: t('graph.deleteElement'), onClick: () => removeNode(menu.node!) }
-                ]
-              : [
-                  // „Edytuj" jako pierwsza opcja — tylko gdy węzeł ma plik (edytowalny).
-                  ...(menu.node.absFile
-                    ? [{ label: t('graph.edit'), onClick: () => onNodeClick?.(menu.node!) }]
-                    : []),
-                  { label: t('graph.rename'), onClick: () => openRename(menu.node!) },
-                  { label: t('graph.deleteElement'), onClick: () => removeNode(menu.node!) }
-                ]
-        }
       />
     )}
 
@@ -907,6 +886,7 @@ export default function GraphView({
         }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && findText.trim().length >= 3) {
+            appBus.emit('graph:search', { query: findText.trim() })
             searchAndPan(findText)
           }
 

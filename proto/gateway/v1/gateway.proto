@@ -147,6 +147,7 @@ message ResolveRequest {
 message AiAgentRequest {
   string prompt = 1;
   string dir = 2; // domyślny katalog (ostatnio otwarty folder)
+  string lang = 3; // UI language for the AI's wording (e.g. "pl", "en")
 }
 
 message FileOp {
@@ -181,6 +182,7 @@ message AiProviderRequest {
 message AiReviewRequest {
   string code = 1;
   string file = 2;
+  string lang = 3; // UI language for the AI's wording (e.g. "pl", "en")
 }
 
 message Remark {

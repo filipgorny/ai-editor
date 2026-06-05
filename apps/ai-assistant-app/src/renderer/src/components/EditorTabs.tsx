@@ -28,6 +28,18 @@ const Tab = styled.div<{ $active: boolean; $min: boolean }>`
   opacity: ${(p) => (p.$min ? 0.65 : 1)};
 `
 
+// close icon shows only on hover so clicking a (small) tab restores it instead of
+// accidentally closing it
+const Close = styled.span`
+  display: inline-flex;
+  align-items: center;
+  opacity: 0;
+
+  ${Tab}:hover & {
+    opacity: 0.75;
+  }
+`
+
 const base = (p: string): string => p.split(/[\\/]/).pop() || p
 
 // EditorTabs — pasek otwartych plików (auto-odświeżany ze stanu), przełączanie,
@@ -61,13 +73,15 @@ export default function EditorTabs({
         >
           {minimized.has(t.path) ? '▢ ' : ''}
           {base(t.path)}
-          <CloseIcon
-            sx={{ fontSize: 14 }}
-            onClick={(e) => {
-              e.stopPropagation()
-              onClose(t.path)
-            }}
-          />
+          <Close>
+            <CloseIcon
+              sx={{ fontSize: 14 }}
+              onClick={(e) => {
+                e.stopPropagation()
+                onClose(t.path)
+              }}
+            />
+          </Close>
         </Tab>
       ))}
     </Bar>

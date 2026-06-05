@@ -197,7 +197,7 @@ function registerIpc(win) {
     "ai:review",
     (_e, payload) => new Promise((resolve, reject) => {
       client.AiReview(
-        { code: payload.code, file: payload.file },
+        { code: payload.code, file: payload.file, lang: payload.lang },
         (err, resp) => err ? reject(err) : resolve(resp?.remarks ?? [])
       );
     })

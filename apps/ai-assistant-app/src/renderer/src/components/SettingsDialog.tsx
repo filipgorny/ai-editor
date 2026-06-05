@@ -12,6 +12,7 @@ import {
 } from '@mui/material'
 import { themeNames } from './themes'
 import { changeLanguage, languages } from '../i18n'
+import { appBus } from '../events'
 
 export type ModelProvider = 'ollama' | 'claude'
 
@@ -40,6 +41,7 @@ export default function SettingsDialog({
     await window.api.setSettings({ provider })
     // przełącz dostawcę LLM w locie (przez gateway → ai)
     await window.api.aiSetProvider(provider).catch(() => undefined)
+    appBus.emit('settings:provider-change', { provider })
     onClose()
   }
 
@@ -52,7 +54,10 @@ export default function SettingsDialog({
           label={t('settings.language')}
           size="small"
           value={i18n.language}
-          onChange={(e) => changeLanguage(e.target.value)}
+          onChange={(e) => {
+            changeLanguage(e.target.value)
+            appBus.emit('settings:language-change', { lang: e.target.value })
+          }}
         >
           {languages.map((l) => (
             <MenuItem key={l.code} value={l.code}>
@@ -77,7 +82,10 @@ export default function SettingsDialog({
           label={t('settings.themeLabel')}
           size="small"
           value={theme}
-          onChange={(e) => onThemeChange(e.target.value)}
+          onChange={(e) => {
+            onThemeChange(e.target.value)
+            appBus.emit('settings:theme-change', { theme: e.target.value })
+          }}
         >
           {themeNames.map((name) => (
             <MenuItem key={name} value={name}>

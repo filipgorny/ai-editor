@@ -173,7 +173,7 @@ function registerIpc(win: BrowserWindow): void {
   ipcMain.handle('fs:conventions', (_e, path: string) => call('DetectConventions', { path }))
 
   // --- ai:agent — agent plików: ai PLANUJE, gateway (filer) WYKONUJE ---
-  ipcMain.handle('ai:agent', (_e, p: { prompt: string; dir: string }) => call('AiAgent', p))
+  ipcMain.handle('ai:agent', (_e, p: { prompt: string; dir: string; lang: string }) => call('AiAgent', p))
 
   // ai:provider — przełączenie dostawcy LLM (przez gateway → ai). Zwraca nazwę.
   ipcMain.handle('ai:provider', async (_e, provider: string) => (await call('AiSetProvider', { provider })).name ?? '')
@@ -199,9 +199,9 @@ function registerIpc(win: BrowserWindow): void {
     })
   )
 
-  ipcMain.handle('ai:review', (_e, payload: { code: string; file: string }) =>
+  ipcMain.handle('ai:review', (_e, payload: { code: string; file: string; lang: string }) =>
     new Promise((resolve, reject) => {
-      client.AiReview({ code: payload.code, file: payload.file }, (err: any, resp: any) =>
+      client.AiReview({ code: payload.code, file: payload.file, lang: payload.lang }, (err: any, resp: any) =>
         err ? reject(err) : resolve(resp?.remarks ?? [])
       )
     })

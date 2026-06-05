@@ -1,5 +1,6 @@
 import { type MouseEvent as ReactMouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { appBus } from '../events'
 import { IconButton, Button, CircularProgress, FormControlLabel, Switch, Snackbar, Alert } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import SaveIcon from '@mui/icons-material/Save'
@@ -172,11 +173,13 @@ export default function CodeEditor({
   theme?: string
   root?: string
 }) {
-  const { t } = useTranslation()
-  // pozycja pływającego okna (przeciągane za pasek tytułu); kolejne z przesunięciem
-  const [pos, setPos] = useState({ x: 90 + index * 34, y: 60 + index * 34 })
-  // rozmiar okna (zmieniany Alt + środkowy przycisk myszy)
-  const [size, setSize] = useState({ w: Math.round(window.innerWidth * 0.72), h: Math.round(window.innerHeight * 0.8) })
+  const { t, i18n } = useTranslation()
+  // default editor window: centered, ~30% narrower than before
+  const [size, setSize] = useState({ w: Math.round(window.innerWidth * 0.5), h: Math.round(window.innerHeight * 0.8) })
+  const [pos, setPos] = useState({
+    x: Math.round((window.innerWidth - window.innerWidth * 0.5) / 2) + index * 30,
+    y: Math.round((window.innerHeight - window.innerHeight * 0.8) / 2) + index * 30
+  })
 
   const startDrag = (e: ReactMouseEvent) => {
     e.preventDefault()
@@ -420,6 +423,7 @@ export default function CodeEditor({
       .catch(() => {
         setContent(t('editor.loadError'))
         setLoading(false)
+        appBus.emit('editor:load-error', { path: target.path })
       })
   }, [target?.path])
 
@@ -560,7 +564,7 @@ export default function CodeEditor({
 
     const t = window.setTimeout(() => {
       window.api
-        .aiReview(content, target.path)
+        .aiReview(content, target.path, i18n.language)
         .then((rs) => setReviewRemarks(rs.map((r) => ({ line: r.line, text: r.text, color: '#6e7681', prefix: '‹' }))))
         .catch(() => undefined)
     }, 1500)
@@ -632,6 +636,7 @@ export default function CodeEditor({
     setSaved(true)
     // event: zapis pliku
     window.api.publishEvent({ type: 'save', title: t('events.save'), file: target.path })
+    appBus.emit('editor:save', { path: target.path })
   }
 
   // Zamknięcie z potwierdzeniem, gdy są niezapisane zmiany.
@@ -759,6 +764,7 @@ export default function CodeEditor({
 
       if (next && next !== before) {
         animateDiff(before, next)
+        appBus.emit('editor:ai-edit', { path: target.path })
       }
     } finally {
       setBusy(false)
@@ -824,7 +830,13 @@ export default function CodeEditor({
         <IconButton size="small" onClick={() => onMinimize?.()} title={t('editor.minimize')}>
           <MinimizeIcon fontSize="small" />
         </IconButton>
-        <IconButton size="small" onClick={() => setFullscreen((v) => !v)}>
+        <IconButton
+          size="small"
+          onClick={() => {
+            appBus.emit('editor:fullscreen', { path: target.path, on: !fullscreen })
+            setFullscreen(!fullscreen)
+          }}
+        >
           {fullscreen ? <FullscreenExitIcon fontSize="small" /> : <FullscreenIcon fontSize="small" />}
         </IconButton>
         <IconButton size="small" onClick={handleClose}>
