@@ -73,9 +73,11 @@ services:
     restart: unless-stopped
     depends_on:
       - events
+      - redis
     environment:
       AI_ADDR: 0.0.0.0:50071
       EVENTS_ADDR: events:50091
+      REDIS_ADDR: redis:6379
       OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5-coder:14b}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}

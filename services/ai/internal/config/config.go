@@ -12,6 +12,7 @@ import (
 type Config struct {
 	Addr       string     `yaml:"addr"`
 	EventsAddr string     `yaml:"events_addr"`
+	RedisAddr  string     `yaml:"redis_addr"` // gdy ustawiony, token Claude trzymamy w Redisie (inaczej plik)
 	LLM        llm.Config `yaml:"llm"`
 }
 
@@ -48,6 +49,10 @@ func Load(path string) (Config, error) {
 
 	if v := os.Getenv("EVENTS_ADDR"); v != "" {
 		c.EventsAddr = v
+	}
+
+	if v := os.Getenv("REDIS_ADDR"); v != "" {
+		c.RedisAddr = v
 	}
 
 	if v := os.Getenv("OLLAMA_HOST"); v != "" {

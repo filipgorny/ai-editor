@@ -103,6 +103,8 @@ function kvSet(key, value) {
   }
   store$1().set(key, value);
 }
+electron.app.setName("Blink");
+electron.app.commandLine.appendSwitch("class", "Blink");
 function resolveClaude() {
   const candidates = [
     path.join(os.homedir(), ".local/bin/claude"),
@@ -265,7 +267,7 @@ function createWindow() {
     backgroundColor: "#0d1117",
     show: false,
     autoHideMenuBar: true,
-    title: "Avier",
+    title: `Blink ${electron.app.getVersion()}`,
     icon: path.join(electron.app.getAppPath(), "build", "icon.png"),
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.js"),
@@ -292,6 +294,11 @@ function createWindow() {
   win.on("unmaximize", persistSoon);
   win.on("close", persistWindow);
   win.on("ready-to-show", () => win.show());
+  const windowTitle = `Blink ${electron.app.getVersion()}`;
+  win.webContents.on("page-title-updated", (e) => {
+    e.preventDefault();
+    win.setTitle(windowTitle);
+  });
   if (process.env.ELECTRON_RENDERER_URL) {
     win.loadURL(process.env.ELECTRON_RENDERER_URL);
   } else {

@@ -1,68 +1,41 @@
-# ai-architect
+# Blink official repository
 
-Monorepo Bazel (bzlmod). Aplikacje Go żyją w `services/<nazwa>`.
+Monorepo Bazel aplikacji Bliink.
 
-## Wymagania
-- Bazel przez `.bazelversion` (7.4.1) — zainstaluj `bazelisk` (w systemie go brak, choć `codeagent` go używa).
-- Go 1.23+, Docker + docker-compose, ollama (natywny, na hoście).
+Blink is an editor for Senior Developers.
 
-## Struktura
-```
-ai-architect/
-├── MODULE.bazel              # bzlmod: rules_go 0.56, gazelle 0.43, Go SDK 1.23.4
-├── BUILD.bazel               # target gazelle + prefix github.com/filipgorny/ai-architect
-├── go.mod                    # github.com/filipgorny/ai-architect
-├── docker-compose.yml        # PostgreSQL 16
-├── .env.example              # config bazy + ollama
-└── services/
-    └── scanner/cmd/scanner/  # aplikacja Go (skaner katalogów)
-```
+# Philosophy
+- Focus on architecture, AI will do the boring job
+- If you used vim or nvim you can use vim mode
+- You can write scripts in Lua to personalize your experience
 
-## Uruchomienie (Docker + Electron)
-Cały backend (8 serwisów Go + PostgreSQL + Redis) chodzi w Dockerze; lokalnie
-odpalamy tylko apkę Electron, która gada z gatewayem na `localhost:50061`.
-**Hot-reload działa w Dockerze**: zmiana dowolnego pliku `.go` jest wykrywana przez
-watcher w kontenerze (CompileDaemon), który rekompiluje i restartuje dany serwis —
-bez ręcznego restartu. Realizuje to `docker-compose.dev.yaml` (nakładka dev).
-```bash
-cp .env.example .env
-pnpm dev            # backend (z hot-reloadem) + apka Electron
-pnpm down           # stop (dane w wolumenach)
-pnpm logs           # logi serwisów (docker compose logs -f)
-pnpm restart        # przebuduj/odśwież backend
-```
+# AI first!
+This editor requires an AI provider like Claude or ChatGPT API,
+to give you what it is made for. 
+There is a possibility to use Ollama but cloud AI is much
+better (for example it has much bigger context window).
 
-### Tylko backend / bez Electrona
-```bash
-# z hot-reloadem (nakładka dev):
-docker compose -f docker-compose.yml -f docker-compose.dev.yaml up -d --build
-# czyste obrazy produkcyjne (bez watchera):
-pnpm run up:prod                # = docker compose -f docker-compose.yml up -d --build
-docker compose down             # stop (dane w wolumenach postgres-data/redis-data)
-```
+You create an architecture plan, add classes, functions,
+services, modules, components... and AI will code it for you
+if you want. 
+If you like to type yourself maybe just integrated copilot
+will be something you like.
 
-### Tryb natywny (go run, bez Dockera dla serwisów)
-Alternatywa dla hot-reloadu w Dockerze — serwisy lecą natywnie przez `go run`
-(nodemon), w Dockerze zostają tylko PostgreSQL i Redis:
-```bash
-pnpm dev:native
-```
+# Vim keys
+The editor as default works in vim mode, and there are a lot
+of keys shorcuts, so basically if you want you can rest
+your hands on the keyboard and dont use mouse at all.
 
-## Build / run pojedynczego serwisu
-```bash
-# Go (natywnie)
-go build ./services/scanner/cmd/scanner
-go run ./services/scanner/cmd/scanner -path .
-
-# Bazel (po instalacji bazelisk)
-bazel run //:gazelle            # generuje/aktualizuje BUILD.bazel
-bazel build //...
-bazel run //services/scanner/cmd/scanner -- -path .
-```
-
-## Model LLM
-Używamy natywnego ollama na hoście — model jest już pociągnięty w systemie:
-```bash
-ollama list                     # -> qwen2.5-coder:14b
-```
-Aplikacja gada z nim po `OLLAMA_HOST=http://localhost:11434` (patrz `.env.example`).
+# Why I created Blink?
+Cause I wanted editor that suits my workflow, and I think
+my workflow is suitable for 2026, when AI is doing
+great job at writing code, and especially as a developer
+who works in the industry for over two decades, I know
+what is important, and I think the architecture planning
+is what you should focus on, letting LLM write the code.
+The thing is - if you use LLM for work to write software,
+you must know how to do it, you have to have it under
+a control. Using coding agents to creat software requreires
+knowledge and skill. This editor assumes you have it,
+or you will learn it, and it is suited especially
+for the new era of software development.

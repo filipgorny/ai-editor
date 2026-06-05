@@ -15,6 +15,7 @@ import (
 	"github.com/filipgorny/ai-architect/services/ai/internal/agent"
 	"github.com/filipgorny/ai-architect/services/ai/internal/config"
 	"github.com/filipgorny/ai-architect/services/ai/internal/server"
+	"github.com/filipgorny/ai-architect/services/ai/internal/tokenstore"
 )
 
 func main() {
@@ -44,8 +45,12 @@ func main() {
 	events := eventsv1.NewEventsClient(conn)
 	ag := agent.New(provider, cfg.LLM, events)
 
-	// Wczytaj token OAuth Claude zapisany w wolumenie, by `claude -p` był uwierzytelniony
-	// od razu po restarcie kontenera (logika i ścieżka — w llm/claude.go).
+	// Token OAuth Claude: gdy skonfigurowano REDIS_ADDR — trzymamy go w Redisie (przeżywa
+	// restart, współdzielony), inaczej w pliku/wolumenie. Magazyn wstrzykujemy PRZED odczytem.
+	if cfg.RedisAddr != "" {
+		llm.SetClaudeTokenStore(tokenstore.NewRedis(cfg.RedisAddr))
+	}
+
 	llm.LoadClaudeToken()
 
 	lis, err := net.Listen("tcp", cfg.Addr)
