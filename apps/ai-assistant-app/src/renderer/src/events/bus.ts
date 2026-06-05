@@ -26,6 +26,10 @@ export type AppEventMap = {
   'file:move': { from: string; to: string }
   'file:delete': { path: string }
 
+  // — Disk watcher (external changes on disk, detected by the filer; not made by the app) —
+  'disk:change': { path: string; op: 'create' | 'write' | 'remove' | 'rename' | 'chmod'; dir: boolean }
+  'disk:refresh': { path: string }
+
   // — Editor —
   'editor:open': { path: string }
   'editor:close': { path: string }
@@ -52,6 +56,27 @@ export type AppEventMap = {
   'settings:provider-change': { provider: string }
   'settings:theme-change': { theme: string }
   'settings:language-change': { lang: string }
+
+  // — Commander (see COMMANDS.md) —
+  'command:run': { name: string; arg: string }
+  'command:error': { name: string; arg: string; message: string }
+
+  // — Keyboard (see keys.ts / SCRIPTING.md). 'key:<combo>' variants are emitted dynamically. —
+  key: KeyEvent
+  keyup: KeyEvent
+}
+
+// KeyEvent — payload for the keyboard events ('key'/'keyup' and their 'key:<combo>' variants).
+export type KeyEvent = {
+  key: string
+  code: string
+  ctrl: boolean
+  alt: boolean
+  shift: boolean
+  meta: boolean
+  combo: string
+  repeat: boolean
+  editable: boolean
 }
 
 export type AppEventName = keyof AppEventMap

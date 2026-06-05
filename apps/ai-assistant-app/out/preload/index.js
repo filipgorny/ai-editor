@@ -32,6 +32,12 @@ const api = {
   aiReview: (code, file, lang) => electron.ipcRenderer.invoke("ai:review", { code, file, lang }),
   lintFile: (code, file) => electron.ipcRenderer.invoke("lint:file", { code, file }),
   publishEvent: (ev) => electron.ipcRenderer.invoke("event:publish", ev),
+  // --- User scripts (via gateway → scripting service; Postgres) ---
+  // project is optional ('' = global). listScripts(project) → global + pinned.
+  listScripts: (project) => electron.ipcRenderer.invoke("scripts:list", project ?? ""),
+  getScript: (id) => electron.ipcRenderer.invoke("scripts:get", id),
+  saveScript: (s) => electron.ipcRenderer.invoke("scripts:save", s),
+  deleteScript: (id) => electron.ipcRenderer.invoke("scripts:delete", id),
   onProgress: (cb) => {
     const handler = (_e, p) => cb(p);
     electron.ipcRenderer.on("scan:progress", handler);
@@ -46,6 +52,14 @@ const api = {
     const handler = (_e, msg) => cb(msg);
     electron.ipcRenderer.on("scan:error", handler);
     return () => electron.ipcRenderer.removeListener("scan:error", handler);
+  },
+  // --- Disk watcher: react to files appearing/disappearing on disk ---
+  watchProject: (path) => electron.ipcRenderer.send("fs:watch:start", path),
+  stopWatch: () => electron.ipcRenderer.send("fs:watch:stop"),
+  onFsChange: (cb) => {
+    const handler = (_e, ev) => cb(ev);
+    electron.ipcRenderer.on("fs:change", handler);
+    return () => electron.ipcRenderer.removeListener("fs:change", handler);
   }
 };
 electron.contextBridge.exposeInMainWorld("api", api);

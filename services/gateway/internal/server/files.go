@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"path/filepath"
 	"strings"
 
@@ -109,6 +110,32 @@ func (p *Proxy) SaveGraphState(ctx context.Context, req *gatewayv1.GraphStateReq
 
 func (p *Proxy) GetGraphState(ctx context.Context, req *gatewayv1.GraphStateKey) (*gatewayv1.GraphStateResponse, error) {
 	return p.client.GetGraphState(ctx, req)
+}
+
+// WatchFiles proxies the filer's recursive disk watcher to the Electron app so
+// the graph can refresh when files appear/disappear on disk.
+func (p *Proxy) WatchFiles(req *gatewayv1.FilePath, out gatewayv1.Gateway_WatchFilesServer) error {
+	in, err := p.filer.Watch(out.Context(), &filerv1.PathReq{Path: req.GetPath()})
+
+	if err != nil {
+		return err
+	}
+
+	for {
+		ev, err := in.Recv()
+
+		if err == io.EOF {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if err := out.Send(&gatewayv1.FileEvent{Path: ev.GetPath(), Op: ev.GetOp(), Dir: ev.GetDir()}); err != nil {
+			return err
+		}
+	}
 }
 
 func (p *Proxy) DetectConventions(ctx context.Context, req *gatewayv1.FilePath) (*gatewayv1.Conventions, error) {

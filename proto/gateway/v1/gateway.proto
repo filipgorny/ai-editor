@@ -50,12 +50,43 @@ service Gateway {
   // Wykrycie konwencji nazw plików i rozszerzenia katalogu (przez filer).
   rpc DetectConventions(FilePath) returns (Conventions);
 
+  // WatchFiles strumieniuje zmiany na dysku w katalogu projektu (przez filer),
+  // by graf mógł reagować na utworzenie/usunięcie/zmianę plików.
+  rpc WatchFiles(FilePath) returns (stream FileEvent);
+
   // AiAgent: ai planuje operacje na plikach/folderach (JSON), gateway je WYKONUJE.
   rpc AiAgent(AiAgentRequest) returns (AiAgentResponse);
 
   // Graph state (viewport/layout) persisted in Postgres by the designer.
   rpc SaveGraphState(GraphStateRequest) returns (FileResult);
   rpc GetGraphState(GraphStateKey) returns (GraphStateResponse);
+
+  // --- User scripts (proxy to the scripting service; Postgres) ---
+  rpc ListScripts(ScriptQuery) returns (ScriptList);
+  rpc GetScript(ScriptId) returns (Script);
+  rpc SaveScript(Script) returns (Script);
+  rpc DeleteScript(ScriptId) returns (FileResult);
+}
+
+message ScriptId {
+  int64 id = 1;
+}
+
+message ScriptQuery {
+  string project = 1; // "" = wszystkie; inaczej globalne + przypięte do projektu
+}
+
+message Script {
+  int64 id = 1;
+  string name = 2;
+  string content = 3;
+  string project = 6; // folder projektu ("" = globalny)
+  int64 created_at = 4;
+  int64 updated_at = 5;
+}
+
+message ScriptList {
+  repeated Script scripts = 1;
 }
 
 message GraphStateRequest {
@@ -96,6 +127,12 @@ message FoundProjects {
 message Conventions {
   string convention = 1; // "dash" | "camel"
   string extension = 2;  // np. "ts"
+}
+
+message FileEvent {
+  string path = 1; // ścieżka zmienionego pliku/folderu
+  string op = 2;   // create | write | remove | rename
+  bool dir = 3;    // czy zmiana dotyczy folderu
 }
 
 message FilePath {

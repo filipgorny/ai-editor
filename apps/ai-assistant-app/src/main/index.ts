@@ -1,5 +1,5 @@
 import { join, dirname } from 'path'
-import { app, BrowserWindow, ipcMain, dialog, Menu, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, Menu, shell, screen } from 'electron'
 import Store from 'electron-store'
 import * as grpc from '@grpc/grpc-js'
 import * as protoLoader from '@grpc/proto-loader'
@@ -46,9 +46,13 @@ function call(method: string, payload: any): Promise<any> {
 let client: any
 
 function createWindow(): BrowserWindow {
+  // Open larger at startup: ~90% of the work area, centered on the primary display.
+  const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize
+
   const win = new BrowserWindow({
-    width: 1320,
-    height: 880,
+    width: Math.round(sw * 0.9),
+    height: Math.round(sh * 0.9),
+    center: true,
     backgroundColor: '#0d1117',
     show: false,
     autoHideMenuBar: true,
@@ -254,6 +258,17 @@ function registerIpc(win: BrowserWindow): void {
     })
   )
 
+  // --- User scripts: via gateway → scripting service (Postgres) ---
+  // project == '' → all; otherwise global + pinned to the project. project is not required.
+  ipcMain.handle('scripts:list', async (_e, project?: string) =>
+    (await call('ListScripts', { project: project ?? '' })).scripts ?? []
+  )
+  ipcMain.handle('scripts:get', (_e, id: number) => call('GetScript', { id }))
+  ipcMain.handle('scripts:save', (_e, s: { id?: number; name: string; content: string; project?: string }) =>
+    call('SaveScript', { id: s.id ?? 0, name: s.name, content: s.content, project: s.project ?? '' })
+  )
+  ipcMain.handle('scripts:delete', async (_e, id: number) => (await call('DeleteScript', { id })).ok ?? false)
+
   ipcMain.on('scan:start', (e, path: string) => {
     const call = client.Scan({ path })
 
@@ -269,6 +284,39 @@ function registerIpc(win: BrowserWindow): void {
     call.on('end', () => e.sender.send('scan:end'))
     call.on('error', (err: any) => e.sender.send('scan:error', String(err)))
   })
+
+  // --- Disk watcher: gateway → filer streams fs changes so the graph stays fresh ---
+  // Only one watcher at a time; starting a new one cancels the previous stream.
+  let watchCall: any = null
+
+  const stopWatch = (): void => {
+    if (watchCall) {
+      try {
+        watchCall.cancel()
+      } catch {
+        // stream already closed
+      }
+
+      watchCall = null
+    }
+  }
+
+  ipcMain.on('fs:watch:start', (e, path: string) => {
+    stopWatch()
+
+    if (!path) {
+      return
+    }
+
+    const call = client.WatchFiles({ path })
+    watchCall = call
+
+    call.on('data', (ev: any) => e.sender.send('fs:change', ev))
+    call.on('end', () => undefined)
+    call.on('error', () => undefined) // cancel / transient errors — ignore
+  })
+
+  ipcMain.on('fs:watch:stop', () => stopWatch())
 }
 
 app.whenReady().then(() => {

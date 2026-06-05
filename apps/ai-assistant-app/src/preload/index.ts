@@ -59,6 +59,26 @@ const api = {
     nodeId?: string
   }): Promise<unknown> => ipcRenderer.invoke('event:publish', ev),
 
+  // --- User scripts (via gateway → scripting service; Postgres) ---
+  // project is optional ('' = global). listScripts(project) → global + pinned.
+  listScripts: (
+    project?: string
+  ): Promise<
+    { id: number; name: string; content: string; project: string; createdAt: number; updatedAt: number }[]
+  > => ipcRenderer.invoke('scripts:list', project ?? ''),
+  getScript: (
+    id: number
+  ): Promise<{ id: number; name: string; content: string; project: string; createdAt: number; updatedAt: number }> =>
+    ipcRenderer.invoke('scripts:get', id),
+  saveScript: (s: {
+    id?: number
+    name: string
+    content: string
+    project?: string
+  }): Promise<{ id: number; name: string; content: string; project: string; createdAt: number; updatedAt: number }> =>
+    ipcRenderer.invoke('scripts:save', s),
+  deleteScript: (id: number): Promise<boolean> => ipcRenderer.invoke('scripts:delete', id),
+
   onProgress: (cb: (p: any) => void): (() => void) => {
     const handler = (_e: unknown, p: any) => cb(p)
 
@@ -81,6 +101,17 @@ const api = {
     ipcRenderer.on('scan:error', handler)
 
     return () => ipcRenderer.removeListener('scan:error', handler)
+  },
+
+  // --- Disk watcher: react to files appearing/disappearing on disk ---
+  watchProject: (path: string): void => ipcRenderer.send('fs:watch:start', path),
+  stopWatch: (): void => ipcRenderer.send('fs:watch:stop'),
+  onFsChange: (cb: (ev: { path: string; op: string; dir: boolean }) => void): (() => void) => {
+    const handler = (_e: unknown, ev: { path: string; op: string; dir: boolean }) => cb(ev)
+
+    ipcRenderer.on('fs:change', handler)
+
+    return () => ipcRenderer.removeListener('fs:change', handler)
   }
 }
 

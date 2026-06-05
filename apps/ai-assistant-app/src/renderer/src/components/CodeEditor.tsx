@@ -1,6 +1,7 @@
 import { type MouseEvent as ReactMouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appBus } from '../events'
+import { commander, type EditorHandle } from '../commander/Commander'
 import { IconButton, Button, CircularProgress, FormControlLabel, Switch, Snackbar, Alert } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import SaveIcon from '@mui/icons-material/Save'
@@ -8,7 +9,8 @@ import FullscreenIcon from '@mui/icons-material/Fullscreen'
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit'
 import MinimizeIcon from '@mui/icons-material/Minimize'
 import styled from 'styled-components'
-import CodeMirror, { EditorView, type ReactCodeMirrorRef } from '@uiw/react-codemirror'
+import { EditorView, type ReactCodeMirrorRef } from '@uiw/react-codemirror'
+import CodeMirrorEditor from './CodeMirrorEditor'
 import { javascript } from '@codemirror/lang-javascript'
 import { themeExt } from './themes'
 import { vim, getCM } from '@replit/codemirror-vim'
@@ -316,6 +318,16 @@ export default function CodeEditor({
   const ref = useRef<ReactCodeMirrorRef>(null)
   // sygnatura (plik#funkcja), do której już przewinęliśmy — by nie przewijać przy edycji.
   const scrolledFor = useRef('')
+  // Aktualne callbacki dla Commandera (świeże co render); handle deleguje tutaj.
+  const apiRef = useRef<EditorHandle>({
+    path: '',
+    getView: () => null,
+    save: () => {},
+    runPrompt: () => {},
+    find: () => {},
+    gotoFn: () => {},
+    setFullscreen: () => {}
+  })
 
   // Nazwa aktualnie używanego modelu AI (na przycisku wysyłki).
   useEffect(() => {
@@ -347,9 +359,12 @@ export default function CodeEditor({
     [target?.path, onOpen]
   )
 
-  // vim() musi być pierwszy (najwyższy priorytet klawiszy). oneDark daje kolory
-  // składni, editorTheme (Prec.highest) wymusza czarne tło + Hack, ghostField
-  // renderuje uwagi (aktualizowane efektem). Bez lineWrapping — dymki idą w prawo.
+  // Keep gotoDef behind a ref so the extensions array stays STABLE across re-renders.
+  // Otherwise extensions change every App render (onOpen is a new fn), CodeMirror
+  // reconfigures and steals focus — raising the OS window "for no reason".
+  const gotoDefRef = useRef(gotoDef)
+  gotoDefRef.current = gotoDef
+
   const extensions = useMemo(
     () => [
       copilotKeymap, // Tab akceptuje podpowiedź Copilota (przed vim)
@@ -376,7 +391,7 @@ export default function CodeEditor({
           }
 
           e.preventDefault()
-          gotoDef(spec)
+          gotoDefRef.current(spec)
 
           return true
         }
@@ -386,7 +401,7 @@ export default function CodeEditor({
       themeExt(theme),
       editorTheme
     ],
-    [vimMode, gotoDef, theme]
+    [vimMode, theme]
   )
 
   // Wstrzyknięcie uwag do edytora efektem (bez rekonfiguracji → dymki nie znikają).
@@ -749,8 +764,10 @@ export default function CodeEditor({
     tick()
   }
 
-  const runAi = async () => {
-    if (!target || !prompt.trim() || busy) {
+  const runAi = async (text?: string) => {
+    const ask = (text ?? prompt).trim()
+
+    if (!target || !ask || busy) {
       return
     }
 
@@ -758,7 +775,7 @@ export default function CodeEditor({
     setBusy(true)
 
     try {
-      const next = await window.api.aiEdit(before, prompt, target.path)
+      const next = await window.api.aiEdit(before, ask, target.path)
 
       setPrompt('')
 
@@ -770,6 +787,66 @@ export default function CodeEditor({
       setBusy(false)
     }
   }
+
+  // gotoFn — Commander hook: scroll to a function/method declaration and place the caret.
+  const gotoFn = (fn: string) => {
+    const view = ref.current?.view
+
+    if (!view || !fn) {
+      return
+    }
+
+    const idx = findFunctionLine(view.state.doc.toString(), fn)
+
+    if (idx < 0) {
+      return
+    }
+
+    const line = view.state.doc.line(idx + 1)
+
+    view.dispatch({ selection: { anchor: line.from }, effects: EditorView.scrollIntoView(line.from, { y: 'start', yMargin: 6 }) })
+    view.focus()
+  }
+
+  // openFind — Commander hook: open the find box and jump to the first match.
+  const openFind = (text: string) => {
+    setFindOpen(true)
+    setFindText(text)
+    runFind(text, 0)
+  }
+
+  // Expose this editor to the Commander while it is the active window, so commands like
+  // write/cursor/save/find operate on it. apiRef holds the latest closures; the handle
+  // delegates to it, so it never goes stale without re-binding on every keystroke.
+  apiRef.current = {
+    path: target?.path ?? '',
+    getView: () => ref.current?.view ?? null,
+    save,
+    runPrompt: (p: string) => runAi(p),
+    find: openFind,
+    gotoFn,
+    setFullscreen: (on) => setFullscreen(on === 'toggle' ? (v) => !v : on)
+  }
+
+  useEffect(() => {
+    if (!active || !target || minimized) {
+      return
+    }
+
+    const handle: EditorHandle = {
+      path: target.path,
+      getView: () => apiRef.current.getView(),
+      save: () => apiRef.current.save(),
+      runPrompt: (p) => apiRef.current.runPrompt(p),
+      find: (txt) => apiRef.current.find(txt),
+      gotoFn: (fn) => apiRef.current.gotoFn(fn),
+      setFullscreen: (on) => apiRef.current.setFullscreen(on)
+    }
+
+    commander.bindEditor(handle)
+
+    return () => commander.unbindEditor(handle)
+  }, [active, target?.path, minimized])
 
   if (!target || minimized) {
     return null
@@ -873,20 +950,15 @@ export default function CodeEditor({
         {loading ? (
           <Loading>{t('editor.loading')}</Loading>
         ) : (
-          <CodeMirror
-            ref={ref}
-            value={content}
-            height="100%"
-            theme="none"
-            extensions={extensions}
-            onChange={setContent}
-          />
+          <CodeMirrorEditor ref={ref} value={content} extensions={extensions} onChange={setContent} />
         )}
       </EditorWrap>
 
       <PromptBar>
         <PromptInput
           rows={2}
+          className={busy ? 'ai-thinking' : undefined}
+          style={{ ['--ai-accent' as string]: colors.controller }}
           placeholder={t('agent.placeholderEditor')}
           value={prompt}
           disabled={busy}
@@ -898,7 +970,7 @@ export default function CodeEditor({
             }
           }}
         />
-        <Button variant="contained" size="small" onClick={runAi} disabled={busy} sx={{ minWidth: 96 }}>
+        <Button variant="contained" size="small" onClick={() => runAi()} disabled={busy} sx={{ minWidth: 96 }}>
           {busy ? (
             <CircularProgress size={16} color="inherit" />
           ) : (

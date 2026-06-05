@@ -1,9 +1,10 @@
 # Wspólny config monorepo ai-architect. Każdy serwis ma własną sekcję.
 # Env nadpisuje (SCANNER_ADDR, DESIGNER_ADDR, GATEWAY_ADDR, AI_ADDR, EVENTS_ADDR,
-# DATABASE_URL, REDIS_ADDR, OLLAMA_HOST, OLLAMA_MODEL, OPENAI_API_KEY).
+# SCRIPTING_ADDR, DATABASE_URL, REDIS_ADDR, OLLAMA_HOST, OLLAMA_MODEL, OPENAI_API_KEY).
 #
 # Przepływ: Electron → gateway → designer → {scanner, Postgres}.
-# Cały LLM idzie przez serwis ai. Tylko designer dotyka Postgresa. Eventy w Redis.
+# Cały LLM idzie przez serwis ai. Postgresa dotykają designer (graf) i scripting
+# (skrypty). Eventy w Redis.
 
 scanners:
   server:
@@ -27,6 +28,7 @@ gateway:
   addr: 127.0.0.1:50061
   designer_addr: 127.0.0.1:50081
   filer_addr: 127.0.0.1:50101    # operacje na plikach idą przez filer
+  scripting_addr: 127.0.0.1:50111 # skrypty użytkownika idą przez scripting
 
 ai:
   addr: 127.0.0.1:50071
@@ -39,6 +41,13 @@ ai:
 events:
   addr: 127.0.0.1:50091
   redis_addr: 127.0.0.1:6379
+
+# scripting — przechowuje skrypty użytkownika (Lua) w Postgresie (nazwa + treść).
+# Drugi (obok designera) serwis dotykający bazy. Gateway tylko pośredniczy.
+scripting:
+  addr: 127.0.0.1:50111
+  database:
+    url: postgres://architect:architect@localhost:5432/architect?sslmode=disable
 
 # filer — JEDYNY serwis dotykający systemu plików (czytanie/zapis/operacje +
 # przeglądanie dysku i szukanie projektów). Gateway pośredniczy.

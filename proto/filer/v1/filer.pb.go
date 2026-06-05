@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v7.34.1
-// source: filer/v1/filer.proto
+// source: proto/filer/v1/filer.proto
 
 package filerv1
 
@@ -21,6 +21,66 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type FileEvent struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Path          string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"` // ścieżka zmienionego pliku/folderu
+	Op            string                 `protobuf:"bytes,2,opt,name=op,proto3" json:"op,omitempty"`     // create | write | remove | rename
+	Dir           bool                   `protobuf:"varint,3,opt,name=dir,proto3" json:"dir,omitempty"`  // czy zmiana dotyczy folderu
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FileEvent) Reset() {
+	*x = FileEvent{}
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FileEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FileEvent) ProtoMessage() {}
+
+func (x *FileEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FileEvent.ProtoReflect.Descriptor instead.
+func (*FileEvent) Descriptor() ([]byte, []int) {
+	return file_proto_filer_v1_filer_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *FileEvent) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *FileEvent) GetOp() string {
+	if x != nil {
+		return x.Op
+	}
+	return ""
+}
+
+func (x *FileEvent) GetDir() bool {
+	if x != nil {
+		return x.Dir
+	}
+	return false
+}
+
 type ConventionInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Convention    string                 `protobuf:"bytes,1,opt,name=convention,proto3" json:"convention,omitempty"` // "dash" | "camel"
@@ -31,7 +91,7 @@ type ConventionInfo struct {
 
 func (x *ConventionInfo) Reset() {
 	*x = ConventionInfo{}
-	mi := &file_filer_v1_filer_proto_msgTypes[0]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -43,7 +103,7 @@ func (x *ConventionInfo) String() string {
 func (*ConventionInfo) ProtoMessage() {}
 
 func (x *ConventionInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_filer_v1_filer_proto_msgTypes[0]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -56,7 +116,7 @@ func (x *ConventionInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConventionInfo.ProtoReflect.Descriptor instead.
 func (*ConventionInfo) Descriptor() ([]byte, []int) {
-	return file_filer_v1_filer_proto_rawDescGZIP(), []int{0}
+	return file_proto_filer_v1_filer_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *ConventionInfo) GetConvention() string {
@@ -81,7 +141,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_filer_v1_filer_proto_msgTypes[1]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -93,7 +153,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_filer_v1_filer_proto_msgTypes[1]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -106,7 +166,7 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_filer_v1_filer_proto_rawDescGZIP(), []int{1}
+	return file_proto_filer_v1_filer_proto_rawDescGZIP(), []int{2}
 }
 
 type Entry struct {
@@ -120,7 +180,7 @@ type Entry struct {
 
 func (x *Entry) Reset() {
 	*x = Entry{}
-	mi := &file_filer_v1_filer_proto_msgTypes[2]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -132,7 +192,7 @@ func (x *Entry) String() string {
 func (*Entry) ProtoMessage() {}
 
 func (x *Entry) ProtoReflect() protoreflect.Message {
-	mi := &file_filer_v1_filer_proto_msgTypes[2]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -145,7 +205,7 @@ func (x *Entry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Entry.ProtoReflect.Descriptor instead.
 func (*Entry) Descriptor() ([]byte, []int) {
-	return file_filer_v1_filer_proto_rawDescGZIP(), []int{2}
+	return file_proto_filer_v1_filer_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *Entry) GetName() string {
@@ -180,7 +240,7 @@ type DirListing struct {
 
 func (x *DirListing) Reset() {
 	*x = DirListing{}
-	mi := &file_filer_v1_filer_proto_msgTypes[3]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -192,7 +252,7 @@ func (x *DirListing) String() string {
 func (*DirListing) ProtoMessage() {}
 
 func (x *DirListing) ProtoReflect() protoreflect.Message {
-	mi := &file_filer_v1_filer_proto_msgTypes[3]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -205,7 +265,7 @@ func (x *DirListing) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DirListing.ProtoReflect.Descriptor instead.
 func (*DirListing) Descriptor() ([]byte, []int) {
-	return file_filer_v1_filer_proto_rawDescGZIP(), []int{3}
+	return file_proto_filer_v1_filer_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *DirListing) GetPath() string {
@@ -240,7 +300,7 @@ type ProjectFound struct {
 
 func (x *ProjectFound) Reset() {
 	*x = ProjectFound{}
-	mi := &file_filer_v1_filer_proto_msgTypes[4]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -252,7 +312,7 @@ func (x *ProjectFound) String() string {
 func (*ProjectFound) ProtoMessage() {}
 
 func (x *ProjectFound) ProtoReflect() protoreflect.Message {
-	mi := &file_filer_v1_filer_proto_msgTypes[4]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -265,7 +325,7 @@ func (x *ProjectFound) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProjectFound.ProtoReflect.Descriptor instead.
 func (*ProjectFound) Descriptor() ([]byte, []int) {
-	return file_filer_v1_filer_proto_rawDescGZIP(), []int{4}
+	return file_proto_filer_v1_filer_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ProjectFound) GetName() string {
@@ -298,7 +358,7 @@ type ProjectList struct {
 
 func (x *ProjectList) Reset() {
 	*x = ProjectList{}
-	mi := &file_filer_v1_filer_proto_msgTypes[5]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -310,7 +370,7 @@ func (x *ProjectList) String() string {
 func (*ProjectList) ProtoMessage() {}
 
 func (x *ProjectList) ProtoReflect() protoreflect.Message {
-	mi := &file_filer_v1_filer_proto_msgTypes[5]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -323,7 +383,7 @@ func (x *ProjectList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProjectList.ProtoReflect.Descriptor instead.
 func (*ProjectList) Descriptor() ([]byte, []int) {
-	return file_filer_v1_filer_proto_rawDescGZIP(), []int{5}
+	return file_proto_filer_v1_filer_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ProjectList) GetProjects() []*ProjectFound {
@@ -342,7 +402,7 @@ type PathReq struct {
 
 func (x *PathReq) Reset() {
 	*x = PathReq{}
-	mi := &file_filer_v1_filer_proto_msgTypes[6]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -354,7 +414,7 @@ func (x *PathReq) String() string {
 func (*PathReq) ProtoMessage() {}
 
 func (x *PathReq) ProtoReflect() protoreflect.Message {
-	mi := &file_filer_v1_filer_proto_msgTypes[6]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -367,7 +427,7 @@ func (x *PathReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PathReq.ProtoReflect.Descriptor instead.
 func (*PathReq) Descriptor() ([]byte, []int) {
-	return file_filer_v1_filer_proto_rawDescGZIP(), []int{6}
+	return file_proto_filer_v1_filer_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *PathReq) GetPath() string {
@@ -386,7 +446,7 @@ type Content struct {
 
 func (x *Content) Reset() {
 	*x = Content{}
-	mi := &file_filer_v1_filer_proto_msgTypes[7]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -398,7 +458,7 @@ func (x *Content) String() string {
 func (*Content) ProtoMessage() {}
 
 func (x *Content) ProtoReflect() protoreflect.Message {
-	mi := &file_filer_v1_filer_proto_msgTypes[7]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -411,7 +471,7 @@ func (x *Content) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Content.ProtoReflect.Descriptor instead.
 func (*Content) Descriptor() ([]byte, []int) {
-	return file_filer_v1_filer_proto_rawDescGZIP(), []int{7}
+	return file_proto_filer_v1_filer_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Content) GetContent() string {
@@ -431,7 +491,7 @@ type Result struct {
 
 func (x *Result) Reset() {
 	*x = Result{}
-	mi := &file_filer_v1_filer_proto_msgTypes[8]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -443,7 +503,7 @@ func (x *Result) String() string {
 func (*Result) ProtoMessage() {}
 
 func (x *Result) ProtoReflect() protoreflect.Message {
-	mi := &file_filer_v1_filer_proto_msgTypes[8]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -456,7 +516,7 @@ func (x *Result) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Result.ProtoReflect.Descriptor instead.
 func (*Result) Descriptor() ([]byte, []int) {
-	return file_filer_v1_filer_proto_rawDescGZIP(), []int{8}
+	return file_proto_filer_v1_filer_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *Result) GetPath() string {
@@ -483,7 +543,7 @@ type SaveReq struct {
 
 func (x *SaveReq) Reset() {
 	*x = SaveReq{}
-	mi := &file_filer_v1_filer_proto_msgTypes[9]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -495,7 +555,7 @@ func (x *SaveReq) String() string {
 func (*SaveReq) ProtoMessage() {}
 
 func (x *SaveReq) ProtoReflect() protoreflect.Message {
-	mi := &file_filer_v1_filer_proto_msgTypes[9]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -508,7 +568,7 @@ func (x *SaveReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SaveReq.ProtoReflect.Descriptor instead.
 func (*SaveReq) Descriptor() ([]byte, []int) {
-	return file_filer_v1_filer_proto_rawDescGZIP(), []int{9}
+	return file_proto_filer_v1_filer_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *SaveReq) GetPath() string {
@@ -537,7 +597,7 @@ type CreateReq struct {
 
 func (x *CreateReq) Reset() {
 	*x = CreateReq{}
-	mi := &file_filer_v1_filer_proto_msgTypes[10]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -549,7 +609,7 @@ func (x *CreateReq) String() string {
 func (*CreateReq) ProtoMessage() {}
 
 func (x *CreateReq) ProtoReflect() protoreflect.Message {
-	mi := &file_filer_v1_filer_proto_msgTypes[10]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -562,7 +622,7 @@ func (x *CreateReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateReq.ProtoReflect.Descriptor instead.
 func (*CreateReq) Descriptor() ([]byte, []int) {
-	return file_filer_v1_filer_proto_rawDescGZIP(), []int{10}
+	return file_proto_filer_v1_filer_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *CreateReq) GetDir() string {
@@ -603,7 +663,7 @@ type MkdirReq struct {
 
 func (x *MkdirReq) Reset() {
 	*x = MkdirReq{}
-	mi := &file_filer_v1_filer_proto_msgTypes[11]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -615,7 +675,7 @@ func (x *MkdirReq) String() string {
 func (*MkdirReq) ProtoMessage() {}
 
 func (x *MkdirReq) ProtoReflect() protoreflect.Message {
-	mi := &file_filer_v1_filer_proto_msgTypes[11]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -628,7 +688,7 @@ func (x *MkdirReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MkdirReq.ProtoReflect.Descriptor instead.
 func (*MkdirReq) Descriptor() ([]byte, []int) {
-	return file_filer_v1_filer_proto_rawDescGZIP(), []int{11}
+	return file_proto_filer_v1_filer_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *MkdirReq) GetDir() string {
@@ -657,7 +717,7 @@ type RenameReq struct {
 
 func (x *RenameReq) Reset() {
 	*x = RenameReq{}
-	mi := &file_filer_v1_filer_proto_msgTypes[12]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -669,7 +729,7 @@ func (x *RenameReq) String() string {
 func (*RenameReq) ProtoMessage() {}
 
 func (x *RenameReq) ProtoReflect() protoreflect.Message {
-	mi := &file_filer_v1_filer_proto_msgTypes[12]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -682,7 +742,7 @@ func (x *RenameReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RenameReq.ProtoReflect.Descriptor instead.
 func (*RenameReq) Descriptor() ([]byte, []int) {
-	return file_filer_v1_filer_proto_rawDescGZIP(), []int{12}
+	return file_proto_filer_v1_filer_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *RenameReq) GetOldPath() string {
@@ -723,7 +783,7 @@ type MoveReq struct {
 
 func (x *MoveReq) Reset() {
 	*x = MoveReq{}
-	mi := &file_filer_v1_filer_proto_msgTypes[13]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -735,7 +795,7 @@ func (x *MoveReq) String() string {
 func (*MoveReq) ProtoMessage() {}
 
 func (x *MoveReq) ProtoReflect() protoreflect.Message {
-	mi := &file_filer_v1_filer_proto_msgTypes[13]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -748,7 +808,7 @@ func (x *MoveReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MoveReq.ProtoReflect.Descriptor instead.
 func (*MoveReq) Descriptor() ([]byte, []int) {
-	return file_filer_v1_filer_proto_rawDescGZIP(), []int{13}
+	return file_proto_filer_v1_filer_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *MoveReq) GetOldPath() string {
@@ -775,7 +835,7 @@ type ResolveReq struct {
 
 func (x *ResolveReq) Reset() {
 	*x = ResolveReq{}
-	mi := &file_filer_v1_filer_proto_msgTypes[14]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -787,7 +847,7 @@ func (x *ResolveReq) String() string {
 func (*ResolveReq) ProtoMessage() {}
 
 func (x *ResolveReq) ProtoReflect() protoreflect.Message {
-	mi := &file_filer_v1_filer_proto_msgTypes[14]
+	mi := &file_proto_filer_v1_filer_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -800,7 +860,7 @@ func (x *ResolveReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResolveReq.ProtoReflect.Descriptor instead.
 func (*ResolveReq) Descriptor() ([]byte, []int) {
-	return file_filer_v1_filer_proto_rawDescGZIP(), []int{14}
+	return file_proto_filer_v1_filer_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ResolveReq) GetFrom() string {
@@ -817,11 +877,15 @@ func (x *ResolveReq) GetSpec() string {
 	return ""
 }
 
-var File_filer_v1_filer_proto protoreflect.FileDescriptor
+var File_proto_filer_v1_filer_proto protoreflect.FileDescriptor
 
-const file_filer_v1_filer_proto_rawDesc = "" +
+const file_proto_filer_v1_filer_proto_rawDesc = "" +
 	"\n" +
-	"\x14filer/v1/filer.proto\x12\bfiler.v1\"N\n" +
+	"\x1aproto/filer/v1/filer.proto\x12\bfiler.v1\"A\n" +
+	"\tFileEvent\x12\x12\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\x12\x0e\n" +
+	"\x02op\x18\x02 \x01(\tR\x02op\x12\x10\n" +
+	"\x03dir\x18\x03 \x01(\bR\x03dir\"N\n" +
 	"\x0eConventionInfo\x12\x1e\n" +
 	"\n" +
 	"convention\x18\x01 \x01(\tR\n" +
@@ -874,7 +938,7 @@ const file_filer_v1_filer_proto_rawDesc = "" +
 	"\n" +
 	"ResolveReq\x12\x12\n" +
 	"\x04from\x18\x01 \x01(\tR\x04from\x12\x12\n" +
-	"\x04spec\x18\x02 \x01(\tR\x04spec2\xd7\x04\n" +
+	"\x04spec\x18\x02 \x01(\tR\x04spec2\x8a\x05\n" +
 	"\x05Filer\x12,\n" +
 	"\x04Read\x12\x11.filer.v1.PathReq\x1a\x11.filer.v1.Content\x12+\n" +
 	"\x04Save\x12\x11.filer.v1.SaveReq\x1a\x10.filer.v1.Result\x12/\n" +
@@ -887,92 +951,96 @@ const file_filer_v1_filer_proto_rawDesc = "" +
 	"\x04Home\x12\x0f.filer.v1.Empty\x1a\x10.filer.v1.Result\x122\n" +
 	"\aListDir\x12\x11.filer.v1.PathReq\x1a\x14.filer.v1.DirListing\x128\n" +
 	"\fFindProjects\x12\x11.filer.v1.PathReq\x1a\x15.filer.v1.ProjectList\x12:\n" +
-	"\vConventions\x12\x11.filer.v1.PathReq\x1a\x18.filer.v1.ConventionInfoB;Z9github.com/filipgorny/ai-architect/proto/filer/v1;filerv1b\x06proto3"
+	"\vConventions\x12\x11.filer.v1.PathReq\x1a\x18.filer.v1.ConventionInfo\x121\n" +
+	"\x05Watch\x12\x11.filer.v1.PathReq\x1a\x13.filer.v1.FileEvent0\x01B;Z9github.com/filipgorny/ai-architect/proto/filer/v1;filerv1b\x06proto3"
 
 var (
-	file_filer_v1_filer_proto_rawDescOnce sync.Once
-	file_filer_v1_filer_proto_rawDescData []byte
+	file_proto_filer_v1_filer_proto_rawDescOnce sync.Once
+	file_proto_filer_v1_filer_proto_rawDescData []byte
 )
 
-func file_filer_v1_filer_proto_rawDescGZIP() []byte {
-	file_filer_v1_filer_proto_rawDescOnce.Do(func() {
-		file_filer_v1_filer_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_filer_v1_filer_proto_rawDesc), len(file_filer_v1_filer_proto_rawDesc)))
+func file_proto_filer_v1_filer_proto_rawDescGZIP() []byte {
+	file_proto_filer_v1_filer_proto_rawDescOnce.Do(func() {
+		file_proto_filer_v1_filer_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_filer_v1_filer_proto_rawDesc), len(file_proto_filer_v1_filer_proto_rawDesc)))
 	})
-	return file_filer_v1_filer_proto_rawDescData
+	return file_proto_filer_v1_filer_proto_rawDescData
 }
 
-var file_filer_v1_filer_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
-var file_filer_v1_filer_proto_goTypes = []any{
-	(*ConventionInfo)(nil), // 0: filer.v1.ConventionInfo
-	(*Empty)(nil),          // 1: filer.v1.Empty
-	(*Entry)(nil),          // 2: filer.v1.Entry
-	(*DirListing)(nil),     // 3: filer.v1.DirListing
-	(*ProjectFound)(nil),   // 4: filer.v1.ProjectFound
-	(*ProjectList)(nil),    // 5: filer.v1.ProjectList
-	(*PathReq)(nil),        // 6: filer.v1.PathReq
-	(*Content)(nil),        // 7: filer.v1.Content
-	(*Result)(nil),         // 8: filer.v1.Result
-	(*SaveReq)(nil),        // 9: filer.v1.SaveReq
-	(*CreateReq)(nil),      // 10: filer.v1.CreateReq
-	(*MkdirReq)(nil),       // 11: filer.v1.MkdirReq
-	(*RenameReq)(nil),      // 12: filer.v1.RenameReq
-	(*MoveReq)(nil),        // 13: filer.v1.MoveReq
-	(*ResolveReq)(nil),     // 14: filer.v1.ResolveReq
+var file_proto_filer_v1_filer_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_proto_filer_v1_filer_proto_goTypes = []any{
+	(*FileEvent)(nil),      // 0: filer.v1.FileEvent
+	(*ConventionInfo)(nil), // 1: filer.v1.ConventionInfo
+	(*Empty)(nil),          // 2: filer.v1.Empty
+	(*Entry)(nil),          // 3: filer.v1.Entry
+	(*DirListing)(nil),     // 4: filer.v1.DirListing
+	(*ProjectFound)(nil),   // 5: filer.v1.ProjectFound
+	(*ProjectList)(nil),    // 6: filer.v1.ProjectList
+	(*PathReq)(nil),        // 7: filer.v1.PathReq
+	(*Content)(nil),        // 8: filer.v1.Content
+	(*Result)(nil),         // 9: filer.v1.Result
+	(*SaveReq)(nil),        // 10: filer.v1.SaveReq
+	(*CreateReq)(nil),      // 11: filer.v1.CreateReq
+	(*MkdirReq)(nil),       // 12: filer.v1.MkdirReq
+	(*RenameReq)(nil),      // 13: filer.v1.RenameReq
+	(*MoveReq)(nil),        // 14: filer.v1.MoveReq
+	(*ResolveReq)(nil),     // 15: filer.v1.ResolveReq
 }
-var file_filer_v1_filer_proto_depIdxs = []int32{
-	2,  // 0: filer.v1.DirListing.entries:type_name -> filer.v1.Entry
-	4,  // 1: filer.v1.ProjectList.projects:type_name -> filer.v1.ProjectFound
-	6,  // 2: filer.v1.Filer.Read:input_type -> filer.v1.PathReq
-	9,  // 3: filer.v1.Filer.Save:input_type -> filer.v1.SaveReq
-	10, // 4: filer.v1.Filer.Create:input_type -> filer.v1.CreateReq
-	11, // 5: filer.v1.Filer.Mkdir:input_type -> filer.v1.MkdirReq
-	12, // 6: filer.v1.Filer.Rename:input_type -> filer.v1.RenameReq
-	13, // 7: filer.v1.Filer.Move:input_type -> filer.v1.MoveReq
-	6,  // 8: filer.v1.Filer.Delete:input_type -> filer.v1.PathReq
-	14, // 9: filer.v1.Filer.Resolve:input_type -> filer.v1.ResolveReq
-	1,  // 10: filer.v1.Filer.Home:input_type -> filer.v1.Empty
-	6,  // 11: filer.v1.Filer.ListDir:input_type -> filer.v1.PathReq
-	6,  // 12: filer.v1.Filer.FindProjects:input_type -> filer.v1.PathReq
-	6,  // 13: filer.v1.Filer.Conventions:input_type -> filer.v1.PathReq
-	7,  // 14: filer.v1.Filer.Read:output_type -> filer.v1.Content
-	8,  // 15: filer.v1.Filer.Save:output_type -> filer.v1.Result
-	8,  // 16: filer.v1.Filer.Create:output_type -> filer.v1.Result
-	8,  // 17: filer.v1.Filer.Mkdir:output_type -> filer.v1.Result
-	8,  // 18: filer.v1.Filer.Rename:output_type -> filer.v1.Result
-	8,  // 19: filer.v1.Filer.Move:output_type -> filer.v1.Result
-	8,  // 20: filer.v1.Filer.Delete:output_type -> filer.v1.Result
-	8,  // 21: filer.v1.Filer.Resolve:output_type -> filer.v1.Result
-	8,  // 22: filer.v1.Filer.Home:output_type -> filer.v1.Result
-	3,  // 23: filer.v1.Filer.ListDir:output_type -> filer.v1.DirListing
-	5,  // 24: filer.v1.Filer.FindProjects:output_type -> filer.v1.ProjectList
-	0,  // 25: filer.v1.Filer.Conventions:output_type -> filer.v1.ConventionInfo
-	14, // [14:26] is the sub-list for method output_type
-	2,  // [2:14] is the sub-list for method input_type
+var file_proto_filer_v1_filer_proto_depIdxs = []int32{
+	3,  // 0: filer.v1.DirListing.entries:type_name -> filer.v1.Entry
+	5,  // 1: filer.v1.ProjectList.projects:type_name -> filer.v1.ProjectFound
+	7,  // 2: filer.v1.Filer.Read:input_type -> filer.v1.PathReq
+	10, // 3: filer.v1.Filer.Save:input_type -> filer.v1.SaveReq
+	11, // 4: filer.v1.Filer.Create:input_type -> filer.v1.CreateReq
+	12, // 5: filer.v1.Filer.Mkdir:input_type -> filer.v1.MkdirReq
+	13, // 6: filer.v1.Filer.Rename:input_type -> filer.v1.RenameReq
+	14, // 7: filer.v1.Filer.Move:input_type -> filer.v1.MoveReq
+	7,  // 8: filer.v1.Filer.Delete:input_type -> filer.v1.PathReq
+	15, // 9: filer.v1.Filer.Resolve:input_type -> filer.v1.ResolveReq
+	2,  // 10: filer.v1.Filer.Home:input_type -> filer.v1.Empty
+	7,  // 11: filer.v1.Filer.ListDir:input_type -> filer.v1.PathReq
+	7,  // 12: filer.v1.Filer.FindProjects:input_type -> filer.v1.PathReq
+	7,  // 13: filer.v1.Filer.Conventions:input_type -> filer.v1.PathReq
+	7,  // 14: filer.v1.Filer.Watch:input_type -> filer.v1.PathReq
+	8,  // 15: filer.v1.Filer.Read:output_type -> filer.v1.Content
+	9,  // 16: filer.v1.Filer.Save:output_type -> filer.v1.Result
+	9,  // 17: filer.v1.Filer.Create:output_type -> filer.v1.Result
+	9,  // 18: filer.v1.Filer.Mkdir:output_type -> filer.v1.Result
+	9,  // 19: filer.v1.Filer.Rename:output_type -> filer.v1.Result
+	9,  // 20: filer.v1.Filer.Move:output_type -> filer.v1.Result
+	9,  // 21: filer.v1.Filer.Delete:output_type -> filer.v1.Result
+	9,  // 22: filer.v1.Filer.Resolve:output_type -> filer.v1.Result
+	9,  // 23: filer.v1.Filer.Home:output_type -> filer.v1.Result
+	4,  // 24: filer.v1.Filer.ListDir:output_type -> filer.v1.DirListing
+	6,  // 25: filer.v1.Filer.FindProjects:output_type -> filer.v1.ProjectList
+	1,  // 26: filer.v1.Filer.Conventions:output_type -> filer.v1.ConventionInfo
+	0,  // 27: filer.v1.Filer.Watch:output_type -> filer.v1.FileEvent
+	15, // [15:28] is the sub-list for method output_type
+	2,  // [2:15] is the sub-list for method input_type
 	2,  // [2:2] is the sub-list for extension type_name
 	2,  // [2:2] is the sub-list for extension extendee
 	0,  // [0:2] is the sub-list for field type_name
 }
 
-func init() { file_filer_v1_filer_proto_init() }
-func file_filer_v1_filer_proto_init() {
-	if File_filer_v1_filer_proto != nil {
+func init() { file_proto_filer_v1_filer_proto_init() }
+func file_proto_filer_v1_filer_proto_init() {
+	if File_proto_filer_v1_filer_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_filer_v1_filer_proto_rawDesc), len(file_filer_v1_filer_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_filer_v1_filer_proto_rawDesc), len(file_proto_filer_v1_filer_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_filer_v1_filer_proto_goTypes,
-		DependencyIndexes: file_filer_v1_filer_proto_depIdxs,
-		MessageInfos:      file_filer_v1_filer_proto_msgTypes,
+		GoTypes:           file_proto_filer_v1_filer_proto_goTypes,
+		DependencyIndexes: file_proto_filer_v1_filer_proto_depIdxs,
+		MessageInfos:      file_proto_filer_v1_filer_proto_msgTypes,
 	}.Build()
-	File_filer_v1_filer_proto = out.File
-	file_filer_v1_filer_proto_goTypes = nil
-	file_filer_v1_filer_proto_depIdxs = nil
+	File_proto_filer_v1_filer_proto = out.File
+	file_proto_filer_v1_filer_proto_goTypes = nil
+	file_proto_filer_v1_filer_proto_depIdxs = nil
 }

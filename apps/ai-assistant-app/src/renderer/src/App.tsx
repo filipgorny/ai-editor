@@ -5,16 +5,19 @@ import styled from 'styled-components'
 import { Button } from '@mui/material'
 import FolderOpenIcon from '@mui/icons-material/FolderOpen'
 import SettingsIcon from '@mui/icons-material/Settings'
+import CodeIcon from '@mui/icons-material/Code'
 import { AppNode, GatewayMapper, Graph, Node, ScanProgress } from './model'
 import GraphView from './components/GraphView'
 import ScanModal from './components/ScanModal'
 import SettingsDialog from './components/SettingsDialog'
+import ScriptsDialog from './components/ScriptsDialog'
 import AgentBar from './components/AgentBar'
 import EditorTabs from './components/EditorTabs'
 import FileBrowser from './components/FileBrowser'
 import CodeEditor, { type EditorTarget } from './components/CodeEditor'
 import { EditorContext } from './components/EditorContext'
 import { appBus } from './events'
+import { commander } from './commander/Commander'
 import { colors } from './styles/tokens'
 
 const Layout = styled.div`
@@ -66,6 +69,17 @@ const Empty = styled.div`
 type Mode = 'idle' | 'scanning' | 'graph'
 type View = { type: 'project' } | { type: 'app'; appId: number; name: string }
 
+// Default global script, seeded once into the scripting service: Shift+Tab cycles to the
+// next editor window so you can flip between open files.
+const DEFAULT_SCRIPT = {
+  name: 'Window cycle (Shift+Tab)',
+  content: `-- Shift+Tab: switch to the next open editor window (cycle through files).
+onKey("shift+tab", function()
+  cmd("tabs", "next")
+end)
+`
+}
+
 export default function App() {
   const { t, i18n } = useTranslation()
   const [mode, setMode] = useState<Mode>('idle')
@@ -74,7 +88,8 @@ export default function App() {
   const [rawBase, setRawBase] = useState<RawGraph | null>(null)
   const [rawApps, setRawApps] = useState<Record<number, RawGraph>>({})
   const rawAppsRef = useRef<Record<number, RawGraph>>({})
-  const expanding = useRef<number | null>(null) // app being inline-expanded
+  // what the in-flight scan is for (drives onScanEnd). null = none / initial scan.
+  const scanKind = useRef<'project' | 'refresh' | { app: number } | null>(null)
   const [progress, setProgress] = useState<ScanProgress>(ScanProgress.initial())
   const [log, setLog] = useState<string[]>([])
   const [error, setError] = useState('')
@@ -92,13 +107,15 @@ export default function App() {
   const [wallpaper, setWallpaper] = useState('') // graph background image url
   const [focusPath, setFocusPath] = useState('')
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [scriptsOpen, setScriptsOpen] = useState(false)
   const [agentBusy, setAgentBusy] = useState(false)
   const [agentReply, setAgentReply] = useState('')
   // ostatnio otwarty folder (kontekst dla agenta — domyślny katalog nowych plików)
   const lastDir = useRef('')
+  // czy próbowaliśmy już zasiać domyślny skrypt (raz na sesję)
+  const seeded = useRef(false)
 
   const pending = useRef<View>({ type: 'project' })
-  const refreshing = useRef(false) // cichy re-skan (bez modala) po operacji na pliku
   const [navKey, setNavKey] = useState(0) // ++ przy NAWIGACJI (drill/back) — graf fituje/resetuje rozwinięcia
   const scannedProjectId = useRef('')
   const history = useRef<View[]>([])
@@ -152,10 +169,12 @@ export default function App() {
     })
 
     const offEnd = window.api.onScanEnd(async () => {
-      // inline-expand: fetch the app's internal graph and merge it under the app node
-      if (expanding.current != null) {
-        const appId = expanding.current
-        expanding.current = null
+      const kind = scanKind.current
+      scanKind.current = null
+
+      // inline-expand / per-app refresh: re-fetch that app and merge it in place
+      if (kind && typeof kind === 'object') {
+        const appId = kind.app
         const raw = (await window.api.getAppGraph(appId)) as RawGraph
         setRawApps((prev) => ({ ...prev, [appId]: raw }))
         appBus.emit('scan:end', { kind: 'expand' })
@@ -164,8 +183,7 @@ export default function App() {
       }
 
       // silent refresh after a file op: re-fetch base + all expanded apps in place
-      if (refreshing.current) {
-        refreshing.current = false
+      if (kind === 'refresh') {
         const base = (await window.api.getGraph(Number(scannedProjectId.current) || 0)) as RawGraph
         setRawBase(base)
 
@@ -179,7 +197,7 @@ export default function App() {
         return
       }
 
-      // initial project scan → fresh monorepo graph (no apps expanded)
+      // initial project scan ('project' or null) → fresh monorepo graph (apps collapsed)
       const base = (await window.api.getGraph(Number(scannedProjectId.current) || 0)) as RawGraph
       setRawBase(base)
       setRawApps({})
@@ -278,6 +296,7 @@ export default function App() {
     }
 
     pending.current = { type: 'project' }
+    scanKind.current = 'project'
     resetProgress()
     setMode('scanning')
     appBus.emit('scan:start', { kind: 'project', path })
@@ -304,20 +323,20 @@ export default function App() {
   const refreshForPath = (path: string) => {
     setFsVersion((n) => n + 1) // also refresh the file tree (filer)
 
-    if (expanding.current != null || refreshing.current) {
+    if (scanKind.current != null) {
       return // a scan is already in flight
     }
 
     const appId = appIdForPath(path)
 
     if (appId != null) {
-      expanding.current = appId // reuse the inline-expand flow: deep-scan + re-merge
+      scanKind.current = { app: appId } // reuse the inline-expand flow: deep-scan + re-merge
       window.api.startScanApp(appId)
 
       return
     }
 
-    refreshing.current = true
+    scanKind.current = 'refresh'
     window.api.startScan(folder)
   }
 
@@ -325,13 +344,66 @@ export default function App() {
   const refreshCurrentView = () => {
     setFsVersion((n) => n + 1)
 
-    if (expanding.current != null || refreshing.current) {
+    if (scanKind.current != null) {
       return
     }
 
-    refreshing.current = true
+    scanKind.current = 'refresh'
     window.api.startScan(folder)
   }
+
+  // Keep the latest refresh fn for the disk watcher (avoids a stale closure without
+  // re-subscribing on every render).
+  const refreshRef = useRef(refreshForPath)
+  refreshRef.current = refreshForPath
+
+  // React to on-disk changes: the filer watches the project tree (gateway → main →
+  // here) so the graph reflects files created/removed/renamed outside the app —
+  // including those written by `claude -p` in headless mode.
+  useEffect(() => {
+    if (!folder) {
+      return
+    }
+
+    // Guard against a stale preload (dev): the watcher API only exists after a full
+    // `pnpm dev` restart, so skip cleanly instead of crashing the renderer.
+    if (typeof window.api.watchProject !== 'function' || typeof window.api.onFsChange !== 'function') {
+      return
+    }
+
+    window.api.watchProject(folder)
+
+    let timer: number | undefined
+    let pending = ''
+
+    const off = window.api.onFsChange((ev) => {
+      appBus.emit('disk:change', {
+        path: ev.path,
+        op: ev.op as 'create' | 'write' | 'remove' | 'rename' | 'chmod',
+        dir: ev.dir
+      })
+
+      // Only structural changes (new/removed/renamed entries) reshape the graph;
+      // plain content writes (incl. the app's own saves) are ignored to avoid loops.
+      if (ev.op === 'write' || ev.op === 'chmod') {
+        return
+      }
+
+      pending = ev.path
+      window.clearTimeout(timer)
+      // Debounce bursts (e.g. a git checkout) into a single refresh.
+      timer = window.setTimeout(() => {
+        appBus.emit('disk:refresh', { path: pending })
+        refreshRef.current(pending)
+      }, 400)
+    })
+
+    return () => {
+      window.clearTimeout(timer)
+      off()
+      window.api.stopWatch()
+    }
+  }, [folder])
 
   const pickAndScan = async () => {
     const picked = await window.api.pickFolder()
@@ -417,6 +489,13 @@ export default function App() {
 
       setAgentReply(reply)
       appBus.emit('agent:success', { ops: res?.ops?.length ?? 0, message: reply })
+
+      // Fire a granular bus event per executed op, so anything listening to the
+      // file events (scripts, loggers) reacts to AI-agent changes the same way it
+      // does to manual ones. FileOp only carries the resulting path.
+      for (const op of res?.ops ?? []) {
+        emitFileOpEvent(op.op, op.path)
+      }
 
       if (res?.openPath) {
         openFile(res.openPath)
@@ -524,15 +603,93 @@ export default function App() {
   // Inline-expand an app: deep-scan it (silent) then merge its internal graph under
   // the app node. The monorepo graph stays visible the whole time.
   const expandApp = (appId: number) => {
-    if (rawAppsRef.current[appId] || expanding.current != null) {
+    if (rawAppsRef.current[appId] || scanKind.current != null) {
       return // already loaded or a scan is in flight
     }
 
-    expanding.current = appId
+    scanKind.current = { app: appId }
     appBus.emit('nav:app-expand', { appId })
     appBus.emit('scan:start', { kind: 'app', appId })
     window.api.startScanApp(appId)
   }
+
+  // Wire app-level actions into the Commander (open/close editors, switch tabs, pick a
+  // project, run the agent). Re-wired when editors/folder change so closures stay fresh.
+  useEffect(() => {
+    commander.setHost({
+      openFile,
+      closeEditor,
+      selectEditor,
+      minimizeEditor,
+      listEditors: () => editors.map((e) => e.path),
+      activePath: () => activeEditor,
+      pickProject: pickAndScan,
+      refresh: refreshCurrentView,
+      runAgent,
+      resolvePath: (p) => {
+        if (p.startsWith('/') || /^[a-zA-Z]:[\\/]/.test(p)) {
+          return p
+        }
+
+        const rel = p.replace(/^\.?[\\/]/, '')
+
+        return folder ? folder.replace(/[\\/]$/, '') + '/' + rel : rel
+      }
+    })
+  }, [editors, activeEditor, folder])
+
+  // Auto-load stored Lua scripts for the open project from the scripting service (global +
+  // project-pinned). Runs only when scripts exist (so the WASM runtime isn't pulled in
+  // otherwise); the runtime is reset first for a fresh per-project environment. Failures are
+  // swallowed so a bad script can't break startup.
+  useEffect(() => {
+    if (!folder) {
+      return
+    }
+
+    let cancelled = false
+
+    const load = async () => {
+      try {
+        // Seed the default global script once (if the user hasn't created it already).
+        if (!seeded.current) {
+          seeded.current = true
+
+          const all = await window.api.listScripts('')
+
+          if (!all.some((s) => s.name === DEFAULT_SCRIPT.name)) {
+            await window.api.saveScript({ name: DEFAULT_SCRIPT.name, content: DEFAULT_SCRIPT.content, project: '' })
+          }
+        }
+
+        const scripts = await window.api.listScripts(folder)
+
+        if (!scripts.length || cancelled) {
+          return
+        }
+
+        const { runLuaSource, disposeLua } = await import('./lua/runtime')
+
+        await disposeLua()
+
+        for (const s of scripts) {
+          if (cancelled) {
+            return
+          }
+
+          await runLuaSource(s.content)
+        }
+      } catch {
+        // serwis scripting niedostępny lub błąd skryptu — pomijamy (start nie może paść)
+      }
+    }
+
+    load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [folder])
 
   return (
     <EditorContext.Provider value={openFile}>
@@ -545,6 +702,9 @@ export default function App() {
         </Button>
         <Button size="small" startIcon={<SettingsIcon />} onClick={() => setSettingsOpen(true)}>
           {t('topbar.settings')}
+        </Button>
+        <Button size="small" startIcon={<CodeIcon />} onClick={() => setScriptsOpen(true)}>
+          {t('topbar.scripts')}
         </Button>
       </TopBar>
 
@@ -627,7 +787,38 @@ export default function App() {
           wallpaper={wallpaper}
           onWallpaperChange={setWallpaper}
         />
+        <ScriptsDialog open={scriptsOpen} onClose={() => setScriptsOpen(false)} project={folder} />
       </Layout>
     </EditorContext.Provider>
   )
+}
+
+// emitFileOpEvent maps an AI-agent FileOp (op name + resulting path) onto the
+// app's file-event bus. rename/move carry only the resulting path, so `from` is
+// left empty; plain `write` is a content edit (no structural file event).
+function emitFileOpEvent(op: string, path: string): void {
+  switch (op) {
+    case 'create_file':
+      appBus.emit('file:create', { path, kind: 'class' })
+      break
+
+    case 'mkdir':
+      appBus.emit('folder:create', { path })
+      break
+
+    case 'delete':
+      appBus.emit('file:delete', { path })
+      break
+
+    case 'rename':
+      appBus.emit('file:rename', { from: '', to: path })
+      break
+
+    case 'move':
+      appBus.emit('file:move', { from: '', to: path })
+      break
+
+    default:
+      break
+  }
 }

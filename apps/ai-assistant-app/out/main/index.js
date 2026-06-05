@@ -72,9 +72,11 @@ function call(method, payload) {
 }
 let client;
 function createWindow() {
+  const { width: sw, height: sh } = electron.screen.getPrimaryDisplay().workAreaSize;
   const win = new electron.BrowserWindow({
-    width: 1320,
-    height: 880,
+    width: Math.round(sw * 0.9),
+    height: Math.round(sh * 0.9),
+    center: true,
     backgroundColor: "#0d1117",
     show: false,
     autoHideMenuBar: true,
@@ -239,6 +241,16 @@ function registerIpc(win) {
       client.PublishEvent(ev, (err, resp) => err ? reject(err) : resolve(resp));
     })
   );
+  electron.ipcMain.handle(
+    "scripts:list",
+    async (_e, project) => (await call("ListScripts", { project: project ?? "" })).scripts ?? []
+  );
+  electron.ipcMain.handle("scripts:get", (_e, id) => call("GetScript", { id }));
+  electron.ipcMain.handle(
+    "scripts:save",
+    (_e, s) => call("SaveScript", { id: s.id ?? 0, name: s.name, content: s.content, project: s.project ?? "" })
+  );
+  electron.ipcMain.handle("scripts:delete", async (_e, id) => (await call("DeleteScript", { id })).ok ?? false);
   electron.ipcMain.on("scan:start", (e, path2) => {
     const call2 = client.Scan({ path: path2 });
     call2.on("data", (p) => e.sender.send("scan:progress", p));
@@ -251,6 +263,28 @@ function registerIpc(win) {
     call2.on("end", () => e.sender.send("scan:end"));
     call2.on("error", (err) => e.sender.send("scan:error", String(err)));
   });
+  let watchCall = null;
+  const stopWatch = () => {
+    if (watchCall) {
+      try {
+        watchCall.cancel();
+      } catch {
+      }
+      watchCall = null;
+    }
+  };
+  electron.ipcMain.on("fs:watch:start", (e, path2) => {
+    stopWatch();
+    if (!path2) {
+      return;
+    }
+    const call2 = client.WatchFiles({ path: path2 });
+    watchCall = call2;
+    call2.on("data", (ev) => e.sender.send("fs:change", ev));
+    call2.on("end", () => void 0);
+    call2.on("error", () => void 0);
+  });
+  electron.ipcMain.on("fs:watch:stop", () => stopWatch());
 }
 electron.app.whenReady().then(() => {
   electron.Menu.setApplicationMenu(null);

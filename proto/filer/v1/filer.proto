@@ -24,6 +24,16 @@ service Filer {
   // Conventions wykrywa konwencję nazw plików (dash/camel) i rozszerzenie (język)
   // na podstawie plików w katalogu (i jeden poziom wyżej).
   rpc Conventions(PathReq) returns (ConventionInfo);
+
+  // Watch obserwuje katalog rekurencyjnie i strumieniuje zmiany na dysku
+  // (utworzenie/zapis/usunięcie/zmiana nazwy plików i folderów).
+  rpc Watch(PathReq) returns (stream FileEvent);
+}
+
+message FileEvent {
+  string path = 1; // ścieżka zmienionego pliku/folderu
+  string op = 2;   // create | write | remove | rename
+  bool dir = 3;    // czy zmiana dotyczy folderu
 }
 
 message ConventionInfo {

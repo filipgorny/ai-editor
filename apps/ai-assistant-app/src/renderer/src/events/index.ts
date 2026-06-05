@@ -1,5 +1,6 @@
 export { appBus } from './bus'
-export type { AppEventMap, AppEventName } from './bus'
+export type { AppEventMap, AppEventName, KeyEvent } from './bus'
+export { installKeyEvents, normCombo, bindCombo, clearBoundCombos } from './keys'
 
 import { appBus } from './bus'
 

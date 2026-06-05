@@ -102,6 +102,29 @@ off()
 | `settings:theme-change` | `{ theme: string }` | The editor theme is changed. |
 | `settings:language-change` | `{ lang: string }` | The UI language is changed. |
 
+### Commander (see [COMMANDS.md](COMMANDS.md))
+
+| Event | Payload | Emitted when |
+| --- | --- | --- |
+| `command:run` | `{ name: string; arg: string }` | A command ran successfully via `window.commander.run`. |
+| `command:error` | `{ name: string; arg: string; message: string }` | An unknown command was run, or its handler threw. |
+
+### Keyboard (see [SCRIPTING.md](SCRIPTING.md))
+
+A global listener turns key presses into bus events. Payload (`KeyEvent`):
+`{ key, code, ctrl, alt, shift, meta, combo, repeat, editable }` — `combo` is the canonical
+chord (e.g. `ctrl+shift+s`).
+
+| Event | Payload | Emitted when |
+| --- | --- | --- |
+| `key` | `KeyEvent` | Any key is pressed (keydown; lone modifiers excluded). |
+| `key:<combo>` | `KeyEvent` | A specific chord is pressed, e.g. `key:ctrl+k`, `key:shift+tab`. |
+| `keyup` | `KeyEvent` | Any key is released. |
+| `keyup:<combo>` | `KeyEvent` | A specific chord is released. |
+
+Scripts usually subscribe with `onKey("ctrl+k", fn)` (a real keybinding that suppresses the
+default action) or observe with `on("key", fn)`. See [SCRIPTING.md](SCRIPTING.md).
+
 ## Adding a new event
 
 1. Add the name → payload entry to `AppEventMap` in `src/renderer/src/events/bus.ts`.

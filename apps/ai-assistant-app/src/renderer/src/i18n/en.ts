@@ -2,7 +2,8 @@
 export default {
   topbar: {
     pickProject: 'Choose project',
-    settings: 'Settings'
+    settings: 'Settings',
+    scripts: 'Scripts'
   },
   empty: {
     title: 'Choose a project folder to see the graph',
@@ -21,11 +22,12 @@ export default {
     title: 'Settings',
     modelLabel: 'AI model',
     themeLabel: 'Editor theme',
+    wallpaperLabel: 'Wallpaper',
     language: 'Language',
     ollama: 'Ollama (local)',
     claude: 'Claude (headless)',
     claudeHint:
-      'Uses the local <0>claude -p</0> CLI (Claude Code in headless mode). Requires <1>claude</1> installed and logged in on your system.'
+      'Uses the local "claude -p" CLI (Claude Code in headless mode). Requires "claude" installed and logged in on your system.'
   },
   scan: {
     title: 'Scanning project…',
@@ -78,7 +80,29 @@ export default {
   error: {
     render: 'Render error'
   },
+  scripts: {
+    title: 'Scripts',
+    listHeader: 'Scripts ({{count}})',
+    filterAll: 'All scripts',
+    filterProject: "This project's scripts",
+    filterGlobal: 'Global scripts',
+    new: 'New script',
+    untitled: '(unnamed)',
+    global: 'global',
+    attachOnly: 'Attached to this project only',
+    name: 'Name',
+    placeholder: '-- Lua. Available: cmd, run, on, onAny, onKey, emit, log, register, api\ncmd("write", "hello from Lua")',
+    run: 'Run',
+    loadError: 'Failed to load scripts',
+    needName: 'Enter a script name',
+    saved: 'Saved',
+    saveFailed: 'Save failed',
+    deleteConfirm: 'Delete script?',
+    ran: 'Script executed',
+    runError: 'Script error: {{message}}'
+  },
   common: {
-    cancel: 'Cancel'
+    cancel: 'Cancel',
+    close: 'Close'
   }
 }

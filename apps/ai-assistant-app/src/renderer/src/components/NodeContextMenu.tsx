@@ -21,7 +21,7 @@ export default function NodeContextMenu({
   y: number
   node: Node
   addTargetDir: (n: Node) => string | undefined
-  onAdd: (dir: string | undefined, kind: Kind) => void
+  onAdd: (dir: string | undefined, kind: Kind, parent: Node) => void
   onRename: (n: Node) => void
   onDelete: (n: Node) => void
   onEdit: (n: Node) => void
@@ -32,9 +32,9 @@ export default function NodeContextMenu({
 
   const items = isContainer
     ? [
-        { label: `🟥  ${t('graph.class')}`, onClick: () => onAdd(addTargetDir(node), 'class') },
-        { label: `λ  ${t('graph.function')}`, onClick: () => onAdd(addTargetDir(node), 'function') },
-        { label: `📁  ${t('graph.folder')}`, onClick: () => onAdd(addTargetDir(node), 'folder') },
+        { label: `🟥  ${t('graph.class')}`, onClick: () => onAdd(addTargetDir(node), 'class', node) },
+        { label: `λ  ${t('graph.function')}`, onClick: () => onAdd(addTargetDir(node), 'function', node) },
+        { label: `📁  ${t('graph.folder')}`, onClick: () => onAdd(addTargetDir(node), 'folder', node) },
         { label: `✏️  ${t('graph.rename')}`, onClick: () => onRename(node) },
         { label: `🗑️  ${t('graph.deleteElement')}`, onClick: () => onDelete(node) }
       ]

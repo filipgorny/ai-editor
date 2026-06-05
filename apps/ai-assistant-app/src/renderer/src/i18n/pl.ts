@@ -2,7 +2,8 @@
 export default {
   topbar: {
     pickProject: 'Wybierz projekt',
-    settings: 'Ustawienia'
+    settings: 'Ustawienia',
+    scripts: 'Skrypty'
   },
   empty: {
     title: 'Wybierz folder projektu, aby zobaczyć graf',
@@ -21,11 +22,12 @@ export default {
     title: 'Ustawienia',
     modelLabel: 'Model AI',
     themeLabel: 'Motyw edytora',
+    wallpaperLabel: 'Tapeta',
     language: 'Język',
     ollama: 'Ollama (lokalny)',
     claude: 'Claude (headless)',
     claudeHint:
-      'Używa lokalnego CLI <0>claude -p</0> (Claude Code w trybie headless). Wymaga zainstalowanego i zalogowanego <1>claude</1> w systemie.'
+      'Używa lokalnego CLI "claude -p" (Claude Code w trybie headless). Wymaga zainstalowanego i zalogowanego "claude" w systemie.'
   },
   scan: {
     title: 'Skanowanie projektu…',
@@ -78,7 +80,29 @@ export default {
   error: {
     render: 'Błąd renderowania'
   },
+  scripts: {
+    title: 'Skrypty',
+    listHeader: 'Skrypty ({{count}})',
+    filterAll: 'Wszystkie skrypty',
+    filterProject: 'Skrypty tego projektu',
+    filterGlobal: 'Skrypty globalne',
+    new: 'Nowy skrypt',
+    untitled: '(bez nazwy)',
+    global: 'globalny',
+    attachOnly: 'Tylko w tym projekcie',
+    name: 'Nazwa',
+    placeholder: '-- Lua. Dostępne: cmd, run, on, onAny, onKey, emit, log, register, api\ncmd("write", "hello z Lua")',
+    run: 'Uruchom',
+    loadError: 'Nie udało się wczytać skryptów',
+    needName: 'Podaj nazwę skryptu',
+    saved: 'Zapisano',
+    saveFailed: 'Zapis nie powiódł się',
+    deleteConfirm: 'Usunąć skrypt?',
+    ran: 'Skrypt wykonany',
+    runError: 'Błąd skryptu: {{message}}'
+  },
   common: {
-    cancel: 'Anuluj'
+    cancel: 'Anuluj',
+    close: 'Zamknij'
   }
 }

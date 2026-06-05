@@ -1,6 +1,17 @@
 // window.api to granica infrastruktury — zwraca surowe obiekty z gRPC, które
 // warstwa antykorupcyjna (GatewayMapper) tłumaczy na model domenowy.
 declare global {
+  // Script — a user script record (scripting service). project '' = global;
+  // createdAt/updatedAt: unix seconds.
+  type Script = {
+    id: number
+    name: string
+    content: string
+    project: string
+    createdAt: number
+    updatedAt: number
+  }
+
   interface Window {
     api: {
       lastFolder(): Promise<string>
@@ -45,9 +56,16 @@ declare global {
         file?: string
         nodeId?: string
       }): Promise<unknown>
+      listScripts(project?: string): Promise<Script[]>
+      getScript(id: number): Promise<Script>
+      saveScript(s: { id?: number; name: string; content: string; project?: string }): Promise<Script>
+      deleteScript(id: number): Promise<boolean>
       onProgress(cb: (p: unknown) => void): () => void
       onScanEnd(cb: () => void): () => void
       onScanError(cb: (msg: string) => void): () => void
+      watchProject(path: string): void
+      stopWatch(): void
+      onFsChange(cb: (ev: { path: string; op: string; dir: boolean }) => void): () => void
     }
   }
 }

@@ -105,6 +105,8 @@ export default function AgentBar({
       ) : null}
       <Input
         rows={2}
+        className={busy ? 'ai-thinking' : undefined}
+        style={{ ['--ai-accent' as string]: colors.controller }}
         placeholder={t('agent.placeholderMain')}
         value={prompt}
         disabled={busy}

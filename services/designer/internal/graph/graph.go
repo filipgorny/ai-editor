@@ -5,7 +5,9 @@ package graph
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"gorm.io/gorm"
 
@@ -89,7 +91,36 @@ func (b *Builder) BuildApps(ctx context.Context, projectID int64, folder string)
 		tree.contains(filepath.Dir(a.Path), nodeID)
 	}
 
+	// Also surface the project's real top-level directories — even those without an
+	// app — so a folder added to the root (by the user or AI) appears on the graph.
+	addTopDirs(tree, folder)
+
 	return g, nil
+}
+
+// addTopDirs adds the immediate subdirectories of root as folder nodes (skipping
+// build/VCS junk), so the monorepo graph reflects the actual disk layout.
+func addTopDirs(t *folderTree, root string) {
+	entries, err := os.ReadDir(root)
+
+	if err != nil {
+		return
+	}
+
+	for _, e := range entries {
+		if e.IsDir() && !ignoredDir(e.Name()) {
+			t.ensure(e.Name())
+		}
+	}
+}
+
+func ignoredDir(name string) bool {
+	switch name {
+	case "node_modules", ".git", "dist", "build", "out", ".next", "vendor", "target", ".cache", ".idea", ".vscode":
+		return true
+	}
+
+	return strings.HasPrefix(name, "bazel-")
 }
 
 // BuildAppGraph zwraca wewnętrzny graf aplikacji: WSZYSTKIE byty ładowane jednym

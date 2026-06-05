@@ -43,9 +43,14 @@ const (
 	Gateway_ListDir_FullMethodName           = "/gateway.v1.Gateway/ListDir"
 	Gateway_FindProjects_FullMethodName      = "/gateway.v1.Gateway/FindProjects"
 	Gateway_DetectConventions_FullMethodName = "/gateway.v1.Gateway/DetectConventions"
+	Gateway_WatchFiles_FullMethodName        = "/gateway.v1.Gateway/WatchFiles"
 	Gateway_AiAgent_FullMethodName           = "/gateway.v1.Gateway/AiAgent"
 	Gateway_SaveGraphState_FullMethodName    = "/gateway.v1.Gateway/SaveGraphState"
 	Gateway_GetGraphState_FullMethodName     = "/gateway.v1.Gateway/GetGraphState"
+	Gateway_ListScripts_FullMethodName       = "/gateway.v1.Gateway/ListScripts"
+	Gateway_GetScript_FullMethodName         = "/gateway.v1.Gateway/GetScript"
+	Gateway_SaveScript_FullMethodName        = "/gateway.v1.Gateway/SaveScript"
+	Gateway_DeleteScript_FullMethodName      = "/gateway.v1.Gateway/DeleteScript"
 )
 
 // GatewayClient is the client API for Gateway service.
@@ -95,11 +100,19 @@ type GatewayClient interface {
 	FindProjects(ctx context.Context, in *FilePath, opts ...grpc.CallOption) (*FoundProjects, error)
 	// Wykrycie konwencji nazw plików i rozszerzenia katalogu (przez filer).
 	DetectConventions(ctx context.Context, in *FilePath, opts ...grpc.CallOption) (*Conventions, error)
+	// WatchFiles strumieniuje zmiany na dysku w katalogu projektu (przez filer),
+	// by graf mógł reagować na utworzenie/usunięcie/zmianę plików.
+	WatchFiles(ctx context.Context, in *FilePath, opts ...grpc.CallOption) (grpc.ServerStreamingClient[FileEvent], error)
 	// AiAgent: ai planuje operacje na plikach/folderach (JSON), gateway je WYKONUJE.
 	AiAgent(ctx context.Context, in *AiAgentRequest, opts ...grpc.CallOption) (*AiAgentResponse, error)
 	// Graph state (viewport/layout) persisted in Postgres by the designer.
 	SaveGraphState(ctx context.Context, in *GraphStateRequest, opts ...grpc.CallOption) (*FileResult, error)
 	GetGraphState(ctx context.Context, in *GraphStateKey, opts ...grpc.CallOption) (*GraphStateResponse, error)
+	// --- User scripts (proxy to the scripting service; Postgres) ---
+	ListScripts(ctx context.Context, in *ScriptQuery, opts ...grpc.CallOption) (*ScriptList, error)
+	GetScript(ctx context.Context, in *ScriptId, opts ...grpc.CallOption) (*Script, error)
+	SaveScript(ctx context.Context, in *Script, opts ...grpc.CallOption) (*Script, error)
+	DeleteScript(ctx context.Context, in *ScriptId, opts ...grpc.CallOption) (*FileResult, error)
 }
 
 type gatewayClient struct {
@@ -368,6 +381,25 @@ func (c *gatewayClient) DetectConventions(ctx context.Context, in *FilePath, opt
 	return out, nil
 }
 
+func (c *gatewayClient) WatchFiles(ctx context.Context, in *FilePath, opts ...grpc.CallOption) (grpc.ServerStreamingClient[FileEvent], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &Gateway_ServiceDesc.Streams[2], Gateway_WatchFiles_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[FilePath, FileEvent]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Gateway_WatchFilesClient = grpc.ServerStreamingClient[FileEvent]
+
 func (c *gatewayClient) AiAgent(ctx context.Context, in *AiAgentRequest, opts ...grpc.CallOption) (*AiAgentResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AiAgentResponse)
@@ -392,6 +424,46 @@ func (c *gatewayClient) GetGraphState(ctx context.Context, in *GraphStateKey, op
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GraphStateResponse)
 	err := c.cc.Invoke(ctx, Gateway_GetGraphState_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) ListScripts(ctx context.Context, in *ScriptQuery, opts ...grpc.CallOption) (*ScriptList, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ScriptList)
+	err := c.cc.Invoke(ctx, Gateway_ListScripts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) GetScript(ctx context.Context, in *ScriptId, opts ...grpc.CallOption) (*Script, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Script)
+	err := c.cc.Invoke(ctx, Gateway_GetScript_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) SaveScript(ctx context.Context, in *Script, opts ...grpc.CallOption) (*Script, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Script)
+	err := c.cc.Invoke(ctx, Gateway_SaveScript_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) DeleteScript(ctx context.Context, in *ScriptId, opts ...grpc.CallOption) (*FileResult, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileResult)
+	err := c.cc.Invoke(ctx, Gateway_DeleteScript_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -445,11 +517,19 @@ type GatewayServer interface {
 	FindProjects(context.Context, *FilePath) (*FoundProjects, error)
 	// Wykrycie konwencji nazw plików i rozszerzenia katalogu (przez filer).
 	DetectConventions(context.Context, *FilePath) (*Conventions, error)
+	// WatchFiles strumieniuje zmiany na dysku w katalogu projektu (przez filer),
+	// by graf mógł reagować na utworzenie/usunięcie/zmianę plików.
+	WatchFiles(*FilePath, grpc.ServerStreamingServer[FileEvent]) error
 	// AiAgent: ai planuje operacje na plikach/folderach (JSON), gateway je WYKONUJE.
 	AiAgent(context.Context, *AiAgentRequest) (*AiAgentResponse, error)
 	// Graph state (viewport/layout) persisted in Postgres by the designer.
 	SaveGraphState(context.Context, *GraphStateRequest) (*FileResult, error)
 	GetGraphState(context.Context, *GraphStateKey) (*GraphStateResponse, error)
+	// --- User scripts (proxy to the scripting service; Postgres) ---
+	ListScripts(context.Context, *ScriptQuery) (*ScriptList, error)
+	GetScript(context.Context, *ScriptId) (*Script, error)
+	SaveScript(context.Context, *Script) (*Script, error)
+	DeleteScript(context.Context, *ScriptId) (*FileResult, error)
 	mustEmbedUnimplementedGatewayServer()
 }
 
@@ -532,6 +612,9 @@ func (UnimplementedGatewayServer) FindProjects(context.Context, *FilePath) (*Fou
 func (UnimplementedGatewayServer) DetectConventions(context.Context, *FilePath) (*Conventions, error) {
 	return nil, status.Error(codes.Unimplemented, "method DetectConventions not implemented")
 }
+func (UnimplementedGatewayServer) WatchFiles(*FilePath, grpc.ServerStreamingServer[FileEvent]) error {
+	return status.Error(codes.Unimplemented, "method WatchFiles not implemented")
+}
 func (UnimplementedGatewayServer) AiAgent(context.Context, *AiAgentRequest) (*AiAgentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AiAgent not implemented")
 }
@@ -540,6 +623,18 @@ func (UnimplementedGatewayServer) SaveGraphState(context.Context, *GraphStateReq
 }
 func (UnimplementedGatewayServer) GetGraphState(context.Context, *GraphStateKey) (*GraphStateResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetGraphState not implemented")
+}
+func (UnimplementedGatewayServer) ListScripts(context.Context, *ScriptQuery) (*ScriptList, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListScripts not implemented")
+}
+func (UnimplementedGatewayServer) GetScript(context.Context, *ScriptId) (*Script, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetScript not implemented")
+}
+func (UnimplementedGatewayServer) SaveScript(context.Context, *Script) (*Script, error) {
+	return nil, status.Error(codes.Unimplemented, "method SaveScript not implemented")
+}
+func (UnimplementedGatewayServer) DeleteScript(context.Context, *ScriptId) (*FileResult, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteScript not implemented")
 }
 func (UnimplementedGatewayServer) mustEmbedUnimplementedGatewayServer() {}
 func (UnimplementedGatewayServer) testEmbeddedByValue()                 {}
@@ -980,6 +1075,17 @@ func _Gateway_DetectConventions_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Gateway_WatchFiles_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(FilePath)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(GatewayServer).WatchFiles(m, &grpc.GenericServerStream[FilePath, FileEvent]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Gateway_WatchFilesServer = grpc.ServerStreamingServer[FileEvent]
+
 func _Gateway_AiAgent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AiAgentRequest)
 	if err := dec(in); err != nil {
@@ -1030,6 +1136,78 @@ func _Gateway_GetGraphState_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GatewayServer).GetGraphState(ctx, req.(*GraphStateKey))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_ListScripts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ScriptQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).ListScripts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_ListScripts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).ListScripts(ctx, req.(*ScriptQuery))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_GetScript_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ScriptId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).GetScript(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_GetScript_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).GetScript(ctx, req.(*ScriptId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_SaveScript_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Script)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).SaveScript(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_SaveScript_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).SaveScript(ctx, req.(*Script))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_DeleteScript_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ScriptId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).DeleteScript(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_DeleteScript_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).DeleteScript(ctx, req.(*ScriptId))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1141,6 +1319,22 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "GetGraphState",
 			Handler:    _Gateway_GetGraphState_Handler,
 		},
+		{
+			MethodName: "ListScripts",
+			Handler:    _Gateway_ListScripts_Handler,
+		},
+		{
+			MethodName: "GetScript",
+			Handler:    _Gateway_GetScript_Handler,
+		},
+		{
+			MethodName: "SaveScript",
+			Handler:    _Gateway_SaveScript_Handler,
+		},
+		{
+			MethodName: "DeleteScript",
+			Handler:    _Gateway_DeleteScript_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
@@ -1151,6 +1345,11 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "ScanApp",
 			Handler:       _Gateway_ScanApp_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "WatchFiles",
+			Handler:       _Gateway_WatchFiles_Handler,
 			ServerStreams: true,
 		},
 	},

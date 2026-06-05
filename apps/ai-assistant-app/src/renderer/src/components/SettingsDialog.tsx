@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Trans, useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogTitle,
@@ -11,6 +11,7 @@ import {
   Typography
 } from '@mui/material'
 import { themeNames } from './themes'
+import { wallpapers } from './wallpapers'
 import { changeLanguage, languages } from '../i18n'
 import { appBus } from '../events'
 
@@ -21,12 +22,16 @@ export default function SettingsDialog({
   open,
   onClose,
   theme,
-  onThemeChange
+  onThemeChange,
+  wallpaper,
+  onWallpaperChange
 }: {
   open: boolean
   onClose: () => void
   theme: string
   onThemeChange: (t: string) => void
+  wallpaper: string
+  onWallpaperChange: (url: string) => void
 }) {
   const { t, i18n } = useTranslation()
   const [provider, setProvider] = useState<ModelProvider>('ollama')
@@ -94,9 +99,23 @@ export default function SettingsDialog({
           ))}
         </TextField>
 
+        <TextField
+          select
+          label={t('settings.wallpaperLabel', { defaultValue: 'Tapeta' })}
+          size="small"
+          value={wallpaper}
+          onChange={(e) => onWallpaperChange(e.target.value)}
+        >
+          {wallpapers.map((w) => (
+            <MenuItem key={w.url || 'none'} value={w.url}>
+              {i18n.language.startsWith('en') ? w.en : w.pl}
+            </MenuItem>
+          ))}
+        </TextField>
+
         {provider === 'claude' && (
           <Typography variant="caption" color="text.secondary">
-            <Trans i18nKey="settings.claudeHint" components={[<code key="0" />, <code key="1" />]} />
+            {t('settings.claudeHint')}
           </Typography>
         )}
       </DialogContent>

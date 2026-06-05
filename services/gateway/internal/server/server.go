@@ -15,17 +15,19 @@ import (
 	eventsv1 "github.com/filipgorny/ai-architect/proto/events/v1"
 	filerv1 "github.com/filipgorny/ai-architect/proto/filer/v1"
 	gatewayv1 "github.com/filipgorny/ai-architect/proto/gateway/v1"
+	scriptingv1 "github.com/filipgorny/ai-architect/proto/scripting/v1"
 )
 
 // Proxy to jedyny punkt wejścia dla Electrona — przekazuje do designera (graf),
-// ai (LLM), events (Redis) i filer (operacje na plikach).
+// ai (LLM), events (Redis), filer (operacje na plikach) i scripting (skrypty w Postgresie).
 type Proxy struct {
 	gatewayv1.UnimplementedGatewayServer
 
-	client gatewayv1.GatewayClient
-	ai     aiv1.AiClient
-	events eventsv1.EventsClient
-	filer  filerv1.FilerClient
+	client    gatewayv1.GatewayClient
+	ai        aiv1.AiClient
+	events    eventsv1.EventsClient
+	filer     filerv1.FilerClient
+	scripting scriptingv1.ScriptingClient
 }
 
 func New(
@@ -33,8 +35,9 @@ func New(
 	ai aiv1.AiClient,
 	events eventsv1.EventsClient,
 	filer filerv1.FilerClient,
+	scripting scriptingv1.ScriptingClient,
 ) *Proxy {
-	return &Proxy{client: client, ai: ai, events: events, filer: filer}
+	return &Proxy{client: client, ai: ai, events: events, filer: filer, scripting: scripting}
 }
 
 var fence = regexp.MustCompile("(?s)^```[a-zA-Z]*\n(.*?)\n```\\s*$")

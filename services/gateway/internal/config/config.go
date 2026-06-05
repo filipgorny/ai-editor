@@ -9,11 +9,12 @@ import (
 )
 
 type Config struct {
-	Addr         string `yaml:"addr"`
-	DesignerAddr string `yaml:"designer_addr"`
-	AIAddr       string `yaml:"ai_addr"`
-	EventsAddr   string `yaml:"events_addr"`
-	FilerAddr    string `yaml:"filer_addr"`
+	Addr          string `yaml:"addr"`
+	DesignerAddr  string `yaml:"designer_addr"`
+	AIAddr        string `yaml:"ai_addr"`
+	EventsAddr    string `yaml:"events_addr"`
+	FilerAddr     string `yaml:"filer_addr"`
+	ScriptingAddr string `yaml:"scripting_addr"`
 }
 
 func Default() Config {
@@ -24,6 +25,7 @@ func Default() Config {
 	c.AIAddr = "127.0.0.1:50071"
 	c.EventsAddr = "127.0.0.1:50091"
 	c.FilerAddr = "127.0.0.1:50101"
+	c.ScriptingAddr = "127.0.0.1:50111"
 
 	return c
 }
@@ -63,6 +65,10 @@ func Load(path string) (Config, error) {
 
 	if v := os.Getenv("FILER_ADDR"); v != "" {
 		c.FilerAddr = v
+	}
+
+	if v := os.Getenv("SCRIPTING_ADDR"); v != "" {
+		c.ScriptingAddr = v
 	}
 
 	return c, nil

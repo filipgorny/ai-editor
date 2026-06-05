@@ -171,7 +171,10 @@ export default function GraphView({
   // paleta szybkiego dodawania (dwuklik na płótnie)
   // pozycja (flow) gdzie pojawi się nowy element + węzły optymistyczne (od razu)
   const addFlowPos = useRef<{ x: number; y: number } | null>(null)
-  const [localNodes, setLocalNodes] = useState<{ id: string; name: string; kind: string; x: number; y: number }[]>([])
+  const addParentId = useRef<string | null>(null) // node the new element hangs under
+  const [localNodes, setLocalNodes] = useState<
+    { id: string; name: string; kind: string; x: number; y: number; parentId: string }[]
+  >([])
   // ręczne przesunięcia węzłów (drag) — nadpisują pozycję z układu
   const [posOverride, setPosOverride] = useState<Record<string, { x: number; y: number }>>({})
   // Dialog „Zmień nazwę".
@@ -393,18 +396,19 @@ export default function GraphView({
   )
 
   const mergedEdges = useMemo(
-    () =>
-      rootFolderId
-        ? [
-            ...rfEdges,
-            ...localNodes.map((ln) => ({
-              id: 'e:' + ln.id,
-              source: rootFolderId,
-              target: ln.id,
-              style: { stroke: '#30363d', strokeDasharray: '4 4' }
-            }))
-          ]
-        : rfEdges,
+    () => [
+      ...rfEdges,
+      // connect each optimistic node to its parent folder/app (fallback: root)
+      ...localNodes
+        .map((ln) => ({ ln, source: ln.parentId || rootFolderId }))
+        .filter(({ source }) => !!source)
+        .map(({ ln, source }) => ({
+          id: 'e:' + ln.id,
+          source,
+          target: ln.id,
+          style: { stroke: '#30363d', strokeDasharray: '4 4' }
+        }))
+    ],
     [rfEdges, localNodes, rootFolderId]
   )
 
@@ -416,6 +420,9 @@ export default function GraphView({
   // Fit TYLKO przy zmianie sceny (inny projekt/app), nie przy samym odświeżeniu
   // tego samego widoku — wtedy widok zostaje na miejscu.
   const fittedFor = useRef(-1)
+  // The very first load always centers the whole graph (fitView), ignoring any saved
+  // viewport — later navigations restore the saved viewport per scene.
+  const didInitialFit = useRef(false)
 
   useEffect(() => {
     const k = navKey ?? 0
@@ -429,6 +436,14 @@ export default function GraphView({
       const inst = flow.current
 
       if (!inst) {
+        return
+      }
+
+      // On the first load, center the whole graph regardless of any saved viewport.
+      if (!didInitialFit.current) {
+        didInitialFit.current = true
+        inst.fitView({ padding: 0.2, duration: 350 })
+
         return
       }
 
@@ -585,7 +600,8 @@ export default function GraphView({
       return
     }
 
-    const match = graph.nodes().find((n) => n.kind !== 'folder' && n.name.toLowerCase().includes(q))
+    // search across all node kinds — folders, apps, classes, functions…
+    const match = graph.nodes().find((n) => n.name.toLowerCase().includes(q))
 
     if (!match) {
       return
@@ -613,8 +629,14 @@ export default function GraphView({
         }
 
         e.preventDefault()
-        setFindOpen(true)
-        setTimeout(() => findRef.current?.focus(), 0)
+        // toggle: second Ctrl+F closes the search field
+        setFindOpen((v) => {
+          if (!v) {
+            setTimeout(() => findRef.current?.focus(), 0)
+          }
+
+          return !v
+        })
       }
 
       if (e.key === 'Escape') {
@@ -637,12 +659,14 @@ export default function GraphView({
   }
 
   // Open the "Add element" dialog. For folders/apps the target dir is their own.
-  const openAdd = (dir?: string, kind: 'class' | 'function' | 'folder' = 'class') => {
+  // `parent` is the node the new element will hang under (optimistic placement).
+  const openAdd = (dir?: string, kind: 'class' | 'function' | 'folder' = 'class', parent?: Node) => {
     setMenu(null)
     setAddName('')
     setAddFile('')
     setAddKind(kind)
     setAddDir(dir)
+    addParentId.current = parent?.id ?? null
     loadConventions(dir || anyProjectDir())
     setAddOpen(true)
   }
@@ -681,9 +705,18 @@ export default function GraphView({
         onAddElement?.(name, base + '.' + extension, addKind, addDir)
       }
 
-      // węzeł optymistyczny — pojawia się OD RAZU w miejscu kliknięcia
-      const pos = addFlowPos.current ?? { x: 0, y: 0 }
-      setLocalNodes((prev) => [...prev, { id: 'local:' + name + ':' + pos.x, name, kind: addKind, x: pos.x, y: pos.y }])
+      // optimistic node — appears immediately, hung under the parent folder/app and
+      // positioned next to it (so it's visible even before/without a re-scan match)
+      const parentId = addParentId.current || rootFolderId
+      const parentNode = parentId ? flow.current?.getNode(parentId) : undefined
+      const pos =
+        addFlowPos.current ??
+        (parentNode ? { x: parentNode.position.x + 300, y: parentNode.position.y + 60 } : { x: 0, y: 0 })
+
+      setLocalNodes((prev) => [
+        ...prev,
+        { id: 'local:' + name + ':' + pos.x, name, kind: addKind, x: pos.x, y: pos.y, parentId }
+      ])
     }
 
     setAddOpen(false)
@@ -704,11 +737,20 @@ export default function GraphView({
         position: 'relative',
         width: '100%',
         height: '100%',
-        backgroundImage: wallpaper ? `url("${wallpaper}")` : undefined,
+        // dark overlay over the wallpaper so nodes stay readable
+        backgroundImage: wallpaper
+          ? `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url("${wallpaper}")`
+          : undefined,
         backgroundSize: 'cover',
         backgroundPosition: 'center'
       }}
-      onClick={() => menu && setMenu(null)}
+      onClick={() => {
+        if (menu) {
+          setMenu(null)
+        }
+
+        setFindOpen(false) // clicking anywhere closes the search field
+      }}
       onMouseMove={(e) => relink && setMouse({ x: e.clientX, y: e.clientY })}
     >
     <ReactFlow
@@ -872,45 +914,65 @@ export default function GraphView({
     )}
 
     {findOpen && (
-      <input
-        ref={findRef}
-        placeholder={t('graph.searchElement')}
-        value={findText}
-        onChange={(e) => {
-          setFindText(e.target.value)
-
-          // search only once at least 3 characters are typed
-          if (e.target.value.trim().length >= 3) {
-            searchAndPan(e.target.value)
-          }
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && findText.trim().length >= 3) {
-            appBus.emit('graph:search', { query: findText.trim() })
-            searchAndPan(findText)
-          }
-
-          if (e.key === 'Escape') {
-            setFindOpen(false)
-          }
-        }}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
         style={{
           position: 'absolute',
           left: 12,
           bottom: 12,
           zIndex: 20,
-          width: 240,
-          padding: '8px 12px',
-          borderRadius: 6,
-          border: '1px solid #d0d7de',
-          background: '#fff',
-          color: '#111',
-          fontSize: 13,
-          fontFamily: 'monospace',
-          outline: 'none',
-          boxShadow: '0 4px 14px rgba(0,0,0,0.5)'
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          width: 440,
+          padding: '8px 14px',
+          borderRadius: 10,
+          background: '#f2cc60',
+          border: '1px solid #d29922',
+          boxShadow: '0 6px 18px rgba(0,0,0,0.55)'
         }}
-      />
+      >
+        <span style={{ fontSize: 18, lineHeight: '20px', height: 20, display: 'flex', alignItems: 'center' }}>🔍</span>
+        <input
+          ref={findRef}
+          autoFocus
+          placeholder={t('graph.searchElement')}
+          value={findText}
+          onChange={(e) => {
+            setFindText(e.target.value)
+
+            // search only once at least 3 characters are typed
+            if (e.target.value.trim().length >= 3) {
+              searchAndPan(e.target.value)
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && findText.trim().length >= 3) {
+              appBus.emit('graph:search', { query: findText.trim() })
+              searchAndPan(findText)
+            }
+
+            if (e.key === 'Escape') {
+              setFindOpen(false)
+            }
+          }}
+          style={{
+            flex: 1,
+            border: 'none',
+            background: 'transparent',
+            color: '#000',
+            fontWeight: 700,
+            fontSize: 16,
+            lineHeight: '20px',
+            height: 20,
+            padding: 0,
+            margin: 0,
+            fontFamily: 'monospace',
+            outline: 'none'
+          }}
+        />
+      </div>
     )}
 
     <Dialog open={addOpen} onClose={() => setAddOpen(false)} maxWidth="xs" fullWidth>

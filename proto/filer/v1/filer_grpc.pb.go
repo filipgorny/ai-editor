@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             v7.34.1
-// source: filer/v1/filer.proto
+// source: proto/filer/v1/filer.proto
 
 package filerv1
 
@@ -31,6 +31,7 @@ const (
 	Filer_ListDir_FullMethodName      = "/filer.v1.Filer/ListDir"
 	Filer_FindProjects_FullMethodName = "/filer.v1.Filer/FindProjects"
 	Filer_Conventions_FullMethodName  = "/filer.v1.Filer/Conventions"
+	Filer_Watch_FullMethodName        = "/filer.v1.Filer/Watch"
 )
 
 // FilerClient is the client API for Filer service.
@@ -55,6 +56,9 @@ type FilerClient interface {
 	// Conventions wykrywa konwencję nazw plików (dash/camel) i rozszerzenie (język)
 	// na podstawie plików w katalogu (i jeden poziom wyżej).
 	Conventions(ctx context.Context, in *PathReq, opts ...grpc.CallOption) (*ConventionInfo, error)
+	// Watch obserwuje katalog rekurencyjnie i strumieniuje zmiany na dysku
+	// (utworzenie/zapis/usunięcie/zmiana nazwy plików i folderów).
+	Watch(ctx context.Context, in *PathReq, opts ...grpc.CallOption) (grpc.ServerStreamingClient[FileEvent], error)
 }
 
 type filerClient struct {
@@ -185,6 +189,25 @@ func (c *filerClient) Conventions(ctx context.Context, in *PathReq, opts ...grpc
 	return out, nil
 }
 
+func (c *filerClient) Watch(ctx context.Context, in *PathReq, opts ...grpc.CallOption) (grpc.ServerStreamingClient[FileEvent], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &Filer_ServiceDesc.Streams[0], Filer_Watch_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[PathReq, FileEvent]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Filer_WatchClient = grpc.ServerStreamingClient[FileEvent]
+
 // FilerServer is the server API for Filer service.
 // All implementations must embed UnimplementedFilerServer
 // for forward compatibility.
@@ -207,6 +230,9 @@ type FilerServer interface {
 	// Conventions wykrywa konwencję nazw plików (dash/camel) i rozszerzenie (język)
 	// na podstawie plików w katalogu (i jeden poziom wyżej).
 	Conventions(context.Context, *PathReq) (*ConventionInfo, error)
+	// Watch obserwuje katalog rekurencyjnie i strumieniuje zmiany na dysku
+	// (utworzenie/zapis/usunięcie/zmiana nazwy plików i folderów).
+	Watch(*PathReq, grpc.ServerStreamingServer[FileEvent]) error
 	mustEmbedUnimplementedFilerServer()
 }
 
@@ -252,6 +278,9 @@ func (UnimplementedFilerServer) FindProjects(context.Context, *PathReq) (*Projec
 }
 func (UnimplementedFilerServer) Conventions(context.Context, *PathReq) (*ConventionInfo, error) {
 	return nil, status.Error(codes.Unimplemented, "method Conventions not implemented")
+}
+func (UnimplementedFilerServer) Watch(*PathReq, grpc.ServerStreamingServer[FileEvent]) error {
+	return status.Error(codes.Unimplemented, "method Watch not implemented")
 }
 func (UnimplementedFilerServer) mustEmbedUnimplementedFilerServer() {}
 func (UnimplementedFilerServer) testEmbeddedByValue()               {}
@@ -490,6 +519,17 @@ func _Filer_Conventions_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Filer_Watch_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(PathReq)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(FilerServer).Watch(m, &grpc.GenericServerStream[PathReq, FileEvent]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Filer_WatchServer = grpc.ServerStreamingServer[FileEvent]
+
 // Filer_ServiceDesc is the grpc.ServiceDesc for Filer service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -546,6 +586,12 @@ var Filer_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Filer_Conventions_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "filer/v1/filer.proto",
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Watch",
+			Handler:       _Filer_Watch_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "proto/filer/v1/filer.proto",
 }
