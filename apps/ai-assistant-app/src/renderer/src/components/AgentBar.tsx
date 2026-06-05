@@ -3,27 +3,63 @@ import { useTranslation } from 'react-i18next'
 import styled, { css, keyframes } from 'styled-components'
 import { colors } from '../styles/tokens'
 
-// Animated striped progress — blue stripes flowing to the right inside the AI field
-// while it's waiting for a response.
-const stripeFlow = keyframes`
-  from { background-position: 0 0; }
-  to { background-position: 30px 0; }
+// Animacja „fali" na dole pola AI podczas czekania na odpowiedź. Kształt fali to maska SVG
+// (sinusoida wypełniona do dołu), a kolor bierzemy z --accent przez tło — dzięki masce fala
+// dziedziczy motyw. Dwie warstwy (wolniejsza z tyłu, szybsza z przodu) dają głębię.
+const WAVE_MASK =
+  "url(\"data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='80'%20height='24'%3E%3Cpath%20d='M0%2012%20C20%200%2020%200%2040%2012%20S60%2024%2080%2012%20V24%20H0%20Z'%20fill='black'/%3E%3C/svg%3E\")"
+
+const waveBack = keyframes`
+  to { -webkit-mask-position: 90px bottom; mask-position: 90px bottom; }
 `
 
-const busyStripes = css`
-  background-color: color-mix(in srgb, var(--accent, #58a6ff) 8%, transparent);
-  background-image: linear-gradient(
-    -45deg,
-    color-mix(in srgb, var(--accent, #58a6ff) 30%, transparent) 25%,
-    transparent 25%,
-    transparent 50%,
-    color-mix(in srgb, var(--accent, #58a6ff) 30%, transparent) 50%,
-    color-mix(in srgb, var(--accent, #58a6ff) 30%, transparent) 75%,
-    transparent 75%,
-    transparent
-  );
-  background-size: 30px 30px;
-  animation: ${stripeFlow} 0.6s linear infinite;
+const waveFront = keyframes`
+  to { -webkit-mask-position: 70px bottom; mask-position: 70px bottom; }
+`
+
+// Field — wrapper pola, by nałożyć falę absolutnie na dole textarei.
+const Field = styled.div`
+  position: relative;
+  flex: 1;
+  display: flex;
+`
+
+const Wave = styled.div`
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  bottom: 1px;
+  height: 30px;
+  pointer-events: none;
+  overflow: hidden;
+  border-bottom-left-radius: 9px;
+  border-bottom-right-radius: 9px;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 100%;
+    -webkit-mask: ${WAVE_MASK} repeat-x bottom;
+    mask: ${WAVE_MASK} repeat-x bottom;
+  }
+
+  &::before {
+    background: color-mix(in srgb, var(--accent, #58a6ff) 22%, transparent);
+    -webkit-mask-size: 90px 26px;
+    mask-size: 90px 26px;
+    animation: ${waveBack} 2.1s linear infinite;
+  }
+
+  &::after {
+    background: color-mix(in srgb, var(--accent, #58a6ff) 42%, transparent);
+    -webkit-mask-size: 70px 20px;
+    mask-size: 70px 20px;
+    animation: ${waveFront} 1.3s linear infinite;
+  }
 `
 
 const Bar = styled.div`
