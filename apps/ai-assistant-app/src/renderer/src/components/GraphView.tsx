@@ -141,7 +141,9 @@ export default function GraphView({
   onExpandApp,
   wallpaper,
   focusPath,
-  navKey
+  navKey,
+  selectedId,
+  onSelect
 }: {
   graph: Graph
   onNodeClick?: (node: Node) => void
@@ -156,6 +158,9 @@ export default function GraphView({
   focusPath?: string
   // licznik nawigacji — zmiana = fit + reset rozwinięć (a nie cichy refresh)
   navKey?: number
+  // id ostatnio wybranego węzła (podświetlenie) + callback wyboru
+  selectedId?: string
+  onSelect?: (node: Node) => void
 }) {
   const { t } = useTranslation()
   // Rozwinięte foldery. Domyślnie tylko korzenie otwarte — reszta zwinięta.
@@ -173,7 +178,7 @@ export default function GraphView({
   const addFlowPos = useRef<{ x: number; y: number } | null>(null)
   const addParentId = useRef<string | null>(null) // node the new element hangs under
   const [localNodes, setLocalNodes] = useState<
-    { id: string; name: string; kind: string; x: number; y: number; parentId: string }[]
+    { id: string; name: string; kind: string; x: number; y: number; parentId: string; absFile?: string; file?: string }[]
   >([])
   // ręczne przesunięcia węzłów (drag) — nadpisują pozycję z układu
   const [posOverride, setPosOverride] = useState<Record<string, { x: number; y: number }>>({})
@@ -384,15 +389,20 @@ export default function GraphView({
   // Doklej węzły optymistyczne (świeżo dodane, jeszcze przed re-skanem).
   const mergedNodes = useMemo(
     () => [
-      ...rfNodes.map((n) => (posOverride[n.id] ? { ...n, position: posOverride[n.id] } : n)),
+      ...rfNodes.map((n) => ({
+        ...n,
+        ...(posOverride[n.id] ? { position: posOverride[n.id] } : {}),
+        selected: n.id === selectedId
+      })),
       ...localNodes.map((ln) => ({
         id: ln.id,
         type: 'temp',
         position: posOverride[ln.id] ?? { x: ln.x, y: ln.y },
-        data: { name: ln.name, kind: ln.kind }
+        selected: ln.id === selectedId,
+        data: { id: ln.id, name: ln.name, kind: ln.kind, absFile: ln.absFile, file: ln.file }
       }))
     ],
-    [rfNodes, localNodes, posOverride]
+    [rfNodes, localNodes, posOverride, selectedId]
   )
 
   const mergedEdges = useMemo(
@@ -416,6 +426,8 @@ export default function GraphView({
   // trzeba było szukać nodów.
   const flow = useRef<ReactFlowInstance | null>(null)
   const focusOnExpand = useRef<string[] | null>(null)
+  // app id whose expansion should re-fit (center + zoom out) once its internals load
+  const fitAfterExpand = useRef<string | null>(null)
 
   // Fit TYLKO przy zmianie sceny (inny projekt/app), nie przy samym odświeżeniu
   // tego samego widoku — wtedy widok zostaje na miejscu.
@@ -423,15 +435,47 @@ export default function GraphView({
   // The very first load always centers the whole graph (fitView), ignoring any saved
   // viewport — later navigations restore the saved viewport per scene.
   const didInitialFit = useRef(false)
+  // Czy użytkownik sam przesuwał/zoomował widok (realne wheel/pointer, nie programowy fit).
+  // Gdy tak — przy odświeżeniu NIE ruszamy kamery; inaczej dopasowujemy ją do całości.
+  const userMoved = useRef(false)
+
+  // Reset „user moved" przy zmianie sceny — nowa scena ma być dopasowana do całości.
+  useEffect(() => {
+    userMoved.current = false
+  }, [navKey])
+
+  // Wykryj realny ruch usera (zoom kółkiem / pan myszą po tle) — odróżnia od fitView/setViewport.
+  useEffect(() => {
+    const el = wrapRef.current
+
+    if (!el) {
+      return
+    }
+
+    const onWheel = (): void => {
+      userMoved.current = true
+    }
+
+    const onPointerDown = (e: PointerEvent): void => {
+      if ((e.target as HTMLElement).closest('.react-flow__pane')) {
+        userMoved.current = true
+      }
+    }
+
+    el.addEventListener('wheel', onWheel, { passive: true })
+    el.addEventListener('pointerdown', onPointerDown, true)
+
+    return () => {
+      el.removeEventListener('wheel', onWheel)
+      el.removeEventListener('pointerdown', onPointerDown, true)
+    }
+  }, [])
 
   useEffect(() => {
     const k = navKey ?? 0
-
-    if (fittedFor.current === k) {
-      return // brak nawigacji = tylko odświeżenie → nie ruszaj widoku
-    }
-
+    const sceneChange = fittedFor.current !== k
     fittedFor.current = k
+
     const t = window.setTimeout(async () => {
       const inst = flow.current
 
@@ -447,13 +491,24 @@ export default function GraphView({
         return
       }
 
-      // restore saved viewport for this scene (Postgres via designer), else fit
-      const vp = rootDir ? await window.api.getViewport(rootDir) : null
+      if (sceneChange) {
+        // restore saved viewport for this scene (Postgres via designer), else fit
+        const vp = rootDir ? await window.api.getViewport(rootDir) : null
 
-      if (vp) {
-        inst.setViewport(vp, { duration: 350 })
-      } else {
-        inst.fitView({ padding: 0.25, duration: 350 })
+        if (vp) {
+          inst.setViewport(vp, { duration: 350 })
+        } else {
+          inst.fitView({ padding: 0.25, duration: 350 })
+        }
+
+        return
+      }
+
+      // Samo odświeżenie tej samej sceny (np. dodany węzeł): dopasuj kamerę do całości,
+      // by wszystko było widoczne — chyba że user sam przesuwał widok albo trwa
+      // focus/expand (te mają własną obsługę kamery).
+      if (!userMoved.current && !fitAfterExpand.current && !focusOnExpand.current) {
+        inst.fitView({ padding: 0.2, duration: 350 })
       }
     }, 60)
 
@@ -509,6 +564,34 @@ export default function GraphView({
     return () => window.clearTimeout(t)
   }, [rfNodes])
 
+  // Po rozwinięciu APLIKACJI wycentruj i oddal widok, by zmieścił cały graf —
+  // czeka, aż wewnętrzne węzły aplikacji się doładują (skan jest asynchroniczny).
+  useEffect(() => {
+    const id = fitAfterExpand.current
+
+    if (!id) {
+      return
+    }
+
+    const inst = flow.current
+
+    if (!inst) {
+      return
+    }
+
+    // Czekaj, aż dzieci aplikacji pojawią się w grafie (inaczej dopasujemy za wcześnie).
+    const hasKids = graph.dependencies().some((d) => d.kind === 'contains' && d.from === id)
+
+    if (!inst.getNode(id) || !hasKids) {
+      return
+    }
+
+    fitAfterExpand.current = null
+    const t = window.setTimeout(() => flow.current?.fitView({ padding: 0.2, duration: 400 }), 80)
+
+    return () => window.clearTimeout(t)
+  }, [rfNodes, graph])
+
   // Po pojawieniu się w grafie pliku z focusPath (np. świeżo dodanego) — rozwiń
   // przodków i przesuń na niego widok.
   useEffect(() => {
@@ -535,9 +618,11 @@ export default function GraphView({
     setExpanded((prev) => new Set([...prev, ...ancestors]))
   }, [graph, focusPath, parentOf])
 
-  // Klik w folder = rozwiń/zwiń; inne węzły → propaguj wyżej.
+  // Pojedynczy klik = TYLKO zaznaczenie (lub akcja przepinania). Rozwijanie
+  // drzewka i otwieranie pliku w edytorze przeniesione na dwuklik (handleDoubleClick).
   const handleClick = (node: Node) => {
     setMenu(null) // clicking a node closes any open context menu
+    onSelect?.(node) // mark as selected (highlight + AI context)
 
     // Tryb przepinania: klik na folderze = przenieś tam plik; klik gdzie indziej anuluje.
     if (relink) {
@@ -550,40 +635,59 @@ export default function GraphView({
       }
 
       setRelink(null)
+    }
+  }
 
+  // toggleExpand rozwija/zwija drzewko dzieci folderu lub aplikacji.
+  const toggleExpand = (node: Node) => {
+    const willExpand = !expanded.has(node.id)
+    const kids = graph
+      .dependencies()
+      .filter((d) => d.kind === 'contains' && d.from === node.id)
+      .map((d) => d.to)
+
+    if (willExpand) {
+      if (node.kind === 'app') {
+        if (kids.length === 0 && node instanceof AppNode) {
+          onExpandApp?.(node.appId) // not loaded yet → fetch + merge its internals
+        }
+
+        // expanding an app: center + zoom out to fit the whole graph (once internals load)
+        fitAfterExpand.current = node.id
+      } else {
+        // expanding a folder: move the view to the first child
+        focusOnExpand.current = [node.id, ...kids]
+      }
+    }
+
+    appBus.emit('graph:folder-toggle', { id: node.id, expanded: willExpand })
+    setExpanded((prev) => {
+      const next = new Set(prev)
+
+      if (next.has(node.id)) {
+        next.delete(node.id)
+      } else {
+        next.add(node.id)
+      }
+
+      return next
+    })
+  }
+
+  // Dwuklik = aktywacja: folder/aplikacja rozwija drzewko dzieci, plik otwiera edytor.
+  const handleDoubleClick = (node: Node) => {
+    setMenu(null)
+    onSelect?.(node) // also mark as selected (highlight + AI context)
+
+    // W trybie przepinania dwuklik nie aktywuje (klik już to obsłużył).
+    if (relink) {
       return
     }
 
     // Folders and apps expand/collapse in place. An app loads its internal graph
     // (onExpandApp) the first time it's expanded — the monorepo stays visible.
     if (node.kind === 'folder' || node.kind === 'app') {
-      const willExpand = !expanded.has(node.id)
-      const kids = graph
-        .dependencies()
-        .filter((d) => d.kind === 'contains' && d.from === node.id)
-        .map((d) => d.to)
-
-      if (willExpand) {
-        if (node.kind === 'app' && kids.length === 0 && node instanceof AppNode) {
-          onExpandApp?.(node.appId) // not loaded yet → fetch + merge its internals
-        }
-
-        // after expanding, move the view to the first child
-        focusOnExpand.current = [node.id, ...kids]
-      }
-
-      appBus.emit('graph:folder-toggle', { id: node.id, expanded: willExpand })
-      setExpanded((prev) => {
-        const next = new Set(prev)
-
-        if (next.has(node.id)) {
-          next.delete(node.id)
-        } else {
-          next.add(node.id)
-        }
-
-        return next
-      })
+      toggleExpand(node)
 
       return
     }
@@ -679,9 +783,13 @@ export default function GraphView({
     setMenu(null)
     const path = node.kind === 'folder' ? node.file || folderDir.get(node.id) : node.absFile
 
-    if (path) {
-      onDelete?.(node, path)
+    if (!path) {
+      return
     }
+
+    // Drop the optimistic node immediately (it may have no real-node counterpart).
+    setLocalNodes((prev) => prev.filter((ln) => ln.id !== node.id))
+    onDelete?.(node, path)
   }
 
   // Otwarcie dialogu „Zmień nazwę" — prefill nazwą klasy i nazwą pliku.
@@ -713,9 +821,24 @@ export default function GraphView({
         addFlowPos.current ??
         (parentNode ? { x: parentNode.position.x + 300, y: parentNode.position.y + 60 } : { x: 0, y: 0 })
 
+      // Resolve the on-disk path so the optimistic node is fully operable (delete /
+      // rename / edit) even when a re-scan never turns it into a real node — e.g. a
+      // class added to the project root, which the monorepo scan doesn't index.
+      const fileName = addKind === 'folder' ? base : base + '.' + extension
+      const fullPath = addDir ? addDir.replace(/[\\/]+$/, '') + '/' + fileName : ''
+
       setLocalNodes((prev) => [
         ...prev,
-        { id: 'local:' + name + ':' + pos.x, name, kind: addKind, x: pos.x, y: pos.y, parentId }
+        {
+          id: 'local:' + name + ':' + pos.x,
+          name,
+          kind: addKind,
+          x: pos.x,
+          y: pos.y,
+          parentId,
+          absFile: addKind === 'folder' ? undefined : fullPath || undefined,
+          file: addKind === 'folder' ? fullPath || undefined : undefined
+        }
       ])
     }
 
@@ -845,6 +968,7 @@ export default function GraphView({
       onNodeDoubleClick={(_e, n) => {
         const node = n.data as Node
         appBus.emit('graph:node-dblclick', { id: node.id, kind: node.kind })
+        handleDoubleClick(node)
         onNodeDoubleClick?.(node)
       }}
       onNodeContextMenu={(e, n) => {

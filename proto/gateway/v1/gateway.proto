@@ -25,6 +25,10 @@ service Gateway {
   rpc AiModel(Empty) returns (AiModelResponse);
   // AiSetProvider przełącza dostawcę LLM w serwisie ai (proxy).
   rpc AiSetProvider(AiProviderRequest) returns (AiModelResponse);
+  // AiSetClaudeToken zapisuje token OAuth Claude w serwisie ai (proxy).
+  rpc AiSetClaudeToken(AiClaudeTokenRequest) returns (AiClaudeTokenStatus);
+  // AiClaudeStatus mówi, czy serwis ai ma zapisany token Claude (proxy).
+  rpc AiClaudeStatus(Empty) returns (AiClaudeTokenStatus);
   // AiReview zwraca uwagi recenzenta do kodu (per linia) — proxy do ai.
   rpc AiReview(AiReviewRequest) returns (AiReviewResponse);
   // AiComplete zwraca podpowiedź autouzupełniania (Copilot) w miejscu kursora.
@@ -42,6 +46,9 @@ service Gateway {
   rpc MoveFile(MoveRequest) returns (FileResult);
   rpc DeletePath(FilePath) returns (FileResult);
   rpc ResolveImport(ResolveRequest) returns (FileResult);
+  // Links analyzes a file (proxy to scanner: tree-sitter / LSP) and returns its navigable
+  // code links — import paths and imported-symbol usages — for editor go-to-definition.
+  rpc Links(LinkQuery) returns (CodeLinks);
 
   // Przeglądanie dysku i szukanie projektów (przez filer; działa też w Dockerze).
   rpc HomeDir(Empty) returns (FileResult);
@@ -57,6 +64,10 @@ service Gateway {
   // AiAgent: ai planuje operacje na plikach/folderach (JSON), gateway je WYKONUJE.
   rpc AiAgent(AiAgentRequest) returns (AiAgentResponse);
 
+  // AiAsk: agent ze skillami (DWUKIERUNKOWY stream). Aplikacja wysyła start + wyniki skilli;
+  // gateway proxuje do serwisu ai. Skille (read_file/list_dir/get_graph) wykonuje aplikacja.
+  rpc AiAsk(stream AiAskClientMsg) returns (stream AiAskEvent);
+
   // Graph state (viewport/layout) persisted in Postgres by the designer.
   rpc SaveGraphState(GraphStateRequest) returns (FileResult);
   rpc GetGraphState(GraphStateKey) returns (GraphStateResponse);
@@ -66,6 +77,99 @@ service Gateway {
   rpc GetScript(ScriptId) returns (Script);
   rpc SaveScript(Script) returns (Script);
   rpc DeleteScript(ScriptId) returns (FileResult);
+
+  // --- App logs (proxy to the logs service; its own Postgres database) ---
+  rpc AppendLogs(LogBatch) returns (FileResult);
+  rpc ListLogs(LogQuery) returns (LogList);
+  rpc ClearLogs(Empty) returns (FileResult);
+
+  // --- Git (proxy to the git service) ---
+  // UploadRepo streams the project's .git directory to the git service so it can
+  // answer authorship/review queries (the open project "sends" its .git here).
+  rpc UploadRepo(stream GitChunk) returns (GitUploadResult);
+  // GitFileInfo — author of the last commit touching a file.
+  rpc GitFileInfo(GitFileInfoRequest) returns (GitFileInfoResponse);
+  // GitReviewStatus — files changed on the current branch vs its base branch.
+  rpc GitReviewStatus(GitReviewRequest) returns (GitReviewResponse);
+  // GitFileDiff — added/modified line numbers for one file (editor highlighting).
+  rpc GitFileDiff(GitFileDiffRequest) returns (GitFileDiffResponse);
+}
+
+message GitChunk {
+  string repo_path = 1;
+  string rel_path = 2;
+  bytes data = 3;
+  bool eof = 4;
+}
+
+message GitUploadResult {
+  string repo_path = 1;
+  bool ok = 2;
+  int32 files = 3;
+  string head_branch = 4;
+}
+
+message GitFileInfoRequest {
+  string repo_path = 1;
+  string file = 2;
+}
+
+message GitFileInfoResponse {
+  bool tracked = 1;
+  string last_author = 2;
+  string last_author_email = 3;
+  string last_commit_hash = 4;
+  int64 last_commit_time = 5;
+  string last_message = 6;
+}
+
+message GitReviewRequest {
+  string repo_path = 1;
+  string base = 2;
+}
+
+message GitChangedFile {
+  string path = 1;
+  string abs_path = 2;
+  string status = 3;
+}
+
+message GitReviewResponse {
+  string base = 1;
+  string head = 2;
+  repeated GitChangedFile files = 3;
+}
+
+message GitFileDiffRequest {
+  string repo_path = 1;
+  string file = 2;
+  string base = 3;
+}
+
+message GitFileDiffResponse {
+  string status = 1;
+  repeated int32 added_lines = 2;
+  repeated int32 modified_lines = 3;
+}
+
+message LogEntry {
+  int64 id = 1;
+  int64 time = 2;    // unix milliseconds
+  string level = 3;  // "info" | "error"
+  string message = 4;
+  string source = 5;
+}
+
+message LogBatch {
+  repeated LogEntry entries = 1;
+}
+
+message LogQuery {
+  int32 limit = 1; // 0 = last 500
+}
+
+message LogList {
+  repeated LogEntry entries = 1;
 }
 
 message ScriptId {
@@ -181,6 +285,26 @@ message ResolveRequest {
   string spec = 2;
 }
 
+message LinkQuery {
+  string path = 1;
+  string content = 2;
+}
+
+// CodeLink — a clickable span resolving to a definition. Positions are 0-based;
+// columns are byte offsets within the line.
+message CodeLink {
+  uint32 from_line = 1;
+  uint32 from_col = 2;
+  uint32 to_line = 3;
+  uint32 to_col = 4;
+  string target_path = 5;
+  uint32 target_line = 6;
+}
+
+message CodeLinks {
+  repeated CodeLink links = 1;
+}
+
 message AiAgentRequest {
   string prompt = 1;
   string dir = 2; // domyślny katalog (ostatnio otwarty folder)
@@ -196,6 +320,63 @@ message AiAgentResponse {
   repeated FileOp ops = 1; // wykonane operacje
   string open_path = 2;    // plik do otwarcia w edytorze (np. nowo utworzony)
   string message = 3;      // krótkie podsumowanie po polsku
+}
+
+// --- AiAsk: agent ze skillami (bidi). Lustro typów z ai.v1, bo gateway.proto jest
+// samodzielny (ładowany przez @grpc/proto-loader w Electronie). ---
+
+// AiAskContext — lekki kontekst zadania (treści/graf dobierane skillami przez aplikację).
+message AiAskContext {
+  string instruction = 1;
+  string open_file = 2;
+  string selected_kind = 3;
+  string selected_name = 4;
+  string selected_file = 5;
+}
+
+message AiAskStart {
+  string prompt = 1;
+  string dir = 2;  // cwd / klucz sesji (folder projektu)
+  string lang = 3;
+  bool edit = 4;
+  AiAskContext context = 5;
+}
+
+// AiSkillResult — odpowiedź aplikacji na żądanie skilla (po id).
+message AiSkillResult {
+  string id = 1;
+  string content = 2;
+  string error = 3;
+}
+
+// AiAskClientMsg — wiadomości od aplikacji: start albo wynik skilla.
+message AiAskClientMsg {
+  oneof msg {
+    AiAskStart start = 1;
+    AiSkillResult skill_result = 2;
+  }
+}
+
+message AiToolCall {
+  string name = 1;
+  string args = 2;
+  string result = 3;
+}
+
+// AiSkillRequest — serwer prosi aplikację o wykonanie skilla.
+message AiSkillRequest {
+  string id = 1;
+  string name = 2;   // read_file | list_dir | get_graph
+  string args = 3;
+}
+
+message AiAskEvent {
+  oneof event {
+    string plan = 1;
+    AiToolCall tool = 2;
+    string answer = 3;
+    AiSkillRequest skill_request = 4;
+  }
 }
 
 message AiEditRequest {
@@ -214,6 +395,14 @@ message AiModelResponse {
 
 message AiProviderRequest {
   string provider = 1;
+}
+
+message AiClaudeTokenRequest {
+  string token = 1;
+}
+
+message AiClaudeTokenStatus {
+  bool has_token = 1;
 }
 
 message AiReviewRequest {

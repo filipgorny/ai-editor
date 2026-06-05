@@ -1,5 +1,6 @@
-import { Component, type ReactNode } from 'react'
+import { Component, type ErrorInfo, type ReactNode } from 'react'
 import i18n from '../i18n'
+import { logBus } from '../events'
 
 // ErrorBoundary — zamiast czarnego ekranu pokaż treść błędu renderowania.
 export default class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
@@ -7,6 +8,11 @@ export default class ErrorBoundary extends Component<{ children: ReactNode }, { 
 
   static getDerivedStateFromError(error: Error) {
     return { error }
+  }
+
+  // Forward render errors to the logs service (via gateway) like any other error.
+  componentDidCatch(error: Error, info: ErrorInfo): void {
+    logBus.push('Render error: ' + (error?.stack || String(error)) + (info?.componentStack || ''), 'error')
   }
 
   render(): ReactNode {

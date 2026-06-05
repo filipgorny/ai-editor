@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v7.34.1
-// source: gateway/v1/gateway.proto
+// source: proto/gateway/v1/gateway.proto
 
 package gatewayv1
 
@@ -21,6 +21,778 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type GitChunk struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RepoPath      string                 `protobuf:"bytes,1,opt,name=repo_path,json=repoPath,proto3" json:"repo_path,omitempty"`
+	RelPath       string                 `protobuf:"bytes,2,opt,name=rel_path,json=relPath,proto3" json:"rel_path,omitempty"`
+	Data          []byte                 `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	Eof           bool                   `protobuf:"varint,4,opt,name=eof,proto3" json:"eof,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GitChunk) Reset() {
+	*x = GitChunk{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GitChunk) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GitChunk) ProtoMessage() {}
+
+func (x *GitChunk) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GitChunk.ProtoReflect.Descriptor instead.
+func (*GitChunk) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *GitChunk) GetRepoPath() string {
+	if x != nil {
+		return x.RepoPath
+	}
+	return ""
+}
+
+func (x *GitChunk) GetRelPath() string {
+	if x != nil {
+		return x.RelPath
+	}
+	return ""
+}
+
+func (x *GitChunk) GetData() []byte {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+func (x *GitChunk) GetEof() bool {
+	if x != nil {
+		return x.Eof
+	}
+	return false
+}
+
+type GitUploadResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RepoPath      string                 `protobuf:"bytes,1,opt,name=repo_path,json=repoPath,proto3" json:"repo_path,omitempty"`
+	Ok            bool                   `protobuf:"varint,2,opt,name=ok,proto3" json:"ok,omitempty"`
+	Files         int32                  `protobuf:"varint,3,opt,name=files,proto3" json:"files,omitempty"`
+	HeadBranch    string                 `protobuf:"bytes,4,opt,name=head_branch,json=headBranch,proto3" json:"head_branch,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GitUploadResult) Reset() {
+	*x = GitUploadResult{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GitUploadResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GitUploadResult) ProtoMessage() {}
+
+func (x *GitUploadResult) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GitUploadResult.ProtoReflect.Descriptor instead.
+func (*GitUploadResult) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *GitUploadResult) GetRepoPath() string {
+	if x != nil {
+		return x.RepoPath
+	}
+	return ""
+}
+
+func (x *GitUploadResult) GetOk() bool {
+	if x != nil {
+		return x.Ok
+	}
+	return false
+}
+
+func (x *GitUploadResult) GetFiles() int32 {
+	if x != nil {
+		return x.Files
+	}
+	return 0
+}
+
+func (x *GitUploadResult) GetHeadBranch() string {
+	if x != nil {
+		return x.HeadBranch
+	}
+	return ""
+}
+
+type GitFileInfoRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RepoPath      string                 `protobuf:"bytes,1,opt,name=repo_path,json=repoPath,proto3" json:"repo_path,omitempty"`
+	File          string                 `protobuf:"bytes,2,opt,name=file,proto3" json:"file,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GitFileInfoRequest) Reset() {
+	*x = GitFileInfoRequest{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GitFileInfoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GitFileInfoRequest) ProtoMessage() {}
+
+func (x *GitFileInfoRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GitFileInfoRequest.ProtoReflect.Descriptor instead.
+func (*GitFileInfoRequest) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GitFileInfoRequest) GetRepoPath() string {
+	if x != nil {
+		return x.RepoPath
+	}
+	return ""
+}
+
+func (x *GitFileInfoRequest) GetFile() string {
+	if x != nil {
+		return x.File
+	}
+	return ""
+}
+
+type GitFileInfoResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Tracked         bool                   `protobuf:"varint,1,opt,name=tracked,proto3" json:"tracked,omitempty"`
+	LastAuthor      string                 `protobuf:"bytes,2,opt,name=last_author,json=lastAuthor,proto3" json:"last_author,omitempty"`
+	LastAuthorEmail string                 `protobuf:"bytes,3,opt,name=last_author_email,json=lastAuthorEmail,proto3" json:"last_author_email,omitempty"`
+	LastCommitHash  string                 `protobuf:"bytes,4,opt,name=last_commit_hash,json=lastCommitHash,proto3" json:"last_commit_hash,omitempty"`
+	LastCommitTime  int64                  `protobuf:"varint,5,opt,name=last_commit_time,json=lastCommitTime,proto3" json:"last_commit_time,omitempty"`
+	LastMessage     string                 `protobuf:"bytes,6,opt,name=last_message,json=lastMessage,proto3" json:"last_message,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *GitFileInfoResponse) Reset() {
+	*x = GitFileInfoResponse{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GitFileInfoResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GitFileInfoResponse) ProtoMessage() {}
+
+func (x *GitFileInfoResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GitFileInfoResponse.ProtoReflect.Descriptor instead.
+func (*GitFileInfoResponse) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GitFileInfoResponse) GetTracked() bool {
+	if x != nil {
+		return x.Tracked
+	}
+	return false
+}
+
+func (x *GitFileInfoResponse) GetLastAuthor() string {
+	if x != nil {
+		return x.LastAuthor
+	}
+	return ""
+}
+
+func (x *GitFileInfoResponse) GetLastAuthorEmail() string {
+	if x != nil {
+		return x.LastAuthorEmail
+	}
+	return ""
+}
+
+func (x *GitFileInfoResponse) GetLastCommitHash() string {
+	if x != nil {
+		return x.LastCommitHash
+	}
+	return ""
+}
+
+func (x *GitFileInfoResponse) GetLastCommitTime() int64 {
+	if x != nil {
+		return x.LastCommitTime
+	}
+	return 0
+}
+
+func (x *GitFileInfoResponse) GetLastMessage() string {
+	if x != nil {
+		return x.LastMessage
+	}
+	return ""
+}
+
+type GitReviewRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RepoPath      string                 `protobuf:"bytes,1,opt,name=repo_path,json=repoPath,proto3" json:"repo_path,omitempty"`
+	Base          string                 `protobuf:"bytes,2,opt,name=base,proto3" json:"base,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GitReviewRequest) Reset() {
+	*x = GitReviewRequest{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GitReviewRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GitReviewRequest) ProtoMessage() {}
+
+func (x *GitReviewRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GitReviewRequest.ProtoReflect.Descriptor instead.
+func (*GitReviewRequest) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GitReviewRequest) GetRepoPath() string {
+	if x != nil {
+		return x.RepoPath
+	}
+	return ""
+}
+
+func (x *GitReviewRequest) GetBase() string {
+	if x != nil {
+		return x.Base
+	}
+	return ""
+}
+
+type GitChangedFile struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Path          string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	AbsPath       string                 `protobuf:"bytes,2,opt,name=abs_path,json=absPath,proto3" json:"abs_path,omitempty"`
+	Status        string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GitChangedFile) Reset() {
+	*x = GitChangedFile{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GitChangedFile) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GitChangedFile) ProtoMessage() {}
+
+func (x *GitChangedFile) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GitChangedFile.ProtoReflect.Descriptor instead.
+func (*GitChangedFile) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *GitChangedFile) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *GitChangedFile) GetAbsPath() string {
+	if x != nil {
+		return x.AbsPath
+	}
+	return ""
+}
+
+func (x *GitChangedFile) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+type GitReviewResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Base          string                 `protobuf:"bytes,1,opt,name=base,proto3" json:"base,omitempty"`
+	Head          string                 `protobuf:"bytes,2,opt,name=head,proto3" json:"head,omitempty"`
+	Files         []*GitChangedFile      `protobuf:"bytes,3,rep,name=files,proto3" json:"files,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GitReviewResponse) Reset() {
+	*x = GitReviewResponse{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GitReviewResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GitReviewResponse) ProtoMessage() {}
+
+func (x *GitReviewResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GitReviewResponse.ProtoReflect.Descriptor instead.
+func (*GitReviewResponse) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *GitReviewResponse) GetBase() string {
+	if x != nil {
+		return x.Base
+	}
+	return ""
+}
+
+func (x *GitReviewResponse) GetHead() string {
+	if x != nil {
+		return x.Head
+	}
+	return ""
+}
+
+func (x *GitReviewResponse) GetFiles() []*GitChangedFile {
+	if x != nil {
+		return x.Files
+	}
+	return nil
+}
+
+type GitFileDiffRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RepoPath      string                 `protobuf:"bytes,1,opt,name=repo_path,json=repoPath,proto3" json:"repo_path,omitempty"`
+	File          string                 `protobuf:"bytes,2,opt,name=file,proto3" json:"file,omitempty"`
+	Base          string                 `protobuf:"bytes,3,opt,name=base,proto3" json:"base,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GitFileDiffRequest) Reset() {
+	*x = GitFileDiffRequest{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GitFileDiffRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GitFileDiffRequest) ProtoMessage() {}
+
+func (x *GitFileDiffRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GitFileDiffRequest.ProtoReflect.Descriptor instead.
+func (*GitFileDiffRequest) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GitFileDiffRequest) GetRepoPath() string {
+	if x != nil {
+		return x.RepoPath
+	}
+	return ""
+}
+
+func (x *GitFileDiffRequest) GetFile() string {
+	if x != nil {
+		return x.File
+	}
+	return ""
+}
+
+func (x *GitFileDiffRequest) GetBase() string {
+	if x != nil {
+		return x.Base
+	}
+	return ""
+}
+
+type GitFileDiffResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	AddedLines    []int32                `protobuf:"varint,2,rep,packed,name=added_lines,json=addedLines,proto3" json:"added_lines,omitempty"`
+	ModifiedLines []int32                `protobuf:"varint,3,rep,packed,name=modified_lines,json=modifiedLines,proto3" json:"modified_lines,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GitFileDiffResponse) Reset() {
+	*x = GitFileDiffResponse{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GitFileDiffResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GitFileDiffResponse) ProtoMessage() {}
+
+func (x *GitFileDiffResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GitFileDiffResponse.ProtoReflect.Descriptor instead.
+func (*GitFileDiffResponse) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *GitFileDiffResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *GitFileDiffResponse) GetAddedLines() []int32 {
+	if x != nil {
+		return x.AddedLines
+	}
+	return nil
+}
+
+func (x *GitFileDiffResponse) GetModifiedLines() []int32 {
+	if x != nil {
+		return x.ModifiedLines
+	}
+	return nil
+}
+
+type LogEntry struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Time          int64                  `protobuf:"varint,2,opt,name=time,proto3" json:"time,omitempty"`  // unix milliseconds
+	Level         string                 `protobuf:"bytes,3,opt,name=level,proto3" json:"level,omitempty"` // "info" | "error"
+	Message       string                 `protobuf:"bytes,4,opt,name=message,proto3" json:"message,omitempty"`
+	Source        string                 `protobuf:"bytes,5,opt,name=source,proto3" json:"source,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LogEntry) Reset() {
+	*x = LogEntry{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LogEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LogEntry) ProtoMessage() {}
+
+func (x *LogEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LogEntry.ProtoReflect.Descriptor instead.
+func (*LogEntry) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *LogEntry) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *LogEntry) GetTime() int64 {
+	if x != nil {
+		return x.Time
+	}
+	return 0
+}
+
+func (x *LogEntry) GetLevel() string {
+	if x != nil {
+		return x.Level
+	}
+	return ""
+}
+
+func (x *LogEntry) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *LogEntry) GetSource() string {
+	if x != nil {
+		return x.Source
+	}
+	return ""
+}
+
+type LogBatch struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Entries       []*LogEntry            `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LogBatch) Reset() {
+	*x = LogBatch{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LogBatch) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LogBatch) ProtoMessage() {}
+
+func (x *LogBatch) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LogBatch.ProtoReflect.Descriptor instead.
+func (*LogBatch) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *LogBatch) GetEntries() []*LogEntry {
+	if x != nil {
+		return x.Entries
+	}
+	return nil
+}
+
+type LogQuery struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Limit         int32                  `protobuf:"varint,1,opt,name=limit,proto3" json:"limit,omitempty"` // 0 = last 500
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LogQuery) Reset() {
+	*x = LogQuery{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LogQuery) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LogQuery) ProtoMessage() {}
+
+func (x *LogQuery) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LogQuery.ProtoReflect.Descriptor instead.
+func (*LogQuery) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *LogQuery) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type LogList struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Entries       []*LogEntry            `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LogList) Reset() {
+	*x = LogList{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LogList) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LogList) ProtoMessage() {}
+
+func (x *LogList) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LogList.ProtoReflect.Descriptor instead.
+func (*LogList) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *LogList) GetEntries() []*LogEntry {
+	if x != nil {
+		return x.Entries
+	}
+	return nil
+}
+
 type ScriptId struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -30,7 +802,7 @@ type ScriptId struct {
 
 func (x *ScriptId) Reset() {
 	*x = ScriptId{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[0]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -42,7 +814,7 @@ func (x *ScriptId) String() string {
 func (*ScriptId) ProtoMessage() {}
 
 func (x *ScriptId) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[0]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -55,7 +827,7 @@ func (x *ScriptId) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScriptId.ProtoReflect.Descriptor instead.
 func (*ScriptId) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{0}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ScriptId) GetId() int64 {
@@ -74,7 +846,7 @@ type ScriptQuery struct {
 
 func (x *ScriptQuery) Reset() {
 	*x = ScriptQuery{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[1]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -86,7 +858,7 @@ func (x *ScriptQuery) String() string {
 func (*ScriptQuery) ProtoMessage() {}
 
 func (x *ScriptQuery) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[1]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -99,7 +871,7 @@ func (x *ScriptQuery) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScriptQuery.ProtoReflect.Descriptor instead.
 func (*ScriptQuery) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{1}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ScriptQuery) GetProject() string {
@@ -123,7 +895,7 @@ type Script struct {
 
 func (x *Script) Reset() {
 	*x = Script{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[2]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -135,7 +907,7 @@ func (x *Script) String() string {
 func (*Script) ProtoMessage() {}
 
 func (x *Script) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[2]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -148,7 +920,7 @@ func (x *Script) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Script.ProtoReflect.Descriptor instead.
 func (*Script) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{2}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *Script) GetId() int64 {
@@ -202,7 +974,7 @@ type ScriptList struct {
 
 func (x *ScriptList) Reset() {
 	*x = ScriptList{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[3]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -214,7 +986,7 @@ func (x *ScriptList) String() string {
 func (*ScriptList) ProtoMessage() {}
 
 func (x *ScriptList) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[3]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -227,7 +999,7 @@ func (x *ScriptList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScriptList.ProtoReflect.Descriptor instead.
 func (*ScriptList) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{3}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ScriptList) GetScripts() []*Script {
@@ -247,7 +1019,7 @@ type GraphStateRequest struct {
 
 func (x *GraphStateRequest) Reset() {
 	*x = GraphStateRequest{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[4]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -259,7 +1031,7 @@ func (x *GraphStateRequest) String() string {
 func (*GraphStateRequest) ProtoMessage() {}
 
 func (x *GraphStateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[4]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -272,7 +1044,7 @@ func (x *GraphStateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GraphStateRequest.ProtoReflect.Descriptor instead.
 func (*GraphStateRequest) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{4}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *GraphStateRequest) GetKey() string {
@@ -298,7 +1070,7 @@ type GraphStateKey struct {
 
 func (x *GraphStateKey) Reset() {
 	*x = GraphStateKey{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[5]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -310,7 +1082,7 @@ func (x *GraphStateKey) String() string {
 func (*GraphStateKey) ProtoMessage() {}
 
 func (x *GraphStateKey) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[5]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -323,7 +1095,7 @@ func (x *GraphStateKey) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GraphStateKey.ProtoReflect.Descriptor instead.
 func (*GraphStateKey) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{5}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *GraphStateKey) GetKey() string {
@@ -342,7 +1114,7 @@ type GraphStateResponse struct {
 
 func (x *GraphStateResponse) Reset() {
 	*x = GraphStateResponse{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[6]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -354,7 +1126,7 @@ func (x *GraphStateResponse) String() string {
 func (*GraphStateResponse) ProtoMessage() {}
 
 func (x *GraphStateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[6]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -367,7 +1139,7 @@ func (x *GraphStateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GraphStateResponse.ProtoReflect.Descriptor instead.
 func (*GraphStateResponse) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{6}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *GraphStateResponse) GetData() string {
@@ -388,7 +1160,7 @@ type DirEntry struct {
 
 func (x *DirEntry) Reset() {
 	*x = DirEntry{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[7]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -400,7 +1172,7 @@ func (x *DirEntry) String() string {
 func (*DirEntry) ProtoMessage() {}
 
 func (x *DirEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[7]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -413,7 +1185,7 @@ func (x *DirEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DirEntry.ProtoReflect.Descriptor instead.
 func (*DirEntry) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{7}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *DirEntry) GetName() string {
@@ -448,7 +1220,7 @@ type DirListing struct {
 
 func (x *DirListing) Reset() {
 	*x = DirListing{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[8]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -460,7 +1232,7 @@ func (x *DirListing) String() string {
 func (*DirListing) ProtoMessage() {}
 
 func (x *DirListing) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[8]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -473,7 +1245,7 @@ func (x *DirListing) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DirListing.ProtoReflect.Descriptor instead.
 func (*DirListing) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{8}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *DirListing) GetPath() string {
@@ -508,7 +1280,7 @@ type FoundProject struct {
 
 func (x *FoundProject) Reset() {
 	*x = FoundProject{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[9]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -520,7 +1292,7 @@ func (x *FoundProject) String() string {
 func (*FoundProject) ProtoMessage() {}
 
 func (x *FoundProject) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[9]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -533,7 +1305,7 @@ func (x *FoundProject) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FoundProject.ProtoReflect.Descriptor instead.
 func (*FoundProject) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{9}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *FoundProject) GetName() string {
@@ -566,7 +1338,7 @@ type FoundProjects struct {
 
 func (x *FoundProjects) Reset() {
 	*x = FoundProjects{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[10]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -578,7 +1350,7 @@ func (x *FoundProjects) String() string {
 func (*FoundProjects) ProtoMessage() {}
 
 func (x *FoundProjects) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[10]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -591,7 +1363,7 @@ func (x *FoundProjects) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FoundProjects.ProtoReflect.Descriptor instead.
 func (*FoundProjects) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{10}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *FoundProjects) GetProjects() []*FoundProject {
@@ -611,7 +1383,7 @@ type Conventions struct {
 
 func (x *Conventions) Reset() {
 	*x = Conventions{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[11]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -623,7 +1395,7 @@ func (x *Conventions) String() string {
 func (*Conventions) ProtoMessage() {}
 
 func (x *Conventions) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[11]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -636,7 +1408,7 @@ func (x *Conventions) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Conventions.ProtoReflect.Descriptor instead.
 func (*Conventions) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{11}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *Conventions) GetConvention() string {
@@ -664,7 +1436,7 @@ type FileEvent struct {
 
 func (x *FileEvent) Reset() {
 	*x = FileEvent{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[12]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -676,7 +1448,7 @@ func (x *FileEvent) String() string {
 func (*FileEvent) ProtoMessage() {}
 
 func (x *FileEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[12]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -689,7 +1461,7 @@ func (x *FileEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileEvent.ProtoReflect.Descriptor instead.
 func (*FileEvent) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{12}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *FileEvent) GetPath() string {
@@ -722,7 +1494,7 @@ type FilePath struct {
 
 func (x *FilePath) Reset() {
 	*x = FilePath{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[13]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -734,7 +1506,7 @@ func (x *FilePath) String() string {
 func (*FilePath) ProtoMessage() {}
 
 func (x *FilePath) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[13]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -747,7 +1519,7 @@ func (x *FilePath) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FilePath.ProtoReflect.Descriptor instead.
 func (*FilePath) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{13}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *FilePath) GetPath() string {
@@ -766,7 +1538,7 @@ type FileContent struct {
 
 func (x *FileContent) Reset() {
 	*x = FileContent{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[14]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -778,7 +1550,7 @@ func (x *FileContent) String() string {
 func (*FileContent) ProtoMessage() {}
 
 func (x *FileContent) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[14]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -791,7 +1563,7 @@ func (x *FileContent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileContent.ProtoReflect.Descriptor instead.
 func (*FileContent) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{14}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *FileContent) GetContent() string {
@@ -811,7 +1583,7 @@ type FileResult struct {
 
 func (x *FileResult) Reset() {
 	*x = FileResult{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[15]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -823,7 +1595,7 @@ func (x *FileResult) String() string {
 func (*FileResult) ProtoMessage() {}
 
 func (x *FileResult) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[15]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -836,7 +1608,7 @@ func (x *FileResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileResult.ProtoReflect.Descriptor instead.
 func (*FileResult) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{15}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *FileResult) GetPath() string {
@@ -863,7 +1635,7 @@ type SaveRequest struct {
 
 func (x *SaveRequest) Reset() {
 	*x = SaveRequest{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[16]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -875,7 +1647,7 @@ func (x *SaveRequest) String() string {
 func (*SaveRequest) ProtoMessage() {}
 
 func (x *SaveRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[16]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -888,7 +1660,7 @@ func (x *SaveRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SaveRequest.ProtoReflect.Descriptor instead.
 func (*SaveRequest) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{16}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *SaveRequest) GetPath() string {
@@ -916,7 +1688,7 @@ type CreateRequest struct {
 
 func (x *CreateRequest) Reset() {
 	*x = CreateRequest{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[17]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -928,7 +1700,7 @@ func (x *CreateRequest) String() string {
 func (*CreateRequest) ProtoMessage() {}
 
 func (x *CreateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[17]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -941,7 +1713,7 @@ func (x *CreateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateRequest.ProtoReflect.Descriptor instead.
 func (*CreateRequest) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{17}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *CreateRequest) GetDir() string {
@@ -975,7 +1747,7 @@ type CreateFolderRequest struct {
 
 func (x *CreateFolderRequest) Reset() {
 	*x = CreateFolderRequest{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[18]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -987,7 +1759,7 @@ func (x *CreateFolderRequest) String() string {
 func (*CreateFolderRequest) ProtoMessage() {}
 
 func (x *CreateFolderRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[18]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1000,7 +1772,7 @@ func (x *CreateFolderRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateFolderRequest.ProtoReflect.Descriptor instead.
 func (*CreateFolderRequest) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{18}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *CreateFolderRequest) GetDir() string {
@@ -1029,7 +1801,7 @@ type RenameRequest struct {
 
 func (x *RenameRequest) Reset() {
 	*x = RenameRequest{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[19]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1041,7 +1813,7 @@ func (x *RenameRequest) String() string {
 func (*RenameRequest) ProtoMessage() {}
 
 func (x *RenameRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[19]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1054,7 +1826,7 @@ func (x *RenameRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RenameRequest.ProtoReflect.Descriptor instead.
 func (*RenameRequest) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{19}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *RenameRequest) GetOldPath() string {
@@ -1095,7 +1867,7 @@ type MoveRequest struct {
 
 func (x *MoveRequest) Reset() {
 	*x = MoveRequest{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[20]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1107,7 +1879,7 @@ func (x *MoveRequest) String() string {
 func (*MoveRequest) ProtoMessage() {}
 
 func (x *MoveRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[20]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1120,7 +1892,7 @@ func (x *MoveRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MoveRequest.ProtoReflect.Descriptor instead.
 func (*MoveRequest) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{20}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *MoveRequest) GetOldPath() string {
@@ -1147,7 +1919,7 @@ type ResolveRequest struct {
 
 func (x *ResolveRequest) Reset() {
 	*x = ResolveRequest{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[21]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1159,7 +1931,7 @@ func (x *ResolveRequest) String() string {
 func (*ResolveRequest) ProtoMessage() {}
 
 func (x *ResolveRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[21]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1172,7 +1944,7 @@ func (x *ResolveRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResolveRequest.ProtoReflect.Descriptor instead.
 func (*ResolveRequest) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{21}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *ResolveRequest) GetFrom() string {
@@ -1189,6 +1961,188 @@ func (x *ResolveRequest) GetSpec() string {
 	return ""
 }
 
+type LinkQuery struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Path          string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	Content       string                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LinkQuery) Reset() {
+	*x = LinkQuery{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LinkQuery) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LinkQuery) ProtoMessage() {}
+
+func (x *LinkQuery) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LinkQuery.ProtoReflect.Descriptor instead.
+func (*LinkQuery) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *LinkQuery) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *LinkQuery) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+// CodeLink — a clickable span resolving to a definition. Positions are 0-based;
+// columns are byte offsets within the line.
+type CodeLink struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FromLine      uint32                 `protobuf:"varint,1,opt,name=from_line,json=fromLine,proto3" json:"from_line,omitempty"`
+	FromCol       uint32                 `protobuf:"varint,2,opt,name=from_col,json=fromCol,proto3" json:"from_col,omitempty"`
+	ToLine        uint32                 `protobuf:"varint,3,opt,name=to_line,json=toLine,proto3" json:"to_line,omitempty"`
+	ToCol         uint32                 `protobuf:"varint,4,opt,name=to_col,json=toCol,proto3" json:"to_col,omitempty"`
+	TargetPath    string                 `protobuf:"bytes,5,opt,name=target_path,json=targetPath,proto3" json:"target_path,omitempty"`
+	TargetLine    uint32                 `protobuf:"varint,6,opt,name=target_line,json=targetLine,proto3" json:"target_line,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CodeLink) Reset() {
+	*x = CodeLink{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CodeLink) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CodeLink) ProtoMessage() {}
+
+func (x *CodeLink) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CodeLink.ProtoReflect.Descriptor instead.
+func (*CodeLink) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *CodeLink) GetFromLine() uint32 {
+	if x != nil {
+		return x.FromLine
+	}
+	return 0
+}
+
+func (x *CodeLink) GetFromCol() uint32 {
+	if x != nil {
+		return x.FromCol
+	}
+	return 0
+}
+
+func (x *CodeLink) GetToLine() uint32 {
+	if x != nil {
+		return x.ToLine
+	}
+	return 0
+}
+
+func (x *CodeLink) GetToCol() uint32 {
+	if x != nil {
+		return x.ToCol
+	}
+	return 0
+}
+
+func (x *CodeLink) GetTargetPath() string {
+	if x != nil {
+		return x.TargetPath
+	}
+	return ""
+}
+
+func (x *CodeLink) GetTargetLine() uint32 {
+	if x != nil {
+		return x.TargetLine
+	}
+	return 0
+}
+
+type CodeLinks struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Links         []*CodeLink            `protobuf:"bytes,1,rep,name=links,proto3" json:"links,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CodeLinks) Reset() {
+	*x = CodeLinks{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[37]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CodeLinks) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CodeLinks) ProtoMessage() {}
+
+func (x *CodeLinks) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[37]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CodeLinks.ProtoReflect.Descriptor instead.
+func (*CodeLinks) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{37}
+}
+
+func (x *CodeLinks) GetLinks() []*CodeLink {
+	if x != nil {
+		return x.Links
+	}
+	return nil
+}
+
 type AiAgentRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Prompt        string                 `protobuf:"bytes,1,opt,name=prompt,proto3" json:"prompt,omitempty"`
@@ -1200,7 +2154,7 @@ type AiAgentRequest struct {
 
 func (x *AiAgentRequest) Reset() {
 	*x = AiAgentRequest{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[22]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1212,7 +2166,7 @@ func (x *AiAgentRequest) String() string {
 func (*AiAgentRequest) ProtoMessage() {}
 
 func (x *AiAgentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[22]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1225,7 +2179,7 @@ func (x *AiAgentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AiAgentRequest.ProtoReflect.Descriptor instead.
 func (*AiAgentRequest) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{22}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *AiAgentRequest) GetPrompt() string {
@@ -1259,7 +2213,7 @@ type FileOp struct {
 
 func (x *FileOp) Reset() {
 	*x = FileOp{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[23]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1271,7 +2225,7 @@ func (x *FileOp) String() string {
 func (*FileOp) ProtoMessage() {}
 
 func (x *FileOp) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[23]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1284,7 +2238,7 @@ func (x *FileOp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileOp.ProtoReflect.Descriptor instead.
 func (*FileOp) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{23}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *FileOp) GetOp() string {
@@ -1312,7 +2266,7 @@ type AiAgentResponse struct {
 
 func (x *AiAgentResponse) Reset() {
 	*x = AiAgentResponse{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[24]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1324,7 +2278,7 @@ func (x *AiAgentResponse) String() string {
 func (*AiAgentResponse) ProtoMessage() {}
 
 func (x *AiAgentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[24]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1337,7 +2291,7 @@ func (x *AiAgentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AiAgentResponse.ProtoReflect.Descriptor instead.
 func (*AiAgentResponse) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{24}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *AiAgentResponse) GetOps() []*FileOp {
@@ -1361,6 +2315,538 @@ func (x *AiAgentResponse) GetMessage() string {
 	return ""
 }
 
+// AiAskContext — lekki kontekst zadania (treści/graf dobierane skillami przez aplikację).
+type AiAskContext struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Instruction   string                 `protobuf:"bytes,1,opt,name=instruction,proto3" json:"instruction,omitempty"`
+	OpenFile      string                 `protobuf:"bytes,2,opt,name=open_file,json=openFile,proto3" json:"open_file,omitempty"`
+	SelectedKind  string                 `protobuf:"bytes,3,opt,name=selected_kind,json=selectedKind,proto3" json:"selected_kind,omitempty"`
+	SelectedName  string                 `protobuf:"bytes,4,opt,name=selected_name,json=selectedName,proto3" json:"selected_name,omitempty"`
+	SelectedFile  string                 `protobuf:"bytes,5,opt,name=selected_file,json=selectedFile,proto3" json:"selected_file,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiAskContext) Reset() {
+	*x = AiAskContext{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[41]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiAskContext) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiAskContext) ProtoMessage() {}
+
+func (x *AiAskContext) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[41]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiAskContext.ProtoReflect.Descriptor instead.
+func (*AiAskContext) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{41}
+}
+
+func (x *AiAskContext) GetInstruction() string {
+	if x != nil {
+		return x.Instruction
+	}
+	return ""
+}
+
+func (x *AiAskContext) GetOpenFile() string {
+	if x != nil {
+		return x.OpenFile
+	}
+	return ""
+}
+
+func (x *AiAskContext) GetSelectedKind() string {
+	if x != nil {
+		return x.SelectedKind
+	}
+	return ""
+}
+
+func (x *AiAskContext) GetSelectedName() string {
+	if x != nil {
+		return x.SelectedName
+	}
+	return ""
+}
+
+func (x *AiAskContext) GetSelectedFile() string {
+	if x != nil {
+		return x.SelectedFile
+	}
+	return ""
+}
+
+type AiAskStart struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Prompt        string                 `protobuf:"bytes,1,opt,name=prompt,proto3" json:"prompt,omitempty"`
+	Dir           string                 `protobuf:"bytes,2,opt,name=dir,proto3" json:"dir,omitempty"` // cwd / klucz sesji (folder projektu)
+	Lang          string                 `protobuf:"bytes,3,opt,name=lang,proto3" json:"lang,omitempty"`
+	Edit          bool                   `protobuf:"varint,4,opt,name=edit,proto3" json:"edit,omitempty"`
+	Context       *AiAskContext          `protobuf:"bytes,5,opt,name=context,proto3" json:"context,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiAskStart) Reset() {
+	*x = AiAskStart{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[42]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiAskStart) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiAskStart) ProtoMessage() {}
+
+func (x *AiAskStart) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[42]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiAskStart.ProtoReflect.Descriptor instead.
+func (*AiAskStart) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{42}
+}
+
+func (x *AiAskStart) GetPrompt() string {
+	if x != nil {
+		return x.Prompt
+	}
+	return ""
+}
+
+func (x *AiAskStart) GetDir() string {
+	if x != nil {
+		return x.Dir
+	}
+	return ""
+}
+
+func (x *AiAskStart) GetLang() string {
+	if x != nil {
+		return x.Lang
+	}
+	return ""
+}
+
+func (x *AiAskStart) GetEdit() bool {
+	if x != nil {
+		return x.Edit
+	}
+	return false
+}
+
+func (x *AiAskStart) GetContext() *AiAskContext {
+	if x != nil {
+		return x.Context
+	}
+	return nil
+}
+
+// AiSkillResult — odpowiedź aplikacji na żądanie skilla (po id).
+type AiSkillResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Content       string                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	Error         string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiSkillResult) Reset() {
+	*x = AiSkillResult{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[43]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiSkillResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiSkillResult) ProtoMessage() {}
+
+func (x *AiSkillResult) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[43]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiSkillResult.ProtoReflect.Descriptor instead.
+func (*AiSkillResult) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{43}
+}
+
+func (x *AiSkillResult) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *AiSkillResult) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *AiSkillResult) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+// AiAskClientMsg — wiadomości od aplikacji: start albo wynik skilla.
+type AiAskClientMsg struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Msg:
+	//
+	//	*AiAskClientMsg_Start
+	//	*AiAskClientMsg_SkillResult
+	Msg           isAiAskClientMsg_Msg `protobuf_oneof:"msg"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiAskClientMsg) Reset() {
+	*x = AiAskClientMsg{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[44]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiAskClientMsg) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiAskClientMsg) ProtoMessage() {}
+
+func (x *AiAskClientMsg) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[44]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiAskClientMsg.ProtoReflect.Descriptor instead.
+func (*AiAskClientMsg) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{44}
+}
+
+func (x *AiAskClientMsg) GetMsg() isAiAskClientMsg_Msg {
+	if x != nil {
+		return x.Msg
+	}
+	return nil
+}
+
+func (x *AiAskClientMsg) GetStart() *AiAskStart {
+	if x != nil {
+		if x, ok := x.Msg.(*AiAskClientMsg_Start); ok {
+			return x.Start
+		}
+	}
+	return nil
+}
+
+func (x *AiAskClientMsg) GetSkillResult() *AiSkillResult {
+	if x != nil {
+		if x, ok := x.Msg.(*AiAskClientMsg_SkillResult); ok {
+			return x.SkillResult
+		}
+	}
+	return nil
+}
+
+type isAiAskClientMsg_Msg interface {
+	isAiAskClientMsg_Msg()
+}
+
+type AiAskClientMsg_Start struct {
+	Start *AiAskStart `protobuf:"bytes,1,opt,name=start,proto3,oneof"`
+}
+
+type AiAskClientMsg_SkillResult struct {
+	SkillResult *AiSkillResult `protobuf:"bytes,2,opt,name=skill_result,json=skillResult,proto3,oneof"`
+}
+
+func (*AiAskClientMsg_Start) isAiAskClientMsg_Msg() {}
+
+func (*AiAskClientMsg_SkillResult) isAiAskClientMsg_Msg() {}
+
+type AiToolCall struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Args          string                 `protobuf:"bytes,2,opt,name=args,proto3" json:"args,omitempty"`
+	Result        string                 `protobuf:"bytes,3,opt,name=result,proto3" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiToolCall) Reset() {
+	*x = AiToolCall{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[45]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiToolCall) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiToolCall) ProtoMessage() {}
+
+func (x *AiToolCall) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[45]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiToolCall.ProtoReflect.Descriptor instead.
+func (*AiToolCall) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{45}
+}
+
+func (x *AiToolCall) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *AiToolCall) GetArgs() string {
+	if x != nil {
+		return x.Args
+	}
+	return ""
+}
+
+func (x *AiToolCall) GetResult() string {
+	if x != nil {
+		return x.Result
+	}
+	return ""
+}
+
+// AiSkillRequest — serwer prosi aplikację o wykonanie skilla.
+type AiSkillRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"` // read_file | list_dir | get_graph
+	Args          string                 `protobuf:"bytes,3,opt,name=args,proto3" json:"args,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiSkillRequest) Reset() {
+	*x = AiSkillRequest{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[46]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiSkillRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiSkillRequest) ProtoMessage() {}
+
+func (x *AiSkillRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[46]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiSkillRequest.ProtoReflect.Descriptor instead.
+func (*AiSkillRequest) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{46}
+}
+
+func (x *AiSkillRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *AiSkillRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *AiSkillRequest) GetArgs() string {
+	if x != nil {
+		return x.Args
+	}
+	return ""
+}
+
+type AiAskEvent struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Event:
+	//
+	//	*AiAskEvent_Plan
+	//	*AiAskEvent_Tool
+	//	*AiAskEvent_Answer
+	//	*AiAskEvent_SkillRequest
+	Event         isAiAskEvent_Event `protobuf_oneof:"event"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiAskEvent) Reset() {
+	*x = AiAskEvent{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[47]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiAskEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiAskEvent) ProtoMessage() {}
+
+func (x *AiAskEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[47]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiAskEvent.ProtoReflect.Descriptor instead.
+func (*AiAskEvent) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{47}
+}
+
+func (x *AiAskEvent) GetEvent() isAiAskEvent_Event {
+	if x != nil {
+		return x.Event
+	}
+	return nil
+}
+
+func (x *AiAskEvent) GetPlan() string {
+	if x != nil {
+		if x, ok := x.Event.(*AiAskEvent_Plan); ok {
+			return x.Plan
+		}
+	}
+	return ""
+}
+
+func (x *AiAskEvent) GetTool() *AiToolCall {
+	if x != nil {
+		if x, ok := x.Event.(*AiAskEvent_Tool); ok {
+			return x.Tool
+		}
+	}
+	return nil
+}
+
+func (x *AiAskEvent) GetAnswer() string {
+	if x != nil {
+		if x, ok := x.Event.(*AiAskEvent_Answer); ok {
+			return x.Answer
+		}
+	}
+	return ""
+}
+
+func (x *AiAskEvent) GetSkillRequest() *AiSkillRequest {
+	if x != nil {
+		if x, ok := x.Event.(*AiAskEvent_SkillRequest); ok {
+			return x.SkillRequest
+		}
+	}
+	return nil
+}
+
+type isAiAskEvent_Event interface {
+	isAiAskEvent_Event()
+}
+
+type AiAskEvent_Plan struct {
+	Plan string `protobuf:"bytes,1,opt,name=plan,proto3,oneof"`
+}
+
+type AiAskEvent_Tool struct {
+	Tool *AiToolCall `protobuf:"bytes,2,opt,name=tool,proto3,oneof"`
+}
+
+type AiAskEvent_Answer struct {
+	Answer string `protobuf:"bytes,3,opt,name=answer,proto3,oneof"`
+}
+
+type AiAskEvent_SkillRequest struct {
+	SkillRequest *AiSkillRequest `protobuf:"bytes,4,opt,name=skill_request,json=skillRequest,proto3,oneof"`
+}
+
+func (*AiAskEvent_Plan) isAiAskEvent_Event() {}
+
+func (*AiAskEvent_Tool) isAiAskEvent_Event() {}
+
+func (*AiAskEvent_Answer) isAiAskEvent_Event() {}
+
+func (*AiAskEvent_SkillRequest) isAiAskEvent_Event() {}
+
 type AiEditRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
@@ -1372,7 +2858,7 @@ type AiEditRequest struct {
 
 func (x *AiEditRequest) Reset() {
 	*x = AiEditRequest{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[25]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1384,7 +2870,7 @@ func (x *AiEditRequest) String() string {
 func (*AiEditRequest) ProtoMessage() {}
 
 func (x *AiEditRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[25]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1397,7 +2883,7 @@ func (x *AiEditRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AiEditRequest.ProtoReflect.Descriptor instead.
 func (*AiEditRequest) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{25}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *AiEditRequest) GetCode() string {
@@ -1430,7 +2916,7 @@ type AiEditResponse struct {
 
 func (x *AiEditResponse) Reset() {
 	*x = AiEditResponse{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[26]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1442,7 +2928,7 @@ func (x *AiEditResponse) String() string {
 func (*AiEditResponse) ProtoMessage() {}
 
 func (x *AiEditResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[26]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1455,7 +2941,7 @@ func (x *AiEditResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AiEditResponse.ProtoReflect.Descriptor instead.
 func (*AiEditResponse) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{26}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *AiEditResponse) GetCode() string {
@@ -1474,7 +2960,7 @@ type AiModelResponse struct {
 
 func (x *AiModelResponse) Reset() {
 	*x = AiModelResponse{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[27]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1486,7 +2972,7 @@ func (x *AiModelResponse) String() string {
 func (*AiModelResponse) ProtoMessage() {}
 
 func (x *AiModelResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[27]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1499,7 +2985,7 @@ func (x *AiModelResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AiModelResponse.ProtoReflect.Descriptor instead.
 func (*AiModelResponse) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{27}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *AiModelResponse) GetName() string {
@@ -1518,7 +3004,7 @@ type AiProviderRequest struct {
 
 func (x *AiProviderRequest) Reset() {
 	*x = AiProviderRequest{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[28]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1530,7 +3016,7 @@ func (x *AiProviderRequest) String() string {
 func (*AiProviderRequest) ProtoMessage() {}
 
 func (x *AiProviderRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[28]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1543,7 +3029,7 @@ func (x *AiProviderRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AiProviderRequest.ProtoReflect.Descriptor instead.
 func (*AiProviderRequest) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{28}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *AiProviderRequest) GetProvider() string {
@@ -1551,6 +3037,94 @@ func (x *AiProviderRequest) GetProvider() string {
 		return x.Provider
 	}
 	return ""
+}
+
+type AiClaudeTokenRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiClaudeTokenRequest) Reset() {
+	*x = AiClaudeTokenRequest{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[52]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiClaudeTokenRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiClaudeTokenRequest) ProtoMessage() {}
+
+func (x *AiClaudeTokenRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[52]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiClaudeTokenRequest.ProtoReflect.Descriptor instead.
+func (*AiClaudeTokenRequest) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{52}
+}
+
+func (x *AiClaudeTokenRequest) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+type AiClaudeTokenStatus struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	HasToken      bool                   `protobuf:"varint,1,opt,name=has_token,json=hasToken,proto3" json:"has_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AiClaudeTokenStatus) Reset() {
+	*x = AiClaudeTokenStatus{}
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[53]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AiClaudeTokenStatus) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AiClaudeTokenStatus) ProtoMessage() {}
+
+func (x *AiClaudeTokenStatus) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[53]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AiClaudeTokenStatus.ProtoReflect.Descriptor instead.
+func (*AiClaudeTokenStatus) Descriptor() ([]byte, []int) {
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{53}
+}
+
+func (x *AiClaudeTokenStatus) GetHasToken() bool {
+	if x != nil {
+		return x.HasToken
+	}
+	return false
 }
 
 type AiReviewRequest struct {
@@ -1564,7 +3138,7 @@ type AiReviewRequest struct {
 
 func (x *AiReviewRequest) Reset() {
 	*x = AiReviewRequest{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[29]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1576,7 +3150,7 @@ func (x *AiReviewRequest) String() string {
 func (*AiReviewRequest) ProtoMessage() {}
 
 func (x *AiReviewRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[29]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1589,7 +3163,7 @@ func (x *AiReviewRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AiReviewRequest.ProtoReflect.Descriptor instead.
 func (*AiReviewRequest) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{29}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *AiReviewRequest) GetCode() string {
@@ -1623,7 +3197,7 @@ type Remark struct {
 
 func (x *Remark) Reset() {
 	*x = Remark{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[30]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1635,7 +3209,7 @@ func (x *Remark) String() string {
 func (*Remark) ProtoMessage() {}
 
 func (x *Remark) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[30]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1648,7 +3222,7 @@ func (x *Remark) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Remark.ProtoReflect.Descriptor instead.
 func (*Remark) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{30}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *Remark) GetLine() int32 {
@@ -1674,7 +3248,7 @@ type AiReviewResponse struct {
 
 func (x *AiReviewResponse) Reset() {
 	*x = AiReviewResponse{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[31]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1686,7 +3260,7 @@ func (x *AiReviewResponse) String() string {
 func (*AiReviewResponse) ProtoMessage() {}
 
 func (x *AiReviewResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[31]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1699,7 +3273,7 @@ func (x *AiReviewResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AiReviewResponse.ProtoReflect.Descriptor instead.
 func (*AiReviewResponse) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{31}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *AiReviewResponse) GetRemarks() []*Remark {
@@ -1720,7 +3294,7 @@ type AiCompleteRequest struct {
 
 func (x *AiCompleteRequest) Reset() {
 	*x = AiCompleteRequest{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[32]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1732,7 +3306,7 @@ func (x *AiCompleteRequest) String() string {
 func (*AiCompleteRequest) ProtoMessage() {}
 
 func (x *AiCompleteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[32]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1745,7 +3319,7 @@ func (x *AiCompleteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AiCompleteRequest.ProtoReflect.Descriptor instead.
 func (*AiCompleteRequest) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{32}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *AiCompleteRequest) GetPrefix() string {
@@ -1778,7 +3352,7 @@ type AiCompleteResponse struct {
 
 func (x *AiCompleteResponse) Reset() {
 	*x = AiCompleteResponse{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[33]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1790,7 +3364,7 @@ func (x *AiCompleteResponse) String() string {
 func (*AiCompleteResponse) ProtoMessage() {}
 
 func (x *AiCompleteResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[33]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1803,7 +3377,7 @@ func (x *AiCompleteResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AiCompleteResponse.ProtoReflect.Descriptor instead.
 func (*AiCompleteResponse) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{33}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *AiCompleteResponse) GetText() string {
@@ -1827,7 +3401,7 @@ type EventInput struct {
 
 func (x *EventInput) Reset() {
 	*x = EventInput{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[34]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1839,7 +3413,7 @@ func (x *EventInput) String() string {
 func (*EventInput) ProtoMessage() {}
 
 func (x *EventInput) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[34]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1852,7 +3426,7 @@ func (x *EventInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EventInput.ProtoReflect.Descriptor instead.
 func (*EventInput) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{34}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *EventInput) GetType() string {
@@ -1913,7 +3487,7 @@ type Event struct {
 
 func (x *Event) Reset() {
 	*x = Event{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[35]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1925,7 +3499,7 @@ func (x *Event) String() string {
 func (*Event) ProtoMessage() {}
 
 func (x *Event) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[35]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1938,7 +3512,7 @@ func (x *Event) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Event.ProtoReflect.Descriptor instead.
 func (*Event) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{35}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *Event) GetId() string {
@@ -2009,7 +3583,7 @@ type EventQuery struct {
 
 func (x *EventQuery) Reset() {
 	*x = EventQuery{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[36]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2021,7 +3595,7 @@ func (x *EventQuery) String() string {
 func (*EventQuery) ProtoMessage() {}
 
 func (x *EventQuery) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[36]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2034,7 +3608,7 @@ func (x *EventQuery) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EventQuery.ProtoReflect.Descriptor instead.
 func (*EventQuery) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{36}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *EventQuery) GetFile() string {
@@ -2074,7 +3648,7 @@ type EventList struct {
 
 func (x *EventList) Reset() {
 	*x = EventList{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[37]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2086,7 +3660,7 @@ func (x *EventList) String() string {
 func (*EventList) ProtoMessage() {}
 
 func (x *EventList) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[37]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2099,7 +3673,7 @@ func (x *EventList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EventList.ProtoReflect.Descriptor instead.
 func (*EventList) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{37}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *EventList) GetEvents() []*Event {
@@ -2117,7 +3691,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[38]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2129,7 +3703,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[38]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2142,7 +3716,7 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{38}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{63}
 }
 
 type ScanRequest struct {
@@ -2154,7 +3728,7 @@ type ScanRequest struct {
 
 func (x *ScanRequest) Reset() {
 	*x = ScanRequest{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[39]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2166,7 +3740,7 @@ func (x *ScanRequest) String() string {
 func (*ScanRequest) ProtoMessage() {}
 
 func (x *ScanRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[39]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2179,7 +3753,7 @@ func (x *ScanRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScanRequest.ProtoReflect.Descriptor instead.
 func (*ScanRequest) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{39}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *ScanRequest) GetPath() string {
@@ -2198,7 +3772,7 @@ type ScanAppRequest struct {
 
 func (x *ScanAppRequest) Reset() {
 	*x = ScanAppRequest{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[40]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[65]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2210,7 +3784,7 @@ func (x *ScanAppRequest) String() string {
 func (*ScanAppRequest) ProtoMessage() {}
 
 func (x *ScanAppRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[40]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[65]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2223,7 +3797,7 @@ func (x *ScanAppRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScanAppRequest.ProtoReflect.Descriptor instead.
 func (*ScanAppRequest) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{40}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *ScanAppRequest) GetAppId() int64 {
@@ -2242,7 +3816,7 @@ type AppGraphRequest struct {
 
 func (x *AppGraphRequest) Reset() {
 	*x = AppGraphRequest{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[41]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2254,7 +3828,7 @@ func (x *AppGraphRequest) String() string {
 func (*AppGraphRequest) ProtoMessage() {}
 
 func (x *AppGraphRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[41]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2267,7 +3841,7 @@ func (x *AppGraphRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AppGraphRequest.ProtoReflect.Descriptor instead.
 func (*AppGraphRequest) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{41}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *AppGraphRequest) GetAppId() int64 {
@@ -2292,7 +3866,7 @@ type Progress struct {
 
 func (x *Progress) Reset() {
 	*x = Progress{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[42]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2304,7 +3878,7 @@ func (x *Progress) String() string {
 func (*Progress) ProtoMessage() {}
 
 func (x *Progress) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[42]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2317,7 +3891,7 @@ func (x *Progress) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Progress.ProtoReflect.Descriptor instead.
 func (*Progress) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{42}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{67}
 }
 
 func (x *Progress) GetMessage() string {
@@ -2371,7 +3945,7 @@ type GraphRequest struct {
 
 func (x *GraphRequest) Reset() {
 	*x = GraphRequest{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[43]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2383,7 +3957,7 @@ func (x *GraphRequest) String() string {
 func (*GraphRequest) ProtoMessage() {}
 
 func (x *GraphRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[43]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2396,7 +3970,7 @@ func (x *GraphRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GraphRequest.ProtoReflect.Descriptor instead.
 func (*GraphRequest) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{43}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{68}
 }
 
 func (x *GraphRequest) GetProjectId() int64 {
@@ -2425,7 +3999,7 @@ type Node struct {
 
 func (x *Node) Reset() {
 	*x = Node{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[44]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2437,7 +4011,7 @@ func (x *Node) String() string {
 func (*Node) ProtoMessage() {}
 
 func (x *Node) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[44]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2450,7 +4024,7 @@ func (x *Node) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Node.ProtoReflect.Descriptor instead.
 func (*Node) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{44}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{69}
 }
 
 func (x *Node) GetId() string {
@@ -2535,7 +4109,7 @@ type Edge struct {
 
 func (x *Edge) Reset() {
 	*x = Edge{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[45]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[70]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2547,7 +4121,7 @@ func (x *Edge) String() string {
 func (*Edge) ProtoMessage() {}
 
 func (x *Edge) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[45]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[70]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2560,7 +4134,7 @@ func (x *Edge) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Edge.ProtoReflect.Descriptor instead.
 func (*Edge) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{45}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{70}
 }
 
 func (x *Edge) GetFrom() string {
@@ -2596,7 +4170,7 @@ type Graph struct {
 
 func (x *Graph) Reset() {
 	*x = Graph{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[46]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[71]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2608,7 +4182,7 @@ func (x *Graph) String() string {
 func (*Graph) ProtoMessage() {}
 
 func (x *Graph) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[46]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[71]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2621,7 +4195,7 @@ func (x *Graph) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Graph.ProtoReflect.Descriptor instead.
 func (*Graph) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{46}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{71}
 }
 
 func (x *Graph) GetProjectId() int64 {
@@ -2664,7 +4238,7 @@ type Project struct {
 
 func (x *Project) Reset() {
 	*x = Project{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[47]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[72]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2676,7 +4250,7 @@ func (x *Project) String() string {
 func (*Project) ProtoMessage() {}
 
 func (x *Project) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[47]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[72]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2689,7 +4263,7 @@ func (x *Project) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Project.ProtoReflect.Descriptor instead.
 func (*Project) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{47}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{72}
 }
 
 func (x *Project) GetId() int64 {
@@ -2729,7 +4303,7 @@ type Projects struct {
 
 func (x *Projects) Reset() {
 	*x = Projects{}
-	mi := &file_gateway_v1_gateway_proto_msgTypes[48]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[73]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2741,7 +4315,7 @@ func (x *Projects) String() string {
 func (*Projects) ProtoMessage() {}
 
 func (x *Projects) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_v1_gateway_proto_msgTypes[48]
+	mi := &file_proto_gateway_v1_gateway_proto_msgTypes[73]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2754,7 +4328,7 @@ func (x *Projects) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Projects.ProtoReflect.Descriptor instead.
 func (*Projects) Descriptor() ([]byte, []int) {
-	return file_gateway_v1_gateway_proto_rawDescGZIP(), []int{48}
+	return file_proto_gateway_v1_gateway_proto_rawDescGZIP(), []int{73}
 }
 
 func (x *Projects) GetProjects() []*Project {
@@ -2764,12 +4338,66 @@ func (x *Projects) GetProjects() []*Project {
 	return nil
 }
 
-var File_gateway_v1_gateway_proto protoreflect.FileDescriptor
+var File_proto_gateway_v1_gateway_proto protoreflect.FileDescriptor
 
-const file_gateway_v1_gateway_proto_rawDesc = "" +
+const file_proto_gateway_v1_gateway_proto_rawDesc = "" +
 	"\n" +
-	"\x18gateway/v1/gateway.proto\x12\n" +
-	"gateway.v1\"\x1a\n" +
+	"\x1eproto/gateway/v1/gateway.proto\x12\n" +
+	"gateway.v1\"h\n" +
+	"\bGitChunk\x12\x1b\n" +
+	"\trepo_path\x18\x01 \x01(\tR\brepoPath\x12\x19\n" +
+	"\brel_path\x18\x02 \x01(\tR\arelPath\x12\x12\n" +
+	"\x04data\x18\x03 \x01(\fR\x04data\x12\x10\n" +
+	"\x03eof\x18\x04 \x01(\bR\x03eof\"u\n" +
+	"\x0fGitUploadResult\x12\x1b\n" +
+	"\trepo_path\x18\x01 \x01(\tR\brepoPath\x12\x0e\n" +
+	"\x02ok\x18\x02 \x01(\bR\x02ok\x12\x14\n" +
+	"\x05files\x18\x03 \x01(\x05R\x05files\x12\x1f\n" +
+	"\vhead_branch\x18\x04 \x01(\tR\n" +
+	"headBranch\"E\n" +
+	"\x12GitFileInfoRequest\x12\x1b\n" +
+	"\trepo_path\x18\x01 \x01(\tR\brepoPath\x12\x12\n" +
+	"\x04file\x18\x02 \x01(\tR\x04file\"\xf3\x01\n" +
+	"\x13GitFileInfoResponse\x12\x18\n" +
+	"\atracked\x18\x01 \x01(\bR\atracked\x12\x1f\n" +
+	"\vlast_author\x18\x02 \x01(\tR\n" +
+	"lastAuthor\x12*\n" +
+	"\x11last_author_email\x18\x03 \x01(\tR\x0flastAuthorEmail\x12(\n" +
+	"\x10last_commit_hash\x18\x04 \x01(\tR\x0elastCommitHash\x12(\n" +
+	"\x10last_commit_time\x18\x05 \x01(\x03R\x0elastCommitTime\x12!\n" +
+	"\flast_message\x18\x06 \x01(\tR\vlastMessage\"C\n" +
+	"\x10GitReviewRequest\x12\x1b\n" +
+	"\trepo_path\x18\x01 \x01(\tR\brepoPath\x12\x12\n" +
+	"\x04base\x18\x02 \x01(\tR\x04base\"W\n" +
+	"\x0eGitChangedFile\x12\x12\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\x12\x19\n" +
+	"\babs_path\x18\x02 \x01(\tR\aabsPath\x12\x16\n" +
+	"\x06status\x18\x03 \x01(\tR\x06status\"m\n" +
+	"\x11GitReviewResponse\x12\x12\n" +
+	"\x04base\x18\x01 \x01(\tR\x04base\x12\x12\n" +
+	"\x04head\x18\x02 \x01(\tR\x04head\x120\n" +
+	"\x05files\x18\x03 \x03(\v2\x1a.gateway.v1.GitChangedFileR\x05files\"Y\n" +
+	"\x12GitFileDiffRequest\x12\x1b\n" +
+	"\trepo_path\x18\x01 \x01(\tR\brepoPath\x12\x12\n" +
+	"\x04file\x18\x02 \x01(\tR\x04file\x12\x12\n" +
+	"\x04base\x18\x03 \x01(\tR\x04base\"u\n" +
+	"\x13GitFileDiffResponse\x12\x16\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\x12\x1f\n" +
+	"\vadded_lines\x18\x02 \x03(\x05R\n" +
+	"addedLines\x12%\n" +
+	"\x0emodified_lines\x18\x03 \x03(\x05R\rmodifiedLines\"v\n" +
+	"\bLogEntry\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
+	"\x04time\x18\x02 \x01(\x03R\x04time\x12\x14\n" +
+	"\x05level\x18\x03 \x01(\tR\x05level\x12\x18\n" +
+	"\amessage\x18\x04 \x01(\tR\amessage\x12\x16\n" +
+	"\x06source\x18\x05 \x01(\tR\x06source\":\n" +
+	"\bLogBatch\x12.\n" +
+	"\aentries\x18\x01 \x03(\v2\x14.gateway.v1.LogEntryR\aentries\" \n" +
+	"\bLogQuery\x12\x14\n" +
+	"\x05limit\x18\x01 \x01(\x05R\x05limit\"9\n" +
+	"\aLogList\x12.\n" +
+	"\aentries\x18\x01 \x03(\v2\x14.gateway.v1.LogEntryR\aentries\"\x1a\n" +
 	"\bScriptId\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\"'\n" +
 	"\vScriptQuery\x12\x18\n" +
@@ -2847,7 +4475,21 @@ const file_gateway_v1_gateway_proto_rawDesc = "" +
 	"target_dir\x18\x02 \x01(\tR\ttargetDir\"8\n" +
 	"\x0eResolveRequest\x12\x12\n" +
 	"\x04from\x18\x01 \x01(\tR\x04from\x12\x12\n" +
-	"\x04spec\x18\x02 \x01(\tR\x04spec\"N\n" +
+	"\x04spec\x18\x02 \x01(\tR\x04spec\"9\n" +
+	"\tLinkQuery\x12\x12\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\x12\x18\n" +
+	"\acontent\x18\x02 \x01(\tR\acontent\"\xb4\x01\n" +
+	"\bCodeLink\x12\x1b\n" +
+	"\tfrom_line\x18\x01 \x01(\rR\bfromLine\x12\x19\n" +
+	"\bfrom_col\x18\x02 \x01(\rR\afromCol\x12\x17\n" +
+	"\ato_line\x18\x03 \x01(\rR\x06toLine\x12\x15\n" +
+	"\x06to_col\x18\x04 \x01(\rR\x05toCol\x12\x1f\n" +
+	"\vtarget_path\x18\x05 \x01(\tR\n" +
+	"targetPath\x12\x1f\n" +
+	"\vtarget_line\x18\x06 \x01(\rR\n" +
+	"targetLine\"7\n" +
+	"\tCodeLinks\x12*\n" +
+	"\x05links\x18\x01 \x03(\v2\x14.gateway.v1.CodeLinkR\x05links\"N\n" +
 	"\x0eAiAgentRequest\x12\x16\n" +
 	"\x06prompt\x18\x01 \x01(\tR\x06prompt\x12\x10\n" +
 	"\x03dir\x18\x02 \x01(\tR\x03dir\x12\x12\n" +
@@ -2858,7 +4500,44 @@ const file_gateway_v1_gateway_proto_rawDesc = "" +
 	"\x0fAiAgentResponse\x12$\n" +
 	"\x03ops\x18\x01 \x03(\v2\x12.gateway.v1.FileOpR\x03ops\x12\x1b\n" +
 	"\topen_path\x18\x02 \x01(\tR\bopenPath\x12\x18\n" +
-	"\amessage\x18\x03 \x01(\tR\amessage\"O\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\"\xbc\x01\n" +
+	"\fAiAskContext\x12 \n" +
+	"\vinstruction\x18\x01 \x01(\tR\vinstruction\x12\x1b\n" +
+	"\topen_file\x18\x02 \x01(\tR\bopenFile\x12#\n" +
+	"\rselected_kind\x18\x03 \x01(\tR\fselectedKind\x12#\n" +
+	"\rselected_name\x18\x04 \x01(\tR\fselectedName\x12#\n" +
+	"\rselected_file\x18\x05 \x01(\tR\fselectedFile\"\x92\x01\n" +
+	"\n" +
+	"AiAskStart\x12\x16\n" +
+	"\x06prompt\x18\x01 \x01(\tR\x06prompt\x12\x10\n" +
+	"\x03dir\x18\x02 \x01(\tR\x03dir\x12\x12\n" +
+	"\x04lang\x18\x03 \x01(\tR\x04lang\x12\x12\n" +
+	"\x04edit\x18\x04 \x01(\bR\x04edit\x122\n" +
+	"\acontext\x18\x05 \x01(\v2\x18.gateway.v1.AiAskContextR\acontext\"O\n" +
+	"\rAiSkillResult\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
+	"\acontent\x18\x02 \x01(\tR\acontent\x12\x14\n" +
+	"\x05error\x18\x03 \x01(\tR\x05error\"\x87\x01\n" +
+	"\x0eAiAskClientMsg\x12.\n" +
+	"\x05start\x18\x01 \x01(\v2\x16.gateway.v1.AiAskStartH\x00R\x05start\x12>\n" +
+	"\fskill_result\x18\x02 \x01(\v2\x19.gateway.v1.AiSkillResultH\x00R\vskillResultB\x05\n" +
+	"\x03msg\"L\n" +
+	"\n" +
+	"AiToolCall\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
+	"\x04args\x18\x02 \x01(\tR\x04args\x12\x16\n" +
+	"\x06result\x18\x03 \x01(\tR\x06result\"H\n" +
+	"\x0eAiSkillRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
+	"\x04args\x18\x03 \x01(\tR\x04args\"\xb6\x01\n" +
+	"\n" +
+	"AiAskEvent\x12\x14\n" +
+	"\x04plan\x18\x01 \x01(\tH\x00R\x04plan\x12,\n" +
+	"\x04tool\x18\x02 \x01(\v2\x16.gateway.v1.AiToolCallH\x00R\x04tool\x12\x18\n" +
+	"\x06answer\x18\x03 \x01(\tH\x00R\x06answer\x12A\n" +
+	"\rskill_request\x18\x04 \x01(\v2\x1a.gateway.v1.AiSkillRequestH\x00R\fskillRequestB\a\n" +
+	"\x05event\"O\n" +
 	"\rAiEditRequest\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12\x16\n" +
 	"\x06prompt\x18\x02 \x01(\tR\x06prompt\x12\x12\n" +
@@ -2868,7 +4547,11 @@ const file_gateway_v1_gateway_proto_rawDesc = "" +
 	"\x0fAiModelResponse\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\"/\n" +
 	"\x11AiProviderRequest\x12\x1a\n" +
-	"\bprovider\x18\x01 \x01(\tR\bprovider\"M\n" +
+	"\bprovider\x18\x01 \x01(\tR\bprovider\",\n" +
+	"\x14AiClaudeTokenRequest\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"2\n" +
+	"\x13AiClaudeTokenStatus\x12\x1b\n" +
+	"\thas_token\x18\x01 \x01(\bR\bhasToken\"M\n" +
 	"\x0fAiReviewRequest\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12\x12\n" +
 	"\x04file\x18\x02 \x01(\tR\x04file\x12\x12\n" +
@@ -2957,7 +4640,7 @@ const file_gateway_v1_gateway_proto_rawDesc = "" +
 	"\bgit_path\x18\x03 \x01(\tR\agitPath\x12\x12\n" +
 	"\x04kind\x18\x04 \x01(\tR\x04kind\";\n" +
 	"\bProjects\x12/\n" +
-	"\bprojects\x18\x01 \x03(\v2\x13.gateway.v1.ProjectR\bprojects2\xfd\x0f\n" +
+	"\bprojects\x18\x01 \x03(\v2\x13.gateway.v1.ProjectR\bprojects2\xf0\x15\n" +
 	"\aGateway\x127\n" +
 	"\x04Scan\x12\x17.gateway.v1.ScanRequest\x1a\x14.gateway.v1.Progress0\x01\x127\n" +
 	"\bGetGraph\x12\x18.gateway.v1.GraphRequest\x1a\x11.gateway.v1.Graph\x12=\n" +
@@ -2966,7 +4649,9 @@ const file_gateway_v1_gateway_proto_rawDesc = "" +
 	"\fListProjects\x12\x11.gateway.v1.Empty\x1a\x14.gateway.v1.Projects\x12?\n" +
 	"\x06AiEdit\x12\x19.gateway.v1.AiEditRequest\x1a\x1a.gateway.v1.AiEditResponse\x129\n" +
 	"\aAiModel\x12\x11.gateway.v1.Empty\x1a\x1b.gateway.v1.AiModelResponse\x12K\n" +
-	"\rAiSetProvider\x12\x1d.gateway.v1.AiProviderRequest\x1a\x1b.gateway.v1.AiModelResponse\x12E\n" +
+	"\rAiSetProvider\x12\x1d.gateway.v1.AiProviderRequest\x1a\x1b.gateway.v1.AiModelResponse\x12U\n" +
+	"\x10AiSetClaudeToken\x12 .gateway.v1.AiClaudeTokenRequest\x1a\x1f.gateway.v1.AiClaudeTokenStatus\x12D\n" +
+	"\x0eAiClaudeStatus\x12\x11.gateway.v1.Empty\x1a\x1f.gateway.v1.AiClaudeTokenStatus\x12E\n" +
 	"\bAiReview\x12\x1b.gateway.v1.AiReviewRequest\x1a\x1c.gateway.v1.AiReviewResponse\x12K\n" +
 	"\n" +
 	"AiComplete\x12\x1d.gateway.v1.AiCompleteRequest\x1a\x1e.gateway.v1.AiCompleteResponse\x129\n" +
@@ -2983,187 +4668,264 @@ const file_gateway_v1_gateway_proto_rawDesc = "" +
 	"\bMoveFile\x12\x17.gateway.v1.MoveRequest\x1a\x16.gateway.v1.FileResult\x12:\n" +
 	"\n" +
 	"DeletePath\x12\x14.gateway.v1.FilePath\x1a\x16.gateway.v1.FileResult\x12C\n" +
-	"\rResolveImport\x12\x1a.gateway.v1.ResolveRequest\x1a\x16.gateway.v1.FileResult\x124\n" +
+	"\rResolveImport\x12\x1a.gateway.v1.ResolveRequest\x1a\x16.gateway.v1.FileResult\x125\n" +
+	"\x05Links\x12\x15.gateway.v1.LinkQuery\x1a\x15.gateway.v1.CodeLinks\x124\n" +
 	"\aHomeDir\x12\x11.gateway.v1.Empty\x1a\x16.gateway.v1.FileResult\x127\n" +
 	"\aListDir\x12\x14.gateway.v1.FilePath\x1a\x16.gateway.v1.DirListing\x12?\n" +
 	"\fFindProjects\x12\x14.gateway.v1.FilePath\x1a\x19.gateway.v1.FoundProjects\x12B\n" +
 	"\x11DetectConventions\x12\x14.gateway.v1.FilePath\x1a\x17.gateway.v1.Conventions\x12;\n" +
 	"\n" +
 	"WatchFiles\x12\x14.gateway.v1.FilePath\x1a\x15.gateway.v1.FileEvent0\x01\x12B\n" +
-	"\aAiAgent\x12\x1a.gateway.v1.AiAgentRequest\x1a\x1b.gateway.v1.AiAgentResponse\x12G\n" +
+	"\aAiAgent\x12\x1a.gateway.v1.AiAgentRequest\x1a\x1b.gateway.v1.AiAgentResponse\x12?\n" +
+	"\x05AiAsk\x12\x1a.gateway.v1.AiAskClientMsg\x1a\x16.gateway.v1.AiAskEvent(\x010\x01\x12G\n" +
 	"\x0eSaveGraphState\x12\x1d.gateway.v1.GraphStateRequest\x1a\x16.gateway.v1.FileResult\x12J\n" +
 	"\rGetGraphState\x12\x19.gateway.v1.GraphStateKey\x1a\x1e.gateway.v1.GraphStateResponse\x12>\n" +
 	"\vListScripts\x12\x17.gateway.v1.ScriptQuery\x1a\x16.gateway.v1.ScriptList\x125\n" +
 	"\tGetScript\x12\x14.gateway.v1.ScriptId\x1a\x12.gateway.v1.Script\x124\n" +
 	"\n" +
 	"SaveScript\x12\x12.gateway.v1.Script\x1a\x12.gateway.v1.Script\x12<\n" +
-	"\fDeleteScript\x12\x14.gateway.v1.ScriptId\x1a\x16.gateway.v1.FileResultB?Z=github.com/filipgorny/ai-architect/proto/gateway/v1;gatewayv1b\x06proto3"
+	"\fDeleteScript\x12\x14.gateway.v1.ScriptId\x1a\x16.gateway.v1.FileResult\x12:\n" +
+	"\n" +
+	"AppendLogs\x12\x14.gateway.v1.LogBatch\x1a\x16.gateway.v1.FileResult\x125\n" +
+	"\bListLogs\x12\x14.gateway.v1.LogQuery\x1a\x13.gateway.v1.LogList\x126\n" +
+	"\tClearLogs\x12\x11.gateway.v1.Empty\x1a\x16.gateway.v1.FileResult\x12A\n" +
+	"\n" +
+	"UploadRepo\x12\x14.gateway.v1.GitChunk\x1a\x1b.gateway.v1.GitUploadResult(\x01\x12N\n" +
+	"\vGitFileInfo\x12\x1e.gateway.v1.GitFileInfoRequest\x1a\x1f.gateway.v1.GitFileInfoResponse\x12N\n" +
+	"\x0fGitReviewStatus\x12\x1c.gateway.v1.GitReviewRequest\x1a\x1d.gateway.v1.GitReviewResponse\x12N\n" +
+	"\vGitFileDiff\x12\x1e.gateway.v1.GitFileDiffRequest\x1a\x1f.gateway.v1.GitFileDiffResponseB?Z=github.com/filipgorny/ai-architect/proto/gateway/v1;gatewayv1b\x06proto3"
 
 var (
-	file_gateway_v1_gateway_proto_rawDescOnce sync.Once
-	file_gateway_v1_gateway_proto_rawDescData []byte
+	file_proto_gateway_v1_gateway_proto_rawDescOnce sync.Once
+	file_proto_gateway_v1_gateway_proto_rawDescData []byte
 )
 
-func file_gateway_v1_gateway_proto_rawDescGZIP() []byte {
-	file_gateway_v1_gateway_proto_rawDescOnce.Do(func() {
-		file_gateway_v1_gateway_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_gateway_v1_gateway_proto_rawDesc), len(file_gateway_v1_gateway_proto_rawDesc)))
+func file_proto_gateway_v1_gateway_proto_rawDescGZIP() []byte {
+	file_proto_gateway_v1_gateway_proto_rawDescOnce.Do(func() {
+		file_proto_gateway_v1_gateway_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_gateway_v1_gateway_proto_rawDesc), len(file_proto_gateway_v1_gateway_proto_rawDesc)))
 	})
-	return file_gateway_v1_gateway_proto_rawDescData
+	return file_proto_gateway_v1_gateway_proto_rawDescData
 }
 
-var file_gateway_v1_gateway_proto_msgTypes = make([]protoimpl.MessageInfo, 49)
-var file_gateway_v1_gateway_proto_goTypes = []any{
-	(*ScriptId)(nil),            // 0: gateway.v1.ScriptId
-	(*ScriptQuery)(nil),         // 1: gateway.v1.ScriptQuery
-	(*Script)(nil),              // 2: gateway.v1.Script
-	(*ScriptList)(nil),          // 3: gateway.v1.ScriptList
-	(*GraphStateRequest)(nil),   // 4: gateway.v1.GraphStateRequest
-	(*GraphStateKey)(nil),       // 5: gateway.v1.GraphStateKey
-	(*GraphStateResponse)(nil),  // 6: gateway.v1.GraphStateResponse
-	(*DirEntry)(nil),            // 7: gateway.v1.DirEntry
-	(*DirListing)(nil),          // 8: gateway.v1.DirListing
-	(*FoundProject)(nil),        // 9: gateway.v1.FoundProject
-	(*FoundProjects)(nil),       // 10: gateway.v1.FoundProjects
-	(*Conventions)(nil),         // 11: gateway.v1.Conventions
-	(*FileEvent)(nil),           // 12: gateway.v1.FileEvent
-	(*FilePath)(nil),            // 13: gateway.v1.FilePath
-	(*FileContent)(nil),         // 14: gateway.v1.FileContent
-	(*FileResult)(nil),          // 15: gateway.v1.FileResult
-	(*SaveRequest)(nil),         // 16: gateway.v1.SaveRequest
-	(*CreateRequest)(nil),       // 17: gateway.v1.CreateRequest
-	(*CreateFolderRequest)(nil), // 18: gateway.v1.CreateFolderRequest
-	(*RenameRequest)(nil),       // 19: gateway.v1.RenameRequest
-	(*MoveRequest)(nil),         // 20: gateway.v1.MoveRequest
-	(*ResolveRequest)(nil),      // 21: gateway.v1.ResolveRequest
-	(*AiAgentRequest)(nil),      // 22: gateway.v1.AiAgentRequest
-	(*FileOp)(nil),              // 23: gateway.v1.FileOp
-	(*AiAgentResponse)(nil),     // 24: gateway.v1.AiAgentResponse
-	(*AiEditRequest)(nil),       // 25: gateway.v1.AiEditRequest
-	(*AiEditResponse)(nil),      // 26: gateway.v1.AiEditResponse
-	(*AiModelResponse)(nil),     // 27: gateway.v1.AiModelResponse
-	(*AiProviderRequest)(nil),   // 28: gateway.v1.AiProviderRequest
-	(*AiReviewRequest)(nil),     // 29: gateway.v1.AiReviewRequest
-	(*Remark)(nil),              // 30: gateway.v1.Remark
-	(*AiReviewResponse)(nil),    // 31: gateway.v1.AiReviewResponse
-	(*AiCompleteRequest)(nil),   // 32: gateway.v1.AiCompleteRequest
-	(*AiCompleteResponse)(nil),  // 33: gateway.v1.AiCompleteResponse
-	(*EventInput)(nil),          // 34: gateway.v1.EventInput
-	(*Event)(nil),               // 35: gateway.v1.Event
-	(*EventQuery)(nil),          // 36: gateway.v1.EventQuery
-	(*EventList)(nil),           // 37: gateway.v1.EventList
-	(*Empty)(nil),               // 38: gateway.v1.Empty
-	(*ScanRequest)(nil),         // 39: gateway.v1.ScanRequest
-	(*ScanAppRequest)(nil),      // 40: gateway.v1.ScanAppRequest
-	(*AppGraphRequest)(nil),     // 41: gateway.v1.AppGraphRequest
-	(*Progress)(nil),            // 42: gateway.v1.Progress
-	(*GraphRequest)(nil),        // 43: gateway.v1.GraphRequest
-	(*Node)(nil),                // 44: gateway.v1.Node
-	(*Edge)(nil),                // 45: gateway.v1.Edge
-	(*Graph)(nil),               // 46: gateway.v1.Graph
-	(*Project)(nil),             // 47: gateway.v1.Project
-	(*Projects)(nil),            // 48: gateway.v1.Projects
+var file_proto_gateway_v1_gateway_proto_msgTypes = make([]protoimpl.MessageInfo, 74)
+var file_proto_gateway_v1_gateway_proto_goTypes = []any{
+	(*GitChunk)(nil),             // 0: gateway.v1.GitChunk
+	(*GitUploadResult)(nil),      // 1: gateway.v1.GitUploadResult
+	(*GitFileInfoRequest)(nil),   // 2: gateway.v1.GitFileInfoRequest
+	(*GitFileInfoResponse)(nil),  // 3: gateway.v1.GitFileInfoResponse
+	(*GitReviewRequest)(nil),     // 4: gateway.v1.GitReviewRequest
+	(*GitChangedFile)(nil),       // 5: gateway.v1.GitChangedFile
+	(*GitReviewResponse)(nil),    // 6: gateway.v1.GitReviewResponse
+	(*GitFileDiffRequest)(nil),   // 7: gateway.v1.GitFileDiffRequest
+	(*GitFileDiffResponse)(nil),  // 8: gateway.v1.GitFileDiffResponse
+	(*LogEntry)(nil),             // 9: gateway.v1.LogEntry
+	(*LogBatch)(nil),             // 10: gateway.v1.LogBatch
+	(*LogQuery)(nil),             // 11: gateway.v1.LogQuery
+	(*LogList)(nil),              // 12: gateway.v1.LogList
+	(*ScriptId)(nil),             // 13: gateway.v1.ScriptId
+	(*ScriptQuery)(nil),          // 14: gateway.v1.ScriptQuery
+	(*Script)(nil),               // 15: gateway.v1.Script
+	(*ScriptList)(nil),           // 16: gateway.v1.ScriptList
+	(*GraphStateRequest)(nil),    // 17: gateway.v1.GraphStateRequest
+	(*GraphStateKey)(nil),        // 18: gateway.v1.GraphStateKey
+	(*GraphStateResponse)(nil),   // 19: gateway.v1.GraphStateResponse
+	(*DirEntry)(nil),             // 20: gateway.v1.DirEntry
+	(*DirListing)(nil),           // 21: gateway.v1.DirListing
+	(*FoundProject)(nil),         // 22: gateway.v1.FoundProject
+	(*FoundProjects)(nil),        // 23: gateway.v1.FoundProjects
+	(*Conventions)(nil),          // 24: gateway.v1.Conventions
+	(*FileEvent)(nil),            // 25: gateway.v1.FileEvent
+	(*FilePath)(nil),             // 26: gateway.v1.FilePath
+	(*FileContent)(nil),          // 27: gateway.v1.FileContent
+	(*FileResult)(nil),           // 28: gateway.v1.FileResult
+	(*SaveRequest)(nil),          // 29: gateway.v1.SaveRequest
+	(*CreateRequest)(nil),        // 30: gateway.v1.CreateRequest
+	(*CreateFolderRequest)(nil),  // 31: gateway.v1.CreateFolderRequest
+	(*RenameRequest)(nil),        // 32: gateway.v1.RenameRequest
+	(*MoveRequest)(nil),          // 33: gateway.v1.MoveRequest
+	(*ResolveRequest)(nil),       // 34: gateway.v1.ResolveRequest
+	(*LinkQuery)(nil),            // 35: gateway.v1.LinkQuery
+	(*CodeLink)(nil),             // 36: gateway.v1.CodeLink
+	(*CodeLinks)(nil),            // 37: gateway.v1.CodeLinks
+	(*AiAgentRequest)(nil),       // 38: gateway.v1.AiAgentRequest
+	(*FileOp)(nil),               // 39: gateway.v1.FileOp
+	(*AiAgentResponse)(nil),      // 40: gateway.v1.AiAgentResponse
+	(*AiAskContext)(nil),         // 41: gateway.v1.AiAskContext
+	(*AiAskStart)(nil),           // 42: gateway.v1.AiAskStart
+	(*AiSkillResult)(nil),        // 43: gateway.v1.AiSkillResult
+	(*AiAskClientMsg)(nil),       // 44: gateway.v1.AiAskClientMsg
+	(*AiToolCall)(nil),           // 45: gateway.v1.AiToolCall
+	(*AiSkillRequest)(nil),       // 46: gateway.v1.AiSkillRequest
+	(*AiAskEvent)(nil),           // 47: gateway.v1.AiAskEvent
+	(*AiEditRequest)(nil),        // 48: gateway.v1.AiEditRequest
+	(*AiEditResponse)(nil),       // 49: gateway.v1.AiEditResponse
+	(*AiModelResponse)(nil),      // 50: gateway.v1.AiModelResponse
+	(*AiProviderRequest)(nil),    // 51: gateway.v1.AiProviderRequest
+	(*AiClaudeTokenRequest)(nil), // 52: gateway.v1.AiClaudeTokenRequest
+	(*AiClaudeTokenStatus)(nil),  // 53: gateway.v1.AiClaudeTokenStatus
+	(*AiReviewRequest)(nil),      // 54: gateway.v1.AiReviewRequest
+	(*Remark)(nil),               // 55: gateway.v1.Remark
+	(*AiReviewResponse)(nil),     // 56: gateway.v1.AiReviewResponse
+	(*AiCompleteRequest)(nil),    // 57: gateway.v1.AiCompleteRequest
+	(*AiCompleteResponse)(nil),   // 58: gateway.v1.AiCompleteResponse
+	(*EventInput)(nil),           // 59: gateway.v1.EventInput
+	(*Event)(nil),                // 60: gateway.v1.Event
+	(*EventQuery)(nil),           // 61: gateway.v1.EventQuery
+	(*EventList)(nil),            // 62: gateway.v1.EventList
+	(*Empty)(nil),                // 63: gateway.v1.Empty
+	(*ScanRequest)(nil),          // 64: gateway.v1.ScanRequest
+	(*ScanAppRequest)(nil),       // 65: gateway.v1.ScanAppRequest
+	(*AppGraphRequest)(nil),      // 66: gateway.v1.AppGraphRequest
+	(*Progress)(nil),             // 67: gateway.v1.Progress
+	(*GraphRequest)(nil),         // 68: gateway.v1.GraphRequest
+	(*Node)(nil),                 // 69: gateway.v1.Node
+	(*Edge)(nil),                 // 70: gateway.v1.Edge
+	(*Graph)(nil),                // 71: gateway.v1.Graph
+	(*Project)(nil),              // 72: gateway.v1.Project
+	(*Projects)(nil),             // 73: gateway.v1.Projects
 }
-var file_gateway_v1_gateway_proto_depIdxs = []int32{
-	2,  // 0: gateway.v1.ScriptList.scripts:type_name -> gateway.v1.Script
-	7,  // 1: gateway.v1.DirListing.entries:type_name -> gateway.v1.DirEntry
-	9,  // 2: gateway.v1.FoundProjects.projects:type_name -> gateway.v1.FoundProject
-	23, // 3: gateway.v1.AiAgentResponse.ops:type_name -> gateway.v1.FileOp
-	30, // 4: gateway.v1.AiReviewResponse.remarks:type_name -> gateway.v1.Remark
-	35, // 5: gateway.v1.EventList.events:type_name -> gateway.v1.Event
-	44, // 6: gateway.v1.Graph.nodes:type_name -> gateway.v1.Node
-	45, // 7: gateway.v1.Graph.edges:type_name -> gateway.v1.Edge
-	47, // 8: gateway.v1.Projects.projects:type_name -> gateway.v1.Project
-	39, // 9: gateway.v1.Gateway.Scan:input_type -> gateway.v1.ScanRequest
-	43, // 10: gateway.v1.Gateway.GetGraph:input_type -> gateway.v1.GraphRequest
-	40, // 11: gateway.v1.Gateway.ScanApp:input_type -> gateway.v1.ScanAppRequest
-	41, // 12: gateway.v1.Gateway.GetAppGraph:input_type -> gateway.v1.AppGraphRequest
-	38, // 13: gateway.v1.Gateway.ListProjects:input_type -> gateway.v1.Empty
-	25, // 14: gateway.v1.Gateway.AiEdit:input_type -> gateway.v1.AiEditRequest
-	38, // 15: gateway.v1.Gateway.AiModel:input_type -> gateway.v1.Empty
-	28, // 16: gateway.v1.Gateway.AiSetProvider:input_type -> gateway.v1.AiProviderRequest
-	29, // 17: gateway.v1.Gateway.AiReview:input_type -> gateway.v1.AiReviewRequest
-	32, // 18: gateway.v1.Gateway.AiComplete:input_type -> gateway.v1.AiCompleteRequest
-	34, // 19: gateway.v1.Gateway.PublishEvent:input_type -> gateway.v1.EventInput
-	36, // 20: gateway.v1.Gateway.ListEvents:input_type -> gateway.v1.EventQuery
-	13, // 21: gateway.v1.Gateway.ReadFile:input_type -> gateway.v1.FilePath
-	16, // 22: gateway.v1.Gateway.SaveFile:input_type -> gateway.v1.SaveRequest
-	17, // 23: gateway.v1.Gateway.CreateFile:input_type -> gateway.v1.CreateRequest
-	18, // 24: gateway.v1.Gateway.CreateFolder:input_type -> gateway.v1.CreateFolderRequest
-	19, // 25: gateway.v1.Gateway.RenameFile:input_type -> gateway.v1.RenameRequest
-	20, // 26: gateway.v1.Gateway.MoveFile:input_type -> gateway.v1.MoveRequest
-	13, // 27: gateway.v1.Gateway.DeletePath:input_type -> gateway.v1.FilePath
-	21, // 28: gateway.v1.Gateway.ResolveImport:input_type -> gateway.v1.ResolveRequest
-	38, // 29: gateway.v1.Gateway.HomeDir:input_type -> gateway.v1.Empty
-	13, // 30: gateway.v1.Gateway.ListDir:input_type -> gateway.v1.FilePath
-	13, // 31: gateway.v1.Gateway.FindProjects:input_type -> gateway.v1.FilePath
-	13, // 32: gateway.v1.Gateway.DetectConventions:input_type -> gateway.v1.FilePath
-	13, // 33: gateway.v1.Gateway.WatchFiles:input_type -> gateway.v1.FilePath
-	22, // 34: gateway.v1.Gateway.AiAgent:input_type -> gateway.v1.AiAgentRequest
-	4,  // 35: gateway.v1.Gateway.SaveGraphState:input_type -> gateway.v1.GraphStateRequest
-	5,  // 36: gateway.v1.Gateway.GetGraphState:input_type -> gateway.v1.GraphStateKey
-	1,  // 37: gateway.v1.Gateway.ListScripts:input_type -> gateway.v1.ScriptQuery
-	0,  // 38: gateway.v1.Gateway.GetScript:input_type -> gateway.v1.ScriptId
-	2,  // 39: gateway.v1.Gateway.SaveScript:input_type -> gateway.v1.Script
-	0,  // 40: gateway.v1.Gateway.DeleteScript:input_type -> gateway.v1.ScriptId
-	42, // 41: gateway.v1.Gateway.Scan:output_type -> gateway.v1.Progress
-	46, // 42: gateway.v1.Gateway.GetGraph:output_type -> gateway.v1.Graph
-	42, // 43: gateway.v1.Gateway.ScanApp:output_type -> gateway.v1.Progress
-	46, // 44: gateway.v1.Gateway.GetAppGraph:output_type -> gateway.v1.Graph
-	48, // 45: gateway.v1.Gateway.ListProjects:output_type -> gateway.v1.Projects
-	26, // 46: gateway.v1.Gateway.AiEdit:output_type -> gateway.v1.AiEditResponse
-	27, // 47: gateway.v1.Gateway.AiModel:output_type -> gateway.v1.AiModelResponse
-	27, // 48: gateway.v1.Gateway.AiSetProvider:output_type -> gateway.v1.AiModelResponse
-	31, // 49: gateway.v1.Gateway.AiReview:output_type -> gateway.v1.AiReviewResponse
-	33, // 50: gateway.v1.Gateway.AiComplete:output_type -> gateway.v1.AiCompleteResponse
-	35, // 51: gateway.v1.Gateway.PublishEvent:output_type -> gateway.v1.Event
-	37, // 52: gateway.v1.Gateway.ListEvents:output_type -> gateway.v1.EventList
-	14, // 53: gateway.v1.Gateway.ReadFile:output_type -> gateway.v1.FileContent
-	15, // 54: gateway.v1.Gateway.SaveFile:output_type -> gateway.v1.FileResult
-	15, // 55: gateway.v1.Gateway.CreateFile:output_type -> gateway.v1.FileResult
-	15, // 56: gateway.v1.Gateway.CreateFolder:output_type -> gateway.v1.FileResult
-	15, // 57: gateway.v1.Gateway.RenameFile:output_type -> gateway.v1.FileResult
-	15, // 58: gateway.v1.Gateway.MoveFile:output_type -> gateway.v1.FileResult
-	15, // 59: gateway.v1.Gateway.DeletePath:output_type -> gateway.v1.FileResult
-	15, // 60: gateway.v1.Gateway.ResolveImport:output_type -> gateway.v1.FileResult
-	15, // 61: gateway.v1.Gateway.HomeDir:output_type -> gateway.v1.FileResult
-	8,  // 62: gateway.v1.Gateway.ListDir:output_type -> gateway.v1.DirListing
-	10, // 63: gateway.v1.Gateway.FindProjects:output_type -> gateway.v1.FoundProjects
-	11, // 64: gateway.v1.Gateway.DetectConventions:output_type -> gateway.v1.Conventions
-	12, // 65: gateway.v1.Gateway.WatchFiles:output_type -> gateway.v1.FileEvent
-	24, // 66: gateway.v1.Gateway.AiAgent:output_type -> gateway.v1.AiAgentResponse
-	15, // 67: gateway.v1.Gateway.SaveGraphState:output_type -> gateway.v1.FileResult
-	6,  // 68: gateway.v1.Gateway.GetGraphState:output_type -> gateway.v1.GraphStateResponse
-	3,  // 69: gateway.v1.Gateway.ListScripts:output_type -> gateway.v1.ScriptList
-	2,  // 70: gateway.v1.Gateway.GetScript:output_type -> gateway.v1.Script
-	2,  // 71: gateway.v1.Gateway.SaveScript:output_type -> gateway.v1.Script
-	15, // 72: gateway.v1.Gateway.DeleteScript:output_type -> gateway.v1.FileResult
-	41, // [41:73] is the sub-list for method output_type
-	9,  // [9:41] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+var file_proto_gateway_v1_gateway_proto_depIdxs = []int32{
+	5,  // 0: gateway.v1.GitReviewResponse.files:type_name -> gateway.v1.GitChangedFile
+	9,  // 1: gateway.v1.LogBatch.entries:type_name -> gateway.v1.LogEntry
+	9,  // 2: gateway.v1.LogList.entries:type_name -> gateway.v1.LogEntry
+	15, // 3: gateway.v1.ScriptList.scripts:type_name -> gateway.v1.Script
+	20, // 4: gateway.v1.DirListing.entries:type_name -> gateway.v1.DirEntry
+	22, // 5: gateway.v1.FoundProjects.projects:type_name -> gateway.v1.FoundProject
+	36, // 6: gateway.v1.CodeLinks.links:type_name -> gateway.v1.CodeLink
+	39, // 7: gateway.v1.AiAgentResponse.ops:type_name -> gateway.v1.FileOp
+	41, // 8: gateway.v1.AiAskStart.context:type_name -> gateway.v1.AiAskContext
+	42, // 9: gateway.v1.AiAskClientMsg.start:type_name -> gateway.v1.AiAskStart
+	43, // 10: gateway.v1.AiAskClientMsg.skill_result:type_name -> gateway.v1.AiSkillResult
+	45, // 11: gateway.v1.AiAskEvent.tool:type_name -> gateway.v1.AiToolCall
+	46, // 12: gateway.v1.AiAskEvent.skill_request:type_name -> gateway.v1.AiSkillRequest
+	55, // 13: gateway.v1.AiReviewResponse.remarks:type_name -> gateway.v1.Remark
+	60, // 14: gateway.v1.EventList.events:type_name -> gateway.v1.Event
+	69, // 15: gateway.v1.Graph.nodes:type_name -> gateway.v1.Node
+	70, // 16: gateway.v1.Graph.edges:type_name -> gateway.v1.Edge
+	72, // 17: gateway.v1.Projects.projects:type_name -> gateway.v1.Project
+	64, // 18: gateway.v1.Gateway.Scan:input_type -> gateway.v1.ScanRequest
+	68, // 19: gateway.v1.Gateway.GetGraph:input_type -> gateway.v1.GraphRequest
+	65, // 20: gateway.v1.Gateway.ScanApp:input_type -> gateway.v1.ScanAppRequest
+	66, // 21: gateway.v1.Gateway.GetAppGraph:input_type -> gateway.v1.AppGraphRequest
+	63, // 22: gateway.v1.Gateway.ListProjects:input_type -> gateway.v1.Empty
+	48, // 23: gateway.v1.Gateway.AiEdit:input_type -> gateway.v1.AiEditRequest
+	63, // 24: gateway.v1.Gateway.AiModel:input_type -> gateway.v1.Empty
+	51, // 25: gateway.v1.Gateway.AiSetProvider:input_type -> gateway.v1.AiProviderRequest
+	52, // 26: gateway.v1.Gateway.AiSetClaudeToken:input_type -> gateway.v1.AiClaudeTokenRequest
+	63, // 27: gateway.v1.Gateway.AiClaudeStatus:input_type -> gateway.v1.Empty
+	54, // 28: gateway.v1.Gateway.AiReview:input_type -> gateway.v1.AiReviewRequest
+	57, // 29: gateway.v1.Gateway.AiComplete:input_type -> gateway.v1.AiCompleteRequest
+	59, // 30: gateway.v1.Gateway.PublishEvent:input_type -> gateway.v1.EventInput
+	61, // 31: gateway.v1.Gateway.ListEvents:input_type -> gateway.v1.EventQuery
+	26, // 32: gateway.v1.Gateway.ReadFile:input_type -> gateway.v1.FilePath
+	29, // 33: gateway.v1.Gateway.SaveFile:input_type -> gateway.v1.SaveRequest
+	30, // 34: gateway.v1.Gateway.CreateFile:input_type -> gateway.v1.CreateRequest
+	31, // 35: gateway.v1.Gateway.CreateFolder:input_type -> gateway.v1.CreateFolderRequest
+	32, // 36: gateway.v1.Gateway.RenameFile:input_type -> gateway.v1.RenameRequest
+	33, // 37: gateway.v1.Gateway.MoveFile:input_type -> gateway.v1.MoveRequest
+	26, // 38: gateway.v1.Gateway.DeletePath:input_type -> gateway.v1.FilePath
+	34, // 39: gateway.v1.Gateway.ResolveImport:input_type -> gateway.v1.ResolveRequest
+	35, // 40: gateway.v1.Gateway.Links:input_type -> gateway.v1.LinkQuery
+	63, // 41: gateway.v1.Gateway.HomeDir:input_type -> gateway.v1.Empty
+	26, // 42: gateway.v1.Gateway.ListDir:input_type -> gateway.v1.FilePath
+	26, // 43: gateway.v1.Gateway.FindProjects:input_type -> gateway.v1.FilePath
+	26, // 44: gateway.v1.Gateway.DetectConventions:input_type -> gateway.v1.FilePath
+	26, // 45: gateway.v1.Gateway.WatchFiles:input_type -> gateway.v1.FilePath
+	38, // 46: gateway.v1.Gateway.AiAgent:input_type -> gateway.v1.AiAgentRequest
+	44, // 47: gateway.v1.Gateway.AiAsk:input_type -> gateway.v1.AiAskClientMsg
+	17, // 48: gateway.v1.Gateway.SaveGraphState:input_type -> gateway.v1.GraphStateRequest
+	18, // 49: gateway.v1.Gateway.GetGraphState:input_type -> gateway.v1.GraphStateKey
+	14, // 50: gateway.v1.Gateway.ListScripts:input_type -> gateway.v1.ScriptQuery
+	13, // 51: gateway.v1.Gateway.GetScript:input_type -> gateway.v1.ScriptId
+	15, // 52: gateway.v1.Gateway.SaveScript:input_type -> gateway.v1.Script
+	13, // 53: gateway.v1.Gateway.DeleteScript:input_type -> gateway.v1.ScriptId
+	10, // 54: gateway.v1.Gateway.AppendLogs:input_type -> gateway.v1.LogBatch
+	11, // 55: gateway.v1.Gateway.ListLogs:input_type -> gateway.v1.LogQuery
+	63, // 56: gateway.v1.Gateway.ClearLogs:input_type -> gateway.v1.Empty
+	0,  // 57: gateway.v1.Gateway.UploadRepo:input_type -> gateway.v1.GitChunk
+	2,  // 58: gateway.v1.Gateway.GitFileInfo:input_type -> gateway.v1.GitFileInfoRequest
+	4,  // 59: gateway.v1.Gateway.GitReviewStatus:input_type -> gateway.v1.GitReviewRequest
+	7,  // 60: gateway.v1.Gateway.GitFileDiff:input_type -> gateway.v1.GitFileDiffRequest
+	67, // 61: gateway.v1.Gateway.Scan:output_type -> gateway.v1.Progress
+	71, // 62: gateway.v1.Gateway.GetGraph:output_type -> gateway.v1.Graph
+	67, // 63: gateway.v1.Gateway.ScanApp:output_type -> gateway.v1.Progress
+	71, // 64: gateway.v1.Gateway.GetAppGraph:output_type -> gateway.v1.Graph
+	73, // 65: gateway.v1.Gateway.ListProjects:output_type -> gateway.v1.Projects
+	49, // 66: gateway.v1.Gateway.AiEdit:output_type -> gateway.v1.AiEditResponse
+	50, // 67: gateway.v1.Gateway.AiModel:output_type -> gateway.v1.AiModelResponse
+	50, // 68: gateway.v1.Gateway.AiSetProvider:output_type -> gateway.v1.AiModelResponse
+	53, // 69: gateway.v1.Gateway.AiSetClaudeToken:output_type -> gateway.v1.AiClaudeTokenStatus
+	53, // 70: gateway.v1.Gateway.AiClaudeStatus:output_type -> gateway.v1.AiClaudeTokenStatus
+	56, // 71: gateway.v1.Gateway.AiReview:output_type -> gateway.v1.AiReviewResponse
+	58, // 72: gateway.v1.Gateway.AiComplete:output_type -> gateway.v1.AiCompleteResponse
+	60, // 73: gateway.v1.Gateway.PublishEvent:output_type -> gateway.v1.Event
+	62, // 74: gateway.v1.Gateway.ListEvents:output_type -> gateway.v1.EventList
+	27, // 75: gateway.v1.Gateway.ReadFile:output_type -> gateway.v1.FileContent
+	28, // 76: gateway.v1.Gateway.SaveFile:output_type -> gateway.v1.FileResult
+	28, // 77: gateway.v1.Gateway.CreateFile:output_type -> gateway.v1.FileResult
+	28, // 78: gateway.v1.Gateway.CreateFolder:output_type -> gateway.v1.FileResult
+	28, // 79: gateway.v1.Gateway.RenameFile:output_type -> gateway.v1.FileResult
+	28, // 80: gateway.v1.Gateway.MoveFile:output_type -> gateway.v1.FileResult
+	28, // 81: gateway.v1.Gateway.DeletePath:output_type -> gateway.v1.FileResult
+	28, // 82: gateway.v1.Gateway.ResolveImport:output_type -> gateway.v1.FileResult
+	37, // 83: gateway.v1.Gateway.Links:output_type -> gateway.v1.CodeLinks
+	28, // 84: gateway.v1.Gateway.HomeDir:output_type -> gateway.v1.FileResult
+	21, // 85: gateway.v1.Gateway.ListDir:output_type -> gateway.v1.DirListing
+	23, // 86: gateway.v1.Gateway.FindProjects:output_type -> gateway.v1.FoundProjects
+	24, // 87: gateway.v1.Gateway.DetectConventions:output_type -> gateway.v1.Conventions
+	25, // 88: gateway.v1.Gateway.WatchFiles:output_type -> gateway.v1.FileEvent
+	40, // 89: gateway.v1.Gateway.AiAgent:output_type -> gateway.v1.AiAgentResponse
+	47, // 90: gateway.v1.Gateway.AiAsk:output_type -> gateway.v1.AiAskEvent
+	28, // 91: gateway.v1.Gateway.SaveGraphState:output_type -> gateway.v1.FileResult
+	19, // 92: gateway.v1.Gateway.GetGraphState:output_type -> gateway.v1.GraphStateResponse
+	16, // 93: gateway.v1.Gateway.ListScripts:output_type -> gateway.v1.ScriptList
+	15, // 94: gateway.v1.Gateway.GetScript:output_type -> gateway.v1.Script
+	15, // 95: gateway.v1.Gateway.SaveScript:output_type -> gateway.v1.Script
+	28, // 96: gateway.v1.Gateway.DeleteScript:output_type -> gateway.v1.FileResult
+	28, // 97: gateway.v1.Gateway.AppendLogs:output_type -> gateway.v1.FileResult
+	12, // 98: gateway.v1.Gateway.ListLogs:output_type -> gateway.v1.LogList
+	28, // 99: gateway.v1.Gateway.ClearLogs:output_type -> gateway.v1.FileResult
+	1,  // 100: gateway.v1.Gateway.UploadRepo:output_type -> gateway.v1.GitUploadResult
+	3,  // 101: gateway.v1.Gateway.GitFileInfo:output_type -> gateway.v1.GitFileInfoResponse
+	6,  // 102: gateway.v1.Gateway.GitReviewStatus:output_type -> gateway.v1.GitReviewResponse
+	8,  // 103: gateway.v1.Gateway.GitFileDiff:output_type -> gateway.v1.GitFileDiffResponse
+	61, // [61:104] is the sub-list for method output_type
+	18, // [18:61] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
-func init() { file_gateway_v1_gateway_proto_init() }
-func file_gateway_v1_gateway_proto_init() {
-	if File_gateway_v1_gateway_proto != nil {
+func init() { file_proto_gateway_v1_gateway_proto_init() }
+func file_proto_gateway_v1_gateway_proto_init() {
+	if File_proto_gateway_v1_gateway_proto != nil {
 		return
+	}
+	file_proto_gateway_v1_gateway_proto_msgTypes[44].OneofWrappers = []any{
+		(*AiAskClientMsg_Start)(nil),
+		(*AiAskClientMsg_SkillResult)(nil),
+	}
+	file_proto_gateway_v1_gateway_proto_msgTypes[47].OneofWrappers = []any{
+		(*AiAskEvent_Plan)(nil),
+		(*AiAskEvent_Tool)(nil),
+		(*AiAskEvent_Answer)(nil),
+		(*AiAskEvent_SkillRequest)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_gateway_v1_gateway_proto_rawDesc), len(file_gateway_v1_gateway_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_gateway_v1_gateway_proto_rawDesc), len(file_proto_gateway_v1_gateway_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   49,
+			NumMessages:   74,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_gateway_v1_gateway_proto_goTypes,
-		DependencyIndexes: file_gateway_v1_gateway_proto_depIdxs,
-		MessageInfos:      file_gateway_v1_gateway_proto_msgTypes,
+		GoTypes:           file_proto_gateway_v1_gateway_proto_goTypes,
+		DependencyIndexes: file_proto_gateway_v1_gateway_proto_depIdxs,
+		MessageInfos:      file_proto_gateway_v1_gateway_proto_msgTypes,
 	}.Build()
-	File_gateway_v1_gateway_proto = out.File
-	file_gateway_v1_gateway_proto_goTypes = nil
-	file_gateway_v1_gateway_proto_depIdxs = nil
+	File_proto_gateway_v1_gateway_proto = out.File
+	file_proto_gateway_v1_gateway_proto_goTypes = nil
+	file_proto_gateway_v1_gateway_proto_depIdxs = nil
 }

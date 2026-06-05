@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             v7.34.1
-// source: gateway/v1/gateway.proto
+// source: proto/gateway/v1/gateway.proto
 
 package gatewayv1
 
@@ -27,6 +27,8 @@ const (
 	Gateway_AiEdit_FullMethodName            = "/gateway.v1.Gateway/AiEdit"
 	Gateway_AiModel_FullMethodName           = "/gateway.v1.Gateway/AiModel"
 	Gateway_AiSetProvider_FullMethodName     = "/gateway.v1.Gateway/AiSetProvider"
+	Gateway_AiSetClaudeToken_FullMethodName  = "/gateway.v1.Gateway/AiSetClaudeToken"
+	Gateway_AiClaudeStatus_FullMethodName    = "/gateway.v1.Gateway/AiClaudeStatus"
 	Gateway_AiReview_FullMethodName          = "/gateway.v1.Gateway/AiReview"
 	Gateway_AiComplete_FullMethodName        = "/gateway.v1.Gateway/AiComplete"
 	Gateway_PublishEvent_FullMethodName      = "/gateway.v1.Gateway/PublishEvent"
@@ -39,18 +41,27 @@ const (
 	Gateway_MoveFile_FullMethodName          = "/gateway.v1.Gateway/MoveFile"
 	Gateway_DeletePath_FullMethodName        = "/gateway.v1.Gateway/DeletePath"
 	Gateway_ResolveImport_FullMethodName     = "/gateway.v1.Gateway/ResolveImport"
+	Gateway_Links_FullMethodName             = "/gateway.v1.Gateway/Links"
 	Gateway_HomeDir_FullMethodName           = "/gateway.v1.Gateway/HomeDir"
 	Gateway_ListDir_FullMethodName           = "/gateway.v1.Gateway/ListDir"
 	Gateway_FindProjects_FullMethodName      = "/gateway.v1.Gateway/FindProjects"
 	Gateway_DetectConventions_FullMethodName = "/gateway.v1.Gateway/DetectConventions"
 	Gateway_WatchFiles_FullMethodName        = "/gateway.v1.Gateway/WatchFiles"
 	Gateway_AiAgent_FullMethodName           = "/gateway.v1.Gateway/AiAgent"
+	Gateway_AiAsk_FullMethodName             = "/gateway.v1.Gateway/AiAsk"
 	Gateway_SaveGraphState_FullMethodName    = "/gateway.v1.Gateway/SaveGraphState"
 	Gateway_GetGraphState_FullMethodName     = "/gateway.v1.Gateway/GetGraphState"
 	Gateway_ListScripts_FullMethodName       = "/gateway.v1.Gateway/ListScripts"
 	Gateway_GetScript_FullMethodName         = "/gateway.v1.Gateway/GetScript"
 	Gateway_SaveScript_FullMethodName        = "/gateway.v1.Gateway/SaveScript"
 	Gateway_DeleteScript_FullMethodName      = "/gateway.v1.Gateway/DeleteScript"
+	Gateway_AppendLogs_FullMethodName        = "/gateway.v1.Gateway/AppendLogs"
+	Gateway_ListLogs_FullMethodName          = "/gateway.v1.Gateway/ListLogs"
+	Gateway_ClearLogs_FullMethodName         = "/gateway.v1.Gateway/ClearLogs"
+	Gateway_UploadRepo_FullMethodName        = "/gateway.v1.Gateway/UploadRepo"
+	Gateway_GitFileInfo_FullMethodName       = "/gateway.v1.Gateway/GitFileInfo"
+	Gateway_GitReviewStatus_FullMethodName   = "/gateway.v1.Gateway/GitReviewStatus"
+	Gateway_GitFileDiff_FullMethodName       = "/gateway.v1.Gateway/GitFileDiff"
 )
 
 // GatewayClient is the client API for Gateway service.
@@ -78,6 +89,10 @@ type GatewayClient interface {
 	AiModel(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*AiModelResponse, error)
 	// AiSetProvider przełącza dostawcę LLM w serwisie ai (proxy).
 	AiSetProvider(ctx context.Context, in *AiProviderRequest, opts ...grpc.CallOption) (*AiModelResponse, error)
+	// AiSetClaudeToken zapisuje token OAuth Claude w serwisie ai (proxy).
+	AiSetClaudeToken(ctx context.Context, in *AiClaudeTokenRequest, opts ...grpc.CallOption) (*AiClaudeTokenStatus, error)
+	// AiClaudeStatus mówi, czy serwis ai ma zapisany token Claude (proxy).
+	AiClaudeStatus(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*AiClaudeTokenStatus, error)
 	// AiReview zwraca uwagi recenzenta do kodu (per linia) — proxy do ai.
 	AiReview(ctx context.Context, in *AiReviewRequest, opts ...grpc.CallOption) (*AiReviewResponse, error)
 	// AiComplete zwraca podpowiedź autouzupełniania (Copilot) w miejscu kursora.
@@ -94,6 +109,9 @@ type GatewayClient interface {
 	MoveFile(ctx context.Context, in *MoveRequest, opts ...grpc.CallOption) (*FileResult, error)
 	DeletePath(ctx context.Context, in *FilePath, opts ...grpc.CallOption) (*FileResult, error)
 	ResolveImport(ctx context.Context, in *ResolveRequest, opts ...grpc.CallOption) (*FileResult, error)
+	// Links analyzes a file (proxy to scanner: tree-sitter / LSP) and returns its navigable
+	// code links — import paths and imported-symbol usages — for editor go-to-definition.
+	Links(ctx context.Context, in *LinkQuery, opts ...grpc.CallOption) (*CodeLinks, error)
 	// Przeglądanie dysku i szukanie projektów (przez filer; działa też w Dockerze).
 	HomeDir(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FileResult, error)
 	ListDir(ctx context.Context, in *FilePath, opts ...grpc.CallOption) (*DirListing, error)
@@ -105,6 +123,9 @@ type GatewayClient interface {
 	WatchFiles(ctx context.Context, in *FilePath, opts ...grpc.CallOption) (grpc.ServerStreamingClient[FileEvent], error)
 	// AiAgent: ai planuje operacje na plikach/folderach (JSON), gateway je WYKONUJE.
 	AiAgent(ctx context.Context, in *AiAgentRequest, opts ...grpc.CallOption) (*AiAgentResponse, error)
+	// AiAsk: agent ze skillami (DWUKIERUNKOWY stream). Aplikacja wysyła start + wyniki skilli;
+	// gateway proxuje do serwisu ai. Skille (read_file/list_dir/get_graph) wykonuje aplikacja.
+	AiAsk(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[AiAskClientMsg, AiAskEvent], error)
 	// Graph state (viewport/layout) persisted in Postgres by the designer.
 	SaveGraphState(ctx context.Context, in *GraphStateRequest, opts ...grpc.CallOption) (*FileResult, error)
 	GetGraphState(ctx context.Context, in *GraphStateKey, opts ...grpc.CallOption) (*GraphStateResponse, error)
@@ -113,6 +134,20 @@ type GatewayClient interface {
 	GetScript(ctx context.Context, in *ScriptId, opts ...grpc.CallOption) (*Script, error)
 	SaveScript(ctx context.Context, in *Script, opts ...grpc.CallOption) (*Script, error)
 	DeleteScript(ctx context.Context, in *ScriptId, opts ...grpc.CallOption) (*FileResult, error)
+	// --- App logs (proxy to the logs service; its own Postgres database) ---
+	AppendLogs(ctx context.Context, in *LogBatch, opts ...grpc.CallOption) (*FileResult, error)
+	ListLogs(ctx context.Context, in *LogQuery, opts ...grpc.CallOption) (*LogList, error)
+	ClearLogs(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FileResult, error)
+	// --- Git (proxy to the git service) ---
+	// UploadRepo streams the project's .git directory to the git service so it can
+	// answer authorship/review queries (the open project "sends" its .git here).
+	UploadRepo(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[GitChunk, GitUploadResult], error)
+	// GitFileInfo — author of the last commit touching a file.
+	GitFileInfo(ctx context.Context, in *GitFileInfoRequest, opts ...grpc.CallOption) (*GitFileInfoResponse, error)
+	// GitReviewStatus — files changed on the current branch vs its base branch.
+	GitReviewStatus(ctx context.Context, in *GitReviewRequest, opts ...grpc.CallOption) (*GitReviewResponse, error)
+	// GitFileDiff — added/modified line numbers for one file (editor highlighting).
+	GitFileDiff(ctx context.Context, in *GitFileDiffRequest, opts ...grpc.CallOption) (*GitFileDiffResponse, error)
 }
 
 type gatewayClient struct {
@@ -215,6 +250,26 @@ func (c *gatewayClient) AiSetProvider(ctx context.Context, in *AiProviderRequest
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AiModelResponse)
 	err := c.cc.Invoke(ctx, Gateway_AiSetProvider_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) AiSetClaudeToken(ctx context.Context, in *AiClaudeTokenRequest, opts ...grpc.CallOption) (*AiClaudeTokenStatus, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AiClaudeTokenStatus)
+	err := c.cc.Invoke(ctx, Gateway_AiSetClaudeToken_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) AiClaudeStatus(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*AiClaudeTokenStatus, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AiClaudeTokenStatus)
+	err := c.cc.Invoke(ctx, Gateway_AiClaudeStatus_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -341,6 +396,16 @@ func (c *gatewayClient) ResolveImport(ctx context.Context, in *ResolveRequest, o
 	return out, nil
 }
 
+func (c *gatewayClient) Links(ctx context.Context, in *LinkQuery, opts ...grpc.CallOption) (*CodeLinks, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CodeLinks)
+	err := c.cc.Invoke(ctx, Gateway_Links_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *gatewayClient) HomeDir(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FileResult, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(FileResult)
@@ -410,6 +475,19 @@ func (c *gatewayClient) AiAgent(ctx context.Context, in *AiAgentRequest, opts ..
 	return out, nil
 }
 
+func (c *gatewayClient) AiAsk(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[AiAskClientMsg, AiAskEvent], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &Gateway_ServiceDesc.Streams[3], Gateway_AiAsk_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[AiAskClientMsg, AiAskEvent]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Gateway_AiAskClient = grpc.BidiStreamingClient[AiAskClientMsg, AiAskEvent]
+
 func (c *gatewayClient) SaveGraphState(ctx context.Context, in *GraphStateRequest, opts ...grpc.CallOption) (*FileResult, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(FileResult)
@@ -470,6 +548,79 @@ func (c *gatewayClient) DeleteScript(ctx context.Context, in *ScriptId, opts ...
 	return out, nil
 }
 
+func (c *gatewayClient) AppendLogs(ctx context.Context, in *LogBatch, opts ...grpc.CallOption) (*FileResult, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileResult)
+	err := c.cc.Invoke(ctx, Gateway_AppendLogs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) ListLogs(ctx context.Context, in *LogQuery, opts ...grpc.CallOption) (*LogList, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LogList)
+	err := c.cc.Invoke(ctx, Gateway_ListLogs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) ClearLogs(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FileResult, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FileResult)
+	err := c.cc.Invoke(ctx, Gateway_ClearLogs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) UploadRepo(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[GitChunk, GitUploadResult], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &Gateway_ServiceDesc.Streams[4], Gateway_UploadRepo_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[GitChunk, GitUploadResult]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Gateway_UploadRepoClient = grpc.ClientStreamingClient[GitChunk, GitUploadResult]
+
+func (c *gatewayClient) GitFileInfo(ctx context.Context, in *GitFileInfoRequest, opts ...grpc.CallOption) (*GitFileInfoResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GitFileInfoResponse)
+	err := c.cc.Invoke(ctx, Gateway_GitFileInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) GitReviewStatus(ctx context.Context, in *GitReviewRequest, opts ...grpc.CallOption) (*GitReviewResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GitReviewResponse)
+	err := c.cc.Invoke(ctx, Gateway_GitReviewStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) GitFileDiff(ctx context.Context, in *GitFileDiffRequest, opts ...grpc.CallOption) (*GitFileDiffResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GitFileDiffResponse)
+	err := c.cc.Invoke(ctx, Gateway_GitFileDiff_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GatewayServer is the server API for Gateway service.
 // All implementations must embed UnimplementedGatewayServer
 // for forward compatibility.
@@ -495,6 +646,10 @@ type GatewayServer interface {
 	AiModel(context.Context, *Empty) (*AiModelResponse, error)
 	// AiSetProvider przełącza dostawcę LLM w serwisie ai (proxy).
 	AiSetProvider(context.Context, *AiProviderRequest) (*AiModelResponse, error)
+	// AiSetClaudeToken zapisuje token OAuth Claude w serwisie ai (proxy).
+	AiSetClaudeToken(context.Context, *AiClaudeTokenRequest) (*AiClaudeTokenStatus, error)
+	// AiClaudeStatus mówi, czy serwis ai ma zapisany token Claude (proxy).
+	AiClaudeStatus(context.Context, *Empty) (*AiClaudeTokenStatus, error)
 	// AiReview zwraca uwagi recenzenta do kodu (per linia) — proxy do ai.
 	AiReview(context.Context, *AiReviewRequest) (*AiReviewResponse, error)
 	// AiComplete zwraca podpowiedź autouzupełniania (Copilot) w miejscu kursora.
@@ -511,6 +666,9 @@ type GatewayServer interface {
 	MoveFile(context.Context, *MoveRequest) (*FileResult, error)
 	DeletePath(context.Context, *FilePath) (*FileResult, error)
 	ResolveImport(context.Context, *ResolveRequest) (*FileResult, error)
+	// Links analyzes a file (proxy to scanner: tree-sitter / LSP) and returns its navigable
+	// code links — import paths and imported-symbol usages — for editor go-to-definition.
+	Links(context.Context, *LinkQuery) (*CodeLinks, error)
 	// Przeglądanie dysku i szukanie projektów (przez filer; działa też w Dockerze).
 	HomeDir(context.Context, *Empty) (*FileResult, error)
 	ListDir(context.Context, *FilePath) (*DirListing, error)
@@ -522,6 +680,9 @@ type GatewayServer interface {
 	WatchFiles(*FilePath, grpc.ServerStreamingServer[FileEvent]) error
 	// AiAgent: ai planuje operacje na plikach/folderach (JSON), gateway je WYKONUJE.
 	AiAgent(context.Context, *AiAgentRequest) (*AiAgentResponse, error)
+	// AiAsk: agent ze skillami (DWUKIERUNKOWY stream). Aplikacja wysyła start + wyniki skilli;
+	// gateway proxuje do serwisu ai. Skille (read_file/list_dir/get_graph) wykonuje aplikacja.
+	AiAsk(grpc.BidiStreamingServer[AiAskClientMsg, AiAskEvent]) error
 	// Graph state (viewport/layout) persisted in Postgres by the designer.
 	SaveGraphState(context.Context, *GraphStateRequest) (*FileResult, error)
 	GetGraphState(context.Context, *GraphStateKey) (*GraphStateResponse, error)
@@ -530,6 +691,20 @@ type GatewayServer interface {
 	GetScript(context.Context, *ScriptId) (*Script, error)
 	SaveScript(context.Context, *Script) (*Script, error)
 	DeleteScript(context.Context, *ScriptId) (*FileResult, error)
+	// --- App logs (proxy to the logs service; its own Postgres database) ---
+	AppendLogs(context.Context, *LogBatch) (*FileResult, error)
+	ListLogs(context.Context, *LogQuery) (*LogList, error)
+	ClearLogs(context.Context, *Empty) (*FileResult, error)
+	// --- Git (proxy to the git service) ---
+	// UploadRepo streams the project's .git directory to the git service so it can
+	// answer authorship/review queries (the open project "sends" its .git here).
+	UploadRepo(grpc.ClientStreamingServer[GitChunk, GitUploadResult]) error
+	// GitFileInfo — author of the last commit touching a file.
+	GitFileInfo(context.Context, *GitFileInfoRequest) (*GitFileInfoResponse, error)
+	// GitReviewStatus — files changed on the current branch vs its base branch.
+	GitReviewStatus(context.Context, *GitReviewRequest) (*GitReviewResponse, error)
+	// GitFileDiff — added/modified line numbers for one file (editor highlighting).
+	GitFileDiff(context.Context, *GitFileDiffRequest) (*GitFileDiffResponse, error)
 	mustEmbedUnimplementedGatewayServer()
 }
 
@@ -563,6 +738,12 @@ func (UnimplementedGatewayServer) AiModel(context.Context, *Empty) (*AiModelResp
 }
 func (UnimplementedGatewayServer) AiSetProvider(context.Context, *AiProviderRequest) (*AiModelResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AiSetProvider not implemented")
+}
+func (UnimplementedGatewayServer) AiSetClaudeToken(context.Context, *AiClaudeTokenRequest) (*AiClaudeTokenStatus, error) {
+	return nil, status.Error(codes.Unimplemented, "method AiSetClaudeToken not implemented")
+}
+func (UnimplementedGatewayServer) AiClaudeStatus(context.Context, *Empty) (*AiClaudeTokenStatus, error) {
+	return nil, status.Error(codes.Unimplemented, "method AiClaudeStatus not implemented")
 }
 func (UnimplementedGatewayServer) AiReview(context.Context, *AiReviewRequest) (*AiReviewResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AiReview not implemented")
@@ -600,6 +781,9 @@ func (UnimplementedGatewayServer) DeletePath(context.Context, *FilePath) (*FileR
 func (UnimplementedGatewayServer) ResolveImport(context.Context, *ResolveRequest) (*FileResult, error) {
 	return nil, status.Error(codes.Unimplemented, "method ResolveImport not implemented")
 }
+func (UnimplementedGatewayServer) Links(context.Context, *LinkQuery) (*CodeLinks, error) {
+	return nil, status.Error(codes.Unimplemented, "method Links not implemented")
+}
 func (UnimplementedGatewayServer) HomeDir(context.Context, *Empty) (*FileResult, error) {
 	return nil, status.Error(codes.Unimplemented, "method HomeDir not implemented")
 }
@@ -618,6 +802,9 @@ func (UnimplementedGatewayServer) WatchFiles(*FilePath, grpc.ServerStreamingServ
 func (UnimplementedGatewayServer) AiAgent(context.Context, *AiAgentRequest) (*AiAgentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AiAgent not implemented")
 }
+func (UnimplementedGatewayServer) AiAsk(grpc.BidiStreamingServer[AiAskClientMsg, AiAskEvent]) error {
+	return status.Error(codes.Unimplemented, "method AiAsk not implemented")
+}
 func (UnimplementedGatewayServer) SaveGraphState(context.Context, *GraphStateRequest) (*FileResult, error) {
 	return nil, status.Error(codes.Unimplemented, "method SaveGraphState not implemented")
 }
@@ -635,6 +822,27 @@ func (UnimplementedGatewayServer) SaveScript(context.Context, *Script) (*Script,
 }
 func (UnimplementedGatewayServer) DeleteScript(context.Context, *ScriptId) (*FileResult, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteScript not implemented")
+}
+func (UnimplementedGatewayServer) AppendLogs(context.Context, *LogBatch) (*FileResult, error) {
+	return nil, status.Error(codes.Unimplemented, "method AppendLogs not implemented")
+}
+func (UnimplementedGatewayServer) ListLogs(context.Context, *LogQuery) (*LogList, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListLogs not implemented")
+}
+func (UnimplementedGatewayServer) ClearLogs(context.Context, *Empty) (*FileResult, error) {
+	return nil, status.Error(codes.Unimplemented, "method ClearLogs not implemented")
+}
+func (UnimplementedGatewayServer) UploadRepo(grpc.ClientStreamingServer[GitChunk, GitUploadResult]) error {
+	return status.Error(codes.Unimplemented, "method UploadRepo not implemented")
+}
+func (UnimplementedGatewayServer) GitFileInfo(context.Context, *GitFileInfoRequest) (*GitFileInfoResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GitFileInfo not implemented")
+}
+func (UnimplementedGatewayServer) GitReviewStatus(context.Context, *GitReviewRequest) (*GitReviewResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GitReviewStatus not implemented")
+}
+func (UnimplementedGatewayServer) GitFileDiff(context.Context, *GitFileDiffRequest) (*GitFileDiffResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GitFileDiff not implemented")
 }
 func (UnimplementedGatewayServer) mustEmbedUnimplementedGatewayServer() {}
 func (UnimplementedGatewayServer) testEmbeddedByValue()                 {}
@@ -783,6 +991,42 @@ func _Gateway_AiSetProvider_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GatewayServer).AiSetProvider(ctx, req.(*AiProviderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_AiSetClaudeToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AiClaudeTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).AiSetClaudeToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_AiSetClaudeToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).AiSetClaudeToken(ctx, req.(*AiClaudeTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_AiClaudeStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).AiClaudeStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_AiClaudeStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).AiClaudeStatus(ctx, req.(*Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1003,6 +1247,24 @@ func _Gateway_ResolveImport_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Gateway_Links_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LinkQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).Links(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_Links_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).Links(ctx, req.(*LinkQuery))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Gateway_HomeDir_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Empty)
 	if err := dec(in); err != nil {
@@ -1103,6 +1365,13 @@ func _Gateway_AiAgent_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	return interceptor(ctx, in, info, handler)
 }
+
+func _Gateway_AiAsk_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(GatewayServer).AiAsk(&grpc.GenericServerStream[AiAskClientMsg, AiAskEvent]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Gateway_AiAskServer = grpc.BidiStreamingServer[AiAskClientMsg, AiAskEvent]
 
 func _Gateway_SaveGraphState_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GraphStateRequest)
@@ -1212,6 +1481,121 @@ func _Gateway_DeleteScript_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Gateway_AppendLogs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LogBatch)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).AppendLogs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_AppendLogs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).AppendLogs(ctx, req.(*LogBatch))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_ListLogs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LogQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).ListLogs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_ListLogs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).ListLogs(ctx, req.(*LogQuery))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_ClearLogs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).ClearLogs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_ClearLogs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).ClearLogs(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_UploadRepo_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(GatewayServer).UploadRepo(&grpc.GenericServerStream[GitChunk, GitUploadResult]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Gateway_UploadRepoServer = grpc.ClientStreamingServer[GitChunk, GitUploadResult]
+
+func _Gateway_GitFileInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GitFileInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).GitFileInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_GitFileInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).GitFileInfo(ctx, req.(*GitFileInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_GitReviewStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GitReviewRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).GitReviewStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_GitReviewStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).GitReviewStatus(ctx, req.(*GitReviewRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_GitFileDiff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GitFileDiffRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).GitFileDiff(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Gateway_GitFileDiff_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).GitFileDiff(ctx, req.(*GitFileDiffRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Gateway_ServiceDesc is the grpc.ServiceDesc for Gateway service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1242,6 +1626,14 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AiSetProvider",
 			Handler:    _Gateway_AiSetProvider_Handler,
+		},
+		{
+			MethodName: "AiSetClaudeToken",
+			Handler:    _Gateway_AiSetClaudeToken_Handler,
+		},
+		{
+			MethodName: "AiClaudeStatus",
+			Handler:    _Gateway_AiClaudeStatus_Handler,
 		},
 		{
 			MethodName: "AiReview",
@@ -1292,6 +1684,10 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Gateway_ResolveImport_Handler,
 		},
 		{
+			MethodName: "Links",
+			Handler:    _Gateway_Links_Handler,
+		},
+		{
 			MethodName: "HomeDir",
 			Handler:    _Gateway_HomeDir_Handler,
 		},
@@ -1335,6 +1731,30 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "DeleteScript",
 			Handler:    _Gateway_DeleteScript_Handler,
 		},
+		{
+			MethodName: "AppendLogs",
+			Handler:    _Gateway_AppendLogs_Handler,
+		},
+		{
+			MethodName: "ListLogs",
+			Handler:    _Gateway_ListLogs_Handler,
+		},
+		{
+			MethodName: "ClearLogs",
+			Handler:    _Gateway_ClearLogs_Handler,
+		},
+		{
+			MethodName: "GitFileInfo",
+			Handler:    _Gateway_GitFileInfo_Handler,
+		},
+		{
+			MethodName: "GitReviewStatus",
+			Handler:    _Gateway_GitReviewStatus_Handler,
+		},
+		{
+			MethodName: "GitFileDiff",
+			Handler:    _Gateway_GitFileDiff_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
@@ -1352,6 +1772,17 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 			Handler:       _Gateway_WatchFiles_Handler,
 			ServerStreams: true,
 		},
+		{
+			StreamName:    "AiAsk",
+			Handler:       _Gateway_AiAsk_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "UploadRepo",
+			Handler:       _Gateway_UploadRepo_Handler,
+			ClientStreams: true,
+		},
 	},
-	Metadata: "gateway/v1/gateway.proto",
+	Metadata: "proto/gateway/v1/gateway.proto",
 }

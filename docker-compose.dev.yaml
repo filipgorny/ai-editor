@@ -1,0 +1,70 @@
+# Nakładka DEWELOPERSKA — dokładana JAWNIE obok docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yaml up -d --build
+# (tak robi `pnpm dev`). Zamienia każdy serwis Go na obraz z watcherem
+# (services/Dockerfile.dev): repo montowane pod /src, a CompileDaemon rekompiluje
+# i restartuje serwis na każdą zmianę pliku .go. Cache modułów i buildu w wolumenach,
+# żeby przebudowa była szybka.
+#
+# Bez hot-reloadu (czyste obrazy produkcyjne):
+#   docker compose -f docker-compose.yml up -d --build
+
+x-go-dev: &go-dev
+  build:
+    context: .
+    dockerfile: services/Dockerfile.dev
+  # Wspólny tag — obraz budowany raz, współdzielony przez wszystkie serwisy Go.
+  image: ai-architect-go-dev
+  volumes:
+    - .:/src
+    - go-mod-cache:/go/pkg/mod
+    - go-build-cache:/root/.cache/go-build
+
+services:
+  events:
+    <<: *go-dev
+    environment:
+      SERVICE: events
+
+  ai:
+    <<: *go-dev
+    environment:
+      SERVICE: ai
+
+  scanner:
+    <<: *go-dev
+    environment:
+      SERVICE: scanner
+
+  designer:
+    <<: *go-dev
+    environment:
+      SERVICE: designer
+
+  scripting:
+    <<: *go-dev
+    environment:
+      SERVICE: scripting
+
+  logs:
+    <<: *go-dev
+    environment:
+      SERVICE: logs
+
+  filer:
+    <<: *go-dev
+    environment:
+      SERVICE: filer
+
+  git:
+    <<: *go-dev
+    environment:
+      SERVICE: git
+
+  gateway:
+    <<: *go-dev
+    environment:
+      SERVICE: gateway
+
+volumes:
+  go-mod-cache:
+  go-build-cache:

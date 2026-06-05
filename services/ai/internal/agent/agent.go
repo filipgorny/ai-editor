@@ -6,16 +6,23 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 
 	"github.com/filipgorny/ai-architect/llm"
 	aiv1 "github.com/filipgorny/ai-architect/proto/ai/v1"
 	eventsv1 "github.com/filipgorny/ai-architect/proto/events/v1"
+	"github.com/filipgorny/ai-architect/services/ai/internal/history"
 )
 
 type Emit func(*aiv1.AskEvent) error
+
+// SkillFunc wykonuje skill po stronie APLIKACJI (read_file/list_dir/get_graph) i zwraca
+// jego wynik. Serwis ai nie ma dostępu do dysku hosta — dane dostarcza aplikacja.
+type SkillFunc func(name, args string) (string, error)
+
+// historyBudget to maksymalny rozmiar (w znakach) historii wstrzykiwanej w prompt.
+const historyBudget = 8000
 
 // Agent łączy LLM ze skillami (narzędziami). Dostawcę można podmienić w locie
 // (SetProvider) — np. Ollama → Claude headless — bez restartu serwisu.
@@ -25,10 +32,26 @@ type Agent struct {
 	cfg      llm.Config
 	events   eventsv1.EventsClient
 	maxSteps int
+	hist     *history.Store
 }
 
 func New(provider llm.Provider, cfg llm.Config, events eventsv1.EventsClient) *Agent {
-	return &Agent{llm: provider, cfg: cfg, events: events, maxSteps: 6}
+	return &Agent{llm: provider, cfg: cfg, events: events, maxSteps: 6, hist: history.New()}
+}
+
+// isBigModel mówi, czy bieżący dostawca to „duży" model (chmurowy), dla którego
+// warto utrzymywać historię rozmowy. Lokalna Ollama (małe okno kontekstu) — nie.
+func (a *Agent) isBigModel() bool {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	switch a.cfg.Provider {
+	case "claude", "claude-headless", "openai":
+		return true
+
+	default:
+		return false
+	}
 }
 
 // prov zwraca bieżącego dostawcę (bezpiecznie przy podmianie).
@@ -60,29 +83,34 @@ func (a *Agent) SetProvider(provider string) (string, error) {
 	return p.Name(), nil
 }
 
-const toolsDesc = `Masz narzędzia (skille):
-- read_file: czyta zawartość pliku. args = ścieżka pliku.
+const toolsDesc = `Masz narzędzia (skille). read_file/list_dir/get_graph WYKONUJE APLIKACJA —
+NIE czytaj plików samodzielnie, proś o nie skillem:
+- read_file: czyta zawartość pliku. args = ścieżka pliku (użyj otwartego pliku z kontekstu, jeśli pasuje).
 - list_dir: listuje katalog (poznanie struktury). args = ścieżka katalogu.
+- get_graph: zwraca strukturę grafu zależności projektu (węzły/krawędzie). args = puste.
 - check_events: zwraca eventy powiązane z plikiem/nodem. args = ścieżka pliku albo id node'a.
+- ask_user: zadaj użytkownikowi pytanie z wariantami odpowiedzi (modal). Użyj GDY masz wątpliwości
+  albo prompt jest długi/niejednoznaczny — zamiast zgadywać. args = JSON: {"question":"...","options":["...","..."]}.
+  Wynik = wybrana odpowiedź użytkownika.
 - finish: kończ i podaj odpowiedź. args = odpowiedź.
 Odpowiadaj WYŁĄCZNIE jednym obiektem JSON, np. {"tool":"read_file","args":"/x/y.ts"} albo {"tool":"finish","args":"..."}.`
 
-// Run realizuje zadanie: plan → pętla narzędzi → odpowiedź.
-func (a *Agent) Run(ctx context.Context, req *aiv1.AskRequest, emit Emit) error {
-	ctxInfo := ""
+// Run realizuje zadanie: plan → pętla skilli → odpowiedź. Skille read_file/list_dir/get_graph
+// wykonuje APLIKACJA (skill), check_events — serwis ai (events). start niesie ujednolicony
+// kontekst (instrukcja, otwarty plik, zaznaczony element); treści dobierane są skillami.
+func (a *Agent) Run(ctx context.Context, start *aiv1.AskRequest, emit Emit, skill SkillFunc) error {
+	prompt := start.GetPrompt()
 
-	if req.GetFile() != "" {
-		ctxInfo += "Plik kontekstu: " + req.GetFile() + "\n"
+	if prompt == "" {
+		prompt = start.GetContext().GetInstruction()
 	}
 
-	if req.GetNodeId() != "" {
-		ctxInfo += "Node kontekstu: " + req.GetNodeId() + "\n"
-	}
+	ctxInfo := askCtxInfo(start)
 
 	// 1) Plan przed wykonaniem.
 	plan, err := a.prov().Generate(ctx, llm.Request{
 		System:      "Jesteś agentem-asystentem kodu. Ułóż zwięzły plan (numerowane kroki) realizacji zadania. Zwróć sam plan.",
-		Prompt:      req.GetPrompt() + "\n" + ctxInfo,
+		Prompt:      prompt + "\n" + ctxInfo,
 		Temperature: 0.2,
 		MaxTokens:   300,
 	})
@@ -95,13 +123,13 @@ func (a *Agent) Run(ctx context.Context, req *aiv1.AskRequest, emit Emit) error 
 		return err
 	}
 
-	// 2) Pętla narzędzi.
-	var history strings.Builder
+	// 2) Pętla skilli.
+	var hist strings.Builder
 
 	for step := 0; step < a.maxSteps; step++ {
 		decision, err := a.prov().Generate(ctx, llm.Request{
 			System:      toolsDesc,
-			Prompt:      fmt.Sprintf("Zadanie: %s\n%sDotychczasowe wyniki:\n%s\nNastępna akcja (JSON):", req.GetPrompt(), ctxInfo, history.String()),
+			Prompt:      fmt.Sprintf("Zadanie: %s\n%sDotychczasowe wyniki:\n%s\nNastępna akcja (JSON):", prompt, ctxInfo, hist.String()),
 			Temperature: 0.1,
 			MaxTokens:   600,
 		})
@@ -120,7 +148,7 @@ func (a *Agent) Run(ctx context.Context, req *aiv1.AskRequest, emit Emit) error 
 			return emit(answerEvent(decision))
 		}
 
-		result := a.runTool(ctx, tool, args)
+		result := a.runTool(ctx, skill, tool, args)
 
 		if err := emit(&aiv1.AskEvent{Event: &aiv1.AskEvent_Tool{
 			Tool: &aiv1.ToolCall{Name: tool, Args: args, Result: truncate(result, 400)},
@@ -128,13 +156,13 @@ func (a *Agent) Run(ctx context.Context, req *aiv1.AskRequest, emit Emit) error 
 			return err
 		}
 
-		history.WriteString(fmt.Sprintf("- %s(%s) =>\n%s\n", tool, args, truncate(result, 1500)))
+		hist.WriteString(fmt.Sprintf("- %s(%s) =>\n%s\n", tool, args, truncate(result, 1500)))
 	}
 
 	// 3) Odpowiedź końcowa.
 	final, err := a.prov().Generate(ctx, llm.Request{
-		System:      finalSystem(req.GetEdit()),
-		Prompt:      fmt.Sprintf("Zadanie: %s\n%sZebrane informacje:\n%s\nOdpowiedź:", req.GetPrompt(), ctxInfo, history.String()),
+		System:      finalSystem(start.GetEdit()),
+		Prompt:      fmt.Sprintf("Zadanie: %s\n%sZebrane informacje:\n%s\nOdpowiedź:", prompt, ctxInfo, hist.String()),
 		Temperature: 0.2,
 		MaxTokens:   2000,
 	})
@@ -146,47 +174,88 @@ func (a *Agent) Run(ctx context.Context, req *aiv1.AskRequest, emit Emit) error 
 	return emit(answerEvent(final))
 }
 
+// askCtxInfo buduje zwięzły opis kontekstu (otwarty plik, zaznaczony element, node) do
+// promptu. Treści NIE wstrzykuje — od tego są skille read_file/get_graph.
+func askCtxInfo(start *aiv1.AskRequest) string {
+	var sb strings.Builder
+	c := start.GetContext()
+
+	if f := firstNonEmpty(c.GetOpenFile(), start.GetFile()); f != "" {
+		sb.WriteString("Otwarty plik (kontekst dla 'ten/to'): " + f + "\n")
+	}
+
+	if c.GetSelectedFile() != "" || c.GetSelectedName() != "" {
+		sb.WriteString(fmt.Sprintf("Zaznaczony element: %s %s (%s)\n", c.GetSelectedKind(), c.GetSelectedName(), c.GetSelectedFile()))
+	}
+
+	if start.GetNodeId() != "" {
+		sb.WriteString("Node kontekstu: " + start.GetNodeId() + "\n")
+	}
+
+	return sb.String()
+}
+
+func firstNonEmpty(a, b string) string {
+	if a != "" {
+		return a
+	}
+
+	return b
+}
+
 // ModelName zwraca nazwę używanego modelu LLM.
 func (a *Agent) ModelName() string {
 	return a.prov().Name()
 }
 
 // Generate to proste wywołanie LLM (bez agenta) — jedyna droga do LLM w systemie.
-func (a *Agent) Generate(ctx context.Context, system, prompt string, temperature float64, maxTokens int, dir string) (string, error) {
-	return a.prov().Generate(ctx, llm.Request{
+// Gdy podano session i bieżący model jest „duży", do promptu dołączana jest
+// historia rozmowy (pamięć kontekstu), a nowa tura jest w niej zapisywana.
+func (a *Agent) Generate(ctx context.Context, system, prompt string, temperature float64, maxTokens int, dir, session string) (string, error) {
+	useHistory := session != "" && a.isBigModel()
+	full := prompt
+
+	if useHistory {
+		if prior := a.hist.Render(session, historyBudget); prior != "" {
+			full = "Wcześniejsza rozmowa (kontekst):\n" + prior + "\nNowe polecenie:\n" + prompt
+		}
+	}
+
+	text, err := a.prov().Generate(ctx, llm.Request{
 		System:      system,
-		Prompt:      prompt,
+		Prompt:      full,
 		Temperature: temperature,
 		MaxTokens:   maxTokens,
 		Dir:         dir,
 	})
+
+	if err != nil {
+		return "", err
+	}
+
+	if useHistory {
+		a.hist.Append(session, "user", prompt)
+		a.hist.Append(session, "assistant", text)
+	}
+
+	return text, nil
 }
 
-func (a *Agent) runTool(ctx context.Context, tool, args string) string {
+// ResetHistory czyści pamięć rozmowy dla sesji (np. nowa rozmowa).
+func (a *Agent) ResetHistory(session string) {
+	a.hist.Clear(session)
+}
+
+func (a *Agent) runTool(ctx context.Context, skill SkillFunc, tool, args string) string {
 	switch tool {
-	case "read_file":
-		data, err := os.ReadFile(args)
+	case "read_file", "list_dir", "get_graph", "ask_user":
+		out, err := skill(tool, args)
 
 		if err != nil {
 			return "błąd: " + err.Error()
 		}
 
-		return truncate(string(data), 6000)
-
-	case "list_dir":
-		entries, err := os.ReadDir(args)
-
-		if err != nil {
-			return "błąd: " + err.Error()
-		}
-
-		var names []string
-
-		for _, e := range entries {
-			names = append(names, e.Name())
-		}
-
-		return strings.Join(names, "\n")
+		return out
 
 	case "check_events":
 		list, err := a.events.List(ctx, &eventsv1.ListRequest{File: args, NodeId: args, Limit: 20})

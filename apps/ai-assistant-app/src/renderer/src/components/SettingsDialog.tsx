@@ -8,12 +8,17 @@ import {
   TextField,
   MenuItem,
   Button,
-  Typography
+  Typography,
+  FormControlLabel,
+  Switch,
+  Divider
 } from '@mui/material'
-import { themeNames } from './themes'
+import { themeNames, RANDOM_DARK, RANDOM_LIGHT } from './themes'
 import { wallpapers } from './wallpapers'
+import { accents } from '../styles/accents'
 import { changeLanguage, languages } from '../i18n'
 import { appBus } from '../events'
+import type { BlameMode } from './GitContext'
 
 export type ModelProvider = 'ollama' | 'claude'
 
@@ -24,7 +29,13 @@ export default function SettingsDialog({
   theme,
   onThemeChange,
   wallpaper,
-  onWallpaperChange
+  onWallpaperChange,
+  accent,
+  onAccentChange,
+  blame,
+  onBlameChange,
+  rainbow,
+  onRainbowChange
 }: {
   open: boolean
   onClose: () => void
@@ -32,6 +43,12 @@ export default function SettingsDialog({
   onThemeChange: (t: string) => void
   wallpaper: string
   onWallpaperChange: (url: string) => void
+  accent: string
+  onAccentChange: (key: string) => void
+  blame: BlameMode
+  onBlameChange: (b: BlameMode) => void
+  rainbow: boolean
+  onRainbowChange: (on: boolean) => void
 }) {
   const { t, i18n } = useTranslation()
   const [provider, setProvider] = useState<ModelProvider>('ollama')
@@ -43,7 +60,7 @@ export default function SettingsDialog({
   }, [open])
 
   const save = async () => {
-    await window.api.setSettings({ provider })
+    await window.api.setSettings({ provider, appTheme: accent })
     // przełącz dostawcę LLM w locie (przez gateway → ai)
     await window.api.aiSetProvider(provider).catch(() => undefined)
     appBus.emit('settings:provider-change', { provider })
@@ -84,6 +101,31 @@ export default function SettingsDialog({
 
         <TextField
           select
+          label={t('settings.accentLabel', { defaultValue: 'Kolor motywu' })}
+          size="small"
+          value={accent}
+          onChange={(e) => onAccentChange(e.target.value)}
+        >
+          {accents.map((a) => (
+            <MenuItem key={a.key} value={a.key}>
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 12,
+                  height: 12,
+                  borderRadius: 3,
+                  background: a.color,
+                  marginRight: 8,
+                  verticalAlign: 'middle'
+                }}
+              />
+              {i18n.language.startsWith('en') ? a.en : a.pl}
+            </MenuItem>
+          ))}
+        </TextField>
+
+        <TextField
+          select
           label={t('settings.themeLabel')}
           size="small"
           value={theme}
@@ -92,6 +134,13 @@ export default function SettingsDialog({
             appBus.emit('settings:theme-change', { theme: e.target.value })
           }}
         >
+          <MenuItem value={RANDOM_DARK} sx={{ fontWeight: 700, color: 'primary.main' }}>
+            {t('settings.themeVariedDark')}
+          </MenuItem>
+          <MenuItem value={RANDOM_LIGHT} sx={{ fontWeight: 700, color: 'primary.main' }}>
+            {t('settings.themeVariedLight')}
+          </MenuItem>
+          <Divider />
           {themeNames.map((name) => (
             <MenuItem key={name} value={name}>
               {name}
@@ -112,6 +161,22 @@ export default function SettingsDialog({
             </MenuItem>
           ))}
         </TextField>
+
+        <TextField
+          select
+          label={t('settings.gitBlameLabel')}
+          size="small"
+          value={blame}
+          onChange={(e) => onBlameChange(e.target.value as BlameMode)}
+        >
+          <MenuItem value="off">{t('settings.gitBlameOff')}</MenuItem>
+          <MenuItem value="last">{t('settings.gitBlameLast')}</MenuItem>
+        </TextField>
+
+        <FormControlLabel
+          control={<Switch checked={rainbow} onChange={(e) => onRainbowChange(e.target.checked)} />}
+          label={t('settings.rainbowBrackets')}
+        />
 
         {provider === 'claude' && (
           <Typography variant="caption" color="text.secondary">

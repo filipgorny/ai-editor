@@ -76,6 +76,18 @@ class Commander {
     }
   }
 
+  // activeEditor zwraca ścieżkę + ŻYWĄ treść aktualnie aktywnego okna edytora (albo null).
+  // Używane przez dolny pasek AI, by agent działał na realnej (też niezapisanej) zawartości.
+  activeEditor(): { path: string; content: string } | null {
+    const view = this.active?.getView()
+
+    if (!this.active || !view) {
+      return null
+    }
+
+    return { path: this.active.path, content: view.state.doc.toString() }
+  }
+
   setHost(host: Partial<CommanderHost>): void {
     this.host = host
   }

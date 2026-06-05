@@ -1,3 +1,18 @@
+# Cały backend ai-architect w Dockerze. Electron (host) gada TYLKO z gatewayem
+# na 127.0.0.1:50061; gateway rozgałęzia do reszty serwisów po nazwie DNS w sieci
+# compose. Postgresa dotykają designer/scripting/logs, Redisa — events, Ollamę
+# (natywną na hoście) — ai. scanner/filer potrzebują dysku hosta zamontowanego 1:1,
+# bo Electron przekazuje ścieżki hosta (np. /home/filip/Projects/...).
+#
+#   pnpm dev            # backend z hot-reloadem (+ docker-compose.dev.yaml) + Electron
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yaml up -d --build  # dev
+#   docker compose up -d --build   # czyste obrazy produkcyjne (bez watchera)
+#   docker compose down
+
+x-build: &go-build
+  context: .
+  dockerfile: services/Dockerfile
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -31,6 +46,49 @@ services:
       timeout: 3s
       retries: 10
 
+  # events — pub/sub po Redisie. Pierwszy w łańcuchu (ai i gateway od niego zależą).
+  events:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: events
+    container_name: ai-architect-events
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      EVENTS_ADDR: 0.0.0.0:50091
+      REDIS_ADDR: redis:6379
+    ports:
+      - "${EVENTS_PORT:-50091}:50091"
+
+  # ai — całe LLM. Gada z natywną Ollamą na hoście przez host.docker.internal.
+  ai:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: ai
+    container_name: ai-architect-ai
+    restart: unless-stopped
+    depends_on:
+      - events
+    environment:
+      AI_ADDR: 0.0.0.0:50071
+      EVENTS_ADDR: events:50091
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5-coder:14b}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${AI_PORT:-50071}:50071"
+    volumes:
+      # token OAuth Claude (z `claude setup-token`) zapisany przez serwis — przeżywa restart
+      - "claude-token:/data"
+
+  # scanner — bezstanowy skaner katalogów (cgo / tree-sitter, własny Dockerfile).
+  # Opis plików deleguje do serwisu ai. Czyta dysk hosta (ro) pod tą samą ścieżką.
   scanner:
     build:
       context: .
@@ -38,16 +96,10 @@ services:
     container_name: ai-architect-scanner
     restart: unless-stopped
     depends_on:
-      postgres:
-        condition: service_healthy
+      - ai
     environment:
       SCANNER_ADDR: 0.0.0.0:50051
-      DATABASE_URL: postgres://${POSTGRES_USER:-architect}:${POSTGRES_PASSWORD:-architect}@postgres:5432/${POSTGRES_DB:-architect}?sslmode=disable
-      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5-coder:14b}
-    extra_hosts:
-      # dostęp do natywnego ollama na hoście
-      - "host.docker.internal:host-gateway"
+      AI_ADDR: ai:50071
     ports:
       - "${SCANNER_PORT:-50051}:50051"
     volumes:
@@ -55,6 +107,126 @@ services:
       # zgadzały się 1:1 wewnątrz kontenera
       - "${HOME}:${HOME}:ro"
 
+  # designer — graf zależności w Postgresie; pyta scanner o skan.
+  designer:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: designer
+    container_name: ai-architect-designer
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      scanner:
+        condition: service_started
+    environment:
+      DESIGNER_ADDR: 0.0.0.0:50081
+      SCANNER_ADDR: scanner:50051
+      DATABASE_URL: postgres://${POSTGRES_USER:-architect}:${POSTGRES_PASSWORD:-architect}@postgres:5432/${POSTGRES_DB:-architect}?sslmode=disable
+    ports:
+      - "${DESIGNER_PORT:-50081}:50081"
+
+  # scripting — skrypty użytkownika (Lua) w Postgresie.
+  scripting:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: scripting
+    container_name: ai-architect-scripting
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SCRIPTING_ADDR: 0.0.0.0:50111
+      DATABASE_URL: postgres://${POSTGRES_USER:-architect}:${POSTGRES_PASSWORD:-architect}@postgres:5432/${POSTGRES_DB:-architect}?sslmode=disable
+    ports:
+      - "${SCRIPTING_PORT:-50111}:50111"
+
+  # logs — logi aplikacji we własnej tabeli. LOGS_DATABASE_URL pozwala wskazać
+  # osobną bazę; domyślnie współdzielony Postgres.
+  logs:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: logs
+    container_name: ai-architect-logs
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      LOGS_ADDR: 0.0.0.0:50121
+      DATABASE_URL: postgres://${POSTGRES_USER:-architect}:${POSTGRES_PASSWORD:-architect}@postgres:5432/${POSTGRES_DB:-architect}?sslmode=disable
+      LOGS_DATABASE_URL: ${LOGS_DATABASE_URL:-}
+    ports:
+      - "${LOGS_PORT:-50121}:50121"
+
+  # filer — JEDYNY serwis piszący po dysku. Montujemy $HOME z zapisem (rw) pod tą
+  # samą ścieżką, żeby ścieżki z Electrona zgadzały się 1:1.
+  filer:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: filer
+    container_name: ai-architect-filer
+    restart: unless-stopped
+    environment:
+      FILER_ADDR: 0.0.0.0:50101
+    ports:
+      - "${FILER_PORT:-50101}:50101"
+    volumes:
+      - "${HOME}:${HOME}:rw"
+
+  # git — autorstwo plików + diff-review. Czyta repo WPROST z dysku (git -C <repo>),
+  # by widzieć też NIEzacommitowane zmiany w drzewie roboczym. Montujemy $HOME:ro pod
+  # tą samą ścieżką (jak scanner/filer), żeby ścieżki z Electrona zgadzały się 1:1.
+  git:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: git
+    container_name: ai-architect-git
+    restart: unless-stopped
+    environment:
+      GIT_ADDR: 0.0.0.0:50131
+    ports:
+      - "${GIT_PORT:-50131}:50131"
+    volumes:
+      - "${HOME}:${HOME}:ro"
+
+  # gateway — punkt wejścia dla Electrona (host:50061). Proxuje do wszystkich.
+  gateway:
+    build:
+      <<: *go-build
+      args:
+        SERVICE: gateway
+    container_name: ai-architect-gateway
+    restart: unless-stopped
+    depends_on:
+      - designer
+      - ai
+      - events
+      - filer
+      - scanner
+      - scripting
+      - logs
+      - git
+    environment:
+      GATEWAY_ADDR: 0.0.0.0:50061
+      DESIGNER_ADDR: designer:50081
+      AI_ADDR: ai:50071
+      EVENTS_ADDR: events:50091
+      FILER_ADDR: filer:50101
+      SCANNER_ADDR: scanner:50051
+      SCRIPTING_ADDR: scripting:50111
+      LOGS_ADDR: logs:50121
+      GIT_ADDR: git:50131
+    ports:
+      - "${GATEWAY_PORT:-50061}:50061"
+
 volumes:
   postgres-data:
   redis-data:
+  claude-token:

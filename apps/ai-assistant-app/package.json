@@ -1,15 +1,17 @@
 {
   "name": "@ai-architect/assistant-app",
-  "version": "0.0.0",
+  "version": "0.2",
   "description": "Electron UI dla ai-architect — graf zależności projektu",
   "main": "./out/main/index.js",
   "scripts": {
-    "dev": "electron-vite dev",
+    "dev": "ELECTRON_CLI_ARGS='[\"--disable-features=Vulkan\"]' electron-vite dev",
     "build": "electron-vite build",
-    "start": "electron-vite preview"
+    "start": "electron-vite preview",
+    "postinstall": "electron-rebuild -f -w better-sqlite3"
   },
   "dependencies": {
     "@codemirror/lang-javascript": "^6.2.2",
+    "@codemirror/lint": "^6.9.6",
     "@codemirror/state": "^6.4.1",
     "@codemirror/theme-one-dark": "^6.1.2",
     "@codemirror/view": "^6.34.1",
@@ -22,6 +24,7 @@
     "@replit/codemirror-vim": "^6.3.0",
     "@uiw/codemirror-themes-all": "^4.25.10",
     "@uiw/react-codemirror": "^4.23.6",
+    "better-sqlite3": "^12.10.0",
     "electron-store": "^8.2.0",
     "eslint": "^9.15.0",
     "i18next": "^26.3.1",
@@ -34,6 +37,7 @@
     "wasmoon": "^1.16.0"
   },
   "devDependencies": {
+    "@electron/rebuild": "^4.0.4",
     "@types/node": "^22.9.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

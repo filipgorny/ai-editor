@@ -19,8 +19,12 @@ Each script has a **name**, **content** (Lua), and an optional **project** it is
 `project` is **optional** — leave it empty for a global script. When a project opens, the app
 auto-loads its scripts (global + pinned to that folder) and runs them once.
 
-Manage scripts in the **Skrypty** dialog: create, edit, pin to the current project, **Run**, and
-delete. You can also run a stored script by id from the Commander: `script:<id>`.
+Manage scripts in the **Skrypty** window (a movable panel): create, edit, pin to the current
+project, **Run**, and delete. Scripts **autosave** when focus leaves the editor / on switching
+scripts / on close. The editor is the same CodeMirror component as the file editor and has an AI
+**copilot** (toggle in the title bar) primed with the scripting vocabulary (globals, events,
+commands, `api`), so it suggests script-aware completions — press `Tab` to accept. You can also
+run a stored script by id from the Commander: `script:<id>`.
 
 ## The Lua API
 

@@ -51,6 +51,8 @@ export type AppEventMap = {
   'graph:folder-toggle': { id: string; expanded: boolean }
   'graph:search': { query: string }
   'graph:move-start': { path: string }
+  // review mode toggled on/off (count = changed files when turning on)
+  'review:toggle': { on: boolean; count?: number }
 
   // — Settings —
   'settings:provider-change': { provider: string }

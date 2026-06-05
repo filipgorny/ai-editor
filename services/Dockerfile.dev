@@ -1,0 +1,26 @@
+# Obraz DEWELOPERSKI wspólny dla wszystkich serwisów Go — watcher + kompilacja na
+# zmianę kodu (hot-reload w Dockerze). Który serwis budować wybiera env SERVICE.
+# Kod NIE jest kopiowany do obrazu — montujemy repo wolumenem pod /src (patrz
+# docker-compose.override.yml, ładowany automatycznie przez `docker compose up`).
+FROM golang:1.26-bookworm
+
+# CompileDaemon — watcher, który rekompiluje i restartuje binarkę na zmianę .go.
+RUN go install github.com/githubnemo/CompileDaemon@v1.4.0
+
+# Serwis `ai` woła Claude Code CLI (`claude -p`). Obraz dev jest współdzielony przez
+# wszystkie serwisy Go, więc CLI instalujemy tu raz dla wszystkich.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl ca-certificates \
+  && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+  && apt-get install -y --no-install-recommends nodejs \
+  && npm install -g @anthropic-ai/claude-code \
+  && rm -rf /var/lib/apt/lists/*
+
+# git potrzebny serwisom w runtime (scanner woła `git`); gcc/cgo jest już w obrazie
+# golang (scanner kompiluje tree-sitter przez cgo).
+WORKDIR /src
+
+COPY tools/dev-watch.sh /usr/local/bin/dev-watch
+RUN chmod +x /usr/local/bin/dev-watch
+
+ENTRYPOINT ["dev-watch"]

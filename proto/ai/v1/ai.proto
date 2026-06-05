@@ -7,8 +7,10 @@ option go_package = "github.com/filipgorny/ai-architect/proto/ai/v1;aiv1";
 // Ai to agent ze skillami (czytanie pliku, sprawdzanie eventów). PLANUJE przed
 // wykonaniem, a postęp (plan, użyte narzędzia, odpowiedź) strumieniuje.
 service Ai {
-  // Ask to agent ze skillami i planowaniem (streaming).
-  rpc Ask(AskRequest) returns (stream AskEvent);
+  // Ask to agent ze skillami — DWUKIERUNKOWY stream. Aplikacja wysyła start (zadanie +
+  // kontekst) oraz odpowiedzi na żądania skilli; serwer strumieniuje plan, użyte narzędzia,
+  // żądania skilli (read_file/list_dir/get_graph wykonywane przez aplikację) i odpowiedź.
+  rpc Ask(stream AskClientMsg) returns (stream AskEvent);
   // Generate to proste wywołanie LLM — wszystko inne (np. opis plików w
   // scannerze) idzie przez ten serwis, by LLM był w jednym miejscu.
   rpc Generate(GenerateRequest) returns (GenerateResponse);
@@ -16,6 +18,11 @@ service Ai {
   rpc Model(ModelRequest) returns (ModelResponse);
   // SetProvider podmienia dostawcę LLM w locie (np. ollama → claude headless).
   rpc SetProvider(SetProviderRequest) returns (ModelResponse);
+  // SetClaudeToken zapisuje długoterminowy token OAuth (claude setup-token) używany
+  // przez `claude -p` w trybie headless. Serwis persystuje go u siebie (wolumen).
+  rpc SetClaudeToken(SetClaudeTokenRequest) returns (ClaudeTokenStatus);
+  // ClaudeStatus mówi, czy serwis ma zapisany token Claude (do bramki logowania w UI).
+  rpc ClaudeStatus(ClaudeStatusRequest) returns (ClaudeTokenStatus);
 }
 
 message ModelRequest {}
@@ -28,12 +35,23 @@ message ModelResponse {
   string name = 1;
 }
 
+message SetClaudeTokenRequest {
+  string token = 1; // sk-ant-oat... (z `claude setup-token`)
+}
+
+message ClaudeStatusRequest {}
+
+message ClaudeTokenStatus {
+  bool has_token = 1;
+}
+
 message GenerateRequest {
   string system = 1;
   string prompt = 2;
   double temperature = 3;
   int32 max_tokens = 4;
-  string dir = 5; // katalog roboczy (cwd) dla dostawców CLI (Claude headless)
+  string dir = 5;     // katalog roboczy (cwd) dla dostawców CLI (Claude headless)
+  string session = 6; // klucz rozmowy (np. folder projektu); puste = bez historii
 }
 
 message GenerateResponse {
@@ -46,6 +64,39 @@ message AskRequest {
   string node_id = 3;  // kontekst: node
   int64 app_id = 4;
   bool edit = 5;       // true = zwróć zmodyfikowany kod pliku
+  AskContext context = 6; // ujednolicony kontekst (to samo, co dostaje AiAgent w gateway)
+}
+
+// AskContext — lekki kontekst zadania. Treści plików i graf NIE są wstrzykiwane do promptu;
+// AI dobiera je skillami (read_file / get_graph) wykonywanymi przez aplikację.
+message AskContext {
+  string instruction = 1;
+  string open_file = 2;      // ścieżka otwartego pliku (kontekst dla „ten/to")
+  string selected_kind = 3;  // zaznaczony element grafu
+  string selected_name = 4;
+  string selected_file = 5;
+}
+
+// AskClientMsg — wiadomości od aplikacji: start zadania albo wynik wykonanego skilla.
+message AskClientMsg {
+  oneof msg {
+    AskRequest start = 1;
+    SkillResult skill_result = 2;
+  }
+}
+
+// SkillRequest — serwer prosi aplikację o wykonanie skilla (np. read_file).
+message SkillRequest {
+  string id = 1;     // korelacja z SkillResult
+  string name = 2;   // read_file | list_dir | get_graph
+  string args = 3;
+}
+
+// SkillResult — odpowiedź aplikacji na SkillRequest (po id).
+message SkillResult {
+  string id = 1;
+  string content = 2;
+  string error = 3;
 }
 
 message ToolCall {
@@ -56,8 +107,9 @@ message ToolCall {
 
 message AskEvent {
   oneof event {
-    string plan = 1;     // plan przed wykonaniem
-    ToolCall tool = 2;   // użyte narzędzie + wynik
-    string answer = 3;   // końcowa odpowiedź (lub zmodyfikowany kod)
+    string plan = 1;                // plan przed wykonaniem
+    ToolCall tool = 2;              // użyte narzędzie + wynik
+    string answer = 3;              // końcowa odpowiedź (lub zmodyfikowany kod)
+    SkillRequest skill_request = 4; // żądanie skilla do wykonania przez aplikację
   }
 }

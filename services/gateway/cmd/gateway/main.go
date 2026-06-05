@@ -14,6 +14,9 @@ import (
 	eventsv1 "github.com/filipgorny/ai-architect/proto/events/v1"
 	filerv1 "github.com/filipgorny/ai-architect/proto/filer/v1"
 	gatewayv1 "github.com/filipgorny/ai-architect/proto/gateway/v1"
+	gitv1 "github.com/filipgorny/ai-architect/proto/git/v1"
+	logsv1 "github.com/filipgorny/ai-architect/proto/logs/v1"
+	scannerv1 "github.com/filipgorny/ai-architect/proto/scanner/v1"
 	scriptingv1 "github.com/filipgorny/ai-architect/proto/scripting/v1"
 	"github.com/filipgorny/ai-architect/services/gateway/internal/config"
 	"github.com/filipgorny/ai-architect/services/gateway/internal/server"
@@ -73,12 +76,39 @@ func main() {
 
 	defer scriptingConn.Close()
 
+	logsConn, err := dial(cfg.LogsAddr)
+
+	if err != nil {
+		log.Fatalf("logs client: %v", err)
+	}
+
+	defer logsConn.Close()
+
+	scannerConn, err := dial(cfg.ScannerAddr)
+
+	if err != nil {
+		log.Fatalf("scanner client: %v", err)
+	}
+
+	defer scannerConn.Close()
+
+	gitConn, err := dial(cfg.GitAddr)
+
+	if err != nil {
+		log.Fatalf("git client: %v", err)
+	}
+
+	defer gitConn.Close()
+
 	srv := server.New(
 		gatewayv1.NewGatewayClient(designerConn),
 		aiv1.NewAiClient(aiConn),
 		eventsv1.NewEventsClient(eventsConn),
 		filerv1.NewFilerClient(filerConn),
 		scriptingv1.NewScriptingClient(scriptingConn),
+		logsv1.NewLogsClient(logsConn),
+		scannerv1.NewScannerClient(scannerConn),
+		gitv1.NewGitClient(gitConn),
 	)
 
 	lis, err := net.Listen("tcp", cfg.Addr)

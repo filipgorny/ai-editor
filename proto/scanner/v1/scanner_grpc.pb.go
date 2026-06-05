@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	Scanner_Scan_FullMethodName    = "/scanner.v1.Scanner/Scan"
 	Scanner_ScanApp_FullMethodName = "/scanner.v1.Scanner/ScanApp"
+	Scanner_Links_FullMethodName   = "/scanner.v1.Scanner/Links"
 )
 
 // ScannerClient is the client API for Scanner service.
@@ -37,6 +38,10 @@ type ScannerClient interface {
 	// ScanApp robi głęboki skan pojedynczej aplikacji: ekstrakcja encji (klasy,
 	// kontrolery, serwisy, moduły) i zapis pod jej app_id.
 	ScanApp(ctx context.Context, in *ScanAppRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ScanEvent], error)
+	// Links analyzes a single source file (tree-sitter; LSP when available) and returns the
+	// navigable code links in it — import paths and imported-symbol usages — each resolved to
+	// the file (and definition line) it points at. Drives go-to-definition in the editor.
+	Links(ctx context.Context, in *LinksRequest, opts ...grpc.CallOption) (*LinksResponse, error)
 }
 
 type scannerClient struct {
@@ -85,6 +90,16 @@ func (c *scannerClient) ScanApp(ctx context.Context, in *ScanAppRequest, opts ..
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type Scanner_ScanAppClient = grpc.ServerStreamingClient[ScanEvent]
 
+func (c *scannerClient) Links(ctx context.Context, in *LinksRequest, opts ...grpc.CallOption) (*LinksResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LinksResponse)
+	err := c.cc.Invoke(ctx, Scanner_Links_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ScannerServer is the server API for Scanner service.
 // All implementations must embed UnimplementedScannerServer
 // for forward compatibility.
@@ -99,6 +114,10 @@ type ScannerServer interface {
 	// ScanApp robi głęboki skan pojedynczej aplikacji: ekstrakcja encji (klasy,
 	// kontrolery, serwisy, moduły) i zapis pod jej app_id.
 	ScanApp(*ScanAppRequest, grpc.ServerStreamingServer[ScanEvent]) error
+	// Links analyzes a single source file (tree-sitter; LSP when available) and returns the
+	// navigable code links in it — import paths and imported-symbol usages — each resolved to
+	// the file (and definition line) it points at. Drives go-to-definition in the editor.
+	Links(context.Context, *LinksRequest) (*LinksResponse, error)
 	mustEmbedUnimplementedScannerServer()
 }
 
@@ -114,6 +133,9 @@ func (UnimplementedScannerServer) Scan(*ScanRequest, grpc.ServerStreamingServer[
 }
 func (UnimplementedScannerServer) ScanApp(*ScanAppRequest, grpc.ServerStreamingServer[ScanEvent]) error {
 	return status.Error(codes.Unimplemented, "method ScanApp not implemented")
+}
+func (UnimplementedScannerServer) Links(context.Context, *LinksRequest) (*LinksResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Links not implemented")
 }
 func (UnimplementedScannerServer) mustEmbedUnimplementedScannerServer() {}
 func (UnimplementedScannerServer) testEmbeddedByValue()                 {}
@@ -158,13 +180,36 @@ func _Scanner_ScanApp_Handler(srv interface{}, stream grpc.ServerStream) error {
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type Scanner_ScanAppServer = grpc.ServerStreamingServer[ScanEvent]
 
+func _Scanner_Links_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LinksRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ScannerServer).Links(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Scanner_Links_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ScannerServer).Links(ctx, req.(*LinksRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Scanner_ServiceDesc is the grpc.ServiceDesc for Scanner service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Scanner_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "scanner.v1.Scanner",
 	HandlerType: (*ScannerServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Links",
+			Handler:    _Scanner_Links_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "Scan",

@@ -18,7 +18,37 @@ ai-architect/
     └── scanner/cmd/scanner/  # aplikacja Go (skaner katalogów)
 ```
 
-## Build / run
+## Uruchomienie (Docker + Electron)
+Cały backend (8 serwisów Go + PostgreSQL + Redis) chodzi w Dockerze; lokalnie
+odpalamy tylko apkę Electron, która gada z gatewayem na `localhost:50061`.
+**Hot-reload działa w Dockerze**: zmiana dowolnego pliku `.go` jest wykrywana przez
+watcher w kontenerze (CompileDaemon), który rekompiluje i restartuje dany serwis —
+bez ręcznego restartu. Realizuje to `docker-compose.dev.yaml` (nakładka dev).
+```bash
+cp .env.example .env
+pnpm dev            # backend (z hot-reloadem) + apka Electron
+pnpm down           # stop (dane w wolumenach)
+pnpm logs           # logi serwisów (docker compose logs -f)
+pnpm restart        # przebuduj/odśwież backend
+```
+
+### Tylko backend / bez Electrona
+```bash
+# z hot-reloadem (nakładka dev):
+docker compose -f docker-compose.yml -f docker-compose.dev.yaml up -d --build
+# czyste obrazy produkcyjne (bez watchera):
+pnpm run up:prod                # = docker compose -f docker-compose.yml up -d --build
+docker compose down             # stop (dane w wolumenach postgres-data/redis-data)
+```
+
+### Tryb natywny (go run, bez Dockera dla serwisów)
+Alternatywa dla hot-reloadu w Dockerze — serwisy lecą natywnie przez `go run`
+(nodemon), w Dockerze zostają tylko PostgreSQL i Redis:
+```bash
+pnpm dev:native
+```
+
+## Build / run pojedynczego serwisu
 ```bash
 # Go (natywnie)
 go build ./services/scanner/cmd/scanner
@@ -28,13 +58,6 @@ go run ./services/scanner/cmd/scanner -path .
 bazel run //:gazelle            # generuje/aktualizuje BUILD.bazel
 bazel build //...
 bazel run //services/scanner/cmd/scanner -- -path .
-```
-
-## Baza danych
-```bash
-cp .env.example .env
-docker compose up -d            # PostgreSQL na localhost:5432
-docker compose down             # stop (dane w wolumenie postgres-data)
 ```
 
 ## Model LLM

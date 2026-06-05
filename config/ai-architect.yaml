@@ -29,6 +29,9 @@ gateway:
   designer_addr: 127.0.0.1:50081
   filer_addr: 127.0.0.1:50101    # operacje na plikach idą przez filer
   scripting_addr: 127.0.0.1:50111 # skrypty użytkownika idą przez scripting
+  logs_addr: 127.0.0.1:50121     # logi aplikacji idą przez logs
+  scanner_addr: 127.0.0.1:50051  # analiza kodu (go-to-definition) idzie przez scanner
+  git_addr: 127.0.0.1:50131      # autorstwo + diff-review idą przez git
 
 ai:
   addr: 127.0.0.1:50071
@@ -49,8 +52,22 @@ scripting:
   database:
     url: postgres://architect:architect@localhost:5432/architect?sslmode=disable
 
+# logs — przechowuje logi aplikacji we własnej bazie. Gateway tylko pośredniczy.
+# LOGS_DATABASE_URL (env) pozwala wskazać OSOBNĄ bazę; domyślnie współdzielony Postgres.
+logs:
+  addr: 127.0.0.1:50121
+  database:
+    url: postgres://architect:architect@localhost:5432/architect?sslmode=disable
+
 # filer — JEDYNY serwis dotykający systemu plików (czytanie/zapis/operacje +
 # przeglądanie dysku i szukanie projektów). Gateway pośredniczy.
 # W Dockerze wymaga zamontowania dysku hosta jako wolumen (np. - /home:/home:rw).
 filer:
   addr: 127.0.0.1:50101
+
+# git — autorstwo plików (ostatnia zmiana) + diff-review (gałąź vs baza). Otwarty
+# projekt wysyła swoją kopię .git przez gateway (UploadRepo); serwis trzyma ją w
+# katalogu roboczym (puste = temp OS) i woła binarkę `git`. Gateway pośredniczy.
+git:
+  addr: 127.0.0.1:50131
+  dir: ""

@@ -72,6 +72,27 @@ export const editorThemes: Record<string, Extension> = {
 
 export const themeNames = Object.keys(editorThemes)
 
+// Motywy jasne (reszta puli to ciemne). Używane do losowania w trybach „różne".
+const LIGHT_THEMES = ['GitHub Light', 'Solarized Light', 'VS Code Light', 'Gruvbox Light', 'Xcode Light']
+const lightNames = themeNames.filter((n) => LIGHT_THEMES.includes(n))
+const darkNames = themeNames.filter((n) => !LIGHT_THEMES.includes(n))
+
+// RANDOM_DARK / RANDOM_LIGHT — specjalne „opcje wyróżnione" w Ustawieniach: zamiast jednego
+// motywu, każdy nowo otwarty plik dostaje losowy motyw z odpowiedniej puli (ciemne / jasne).
+export const RANDOM_DARK = '🎲 dark:random'
+export const RANDOM_LIGHT = '🎲 light:random'
+
+export function isRandomTheme(name: string): boolean {
+  return name === RANDOM_DARK || name === RANDOM_LIGHT
+}
+
+// randomThemeName losuje nazwę konkretnego motywu z puli wskazanej sentinelem.
+export function randomThemeName(which: string): string {
+  const pool = which === RANDOM_LIGHT ? lightNames : darkNames
+
+  return pool[Math.floor(Math.random() * pool.length)] ?? themeNames[0]
+}
+
 export function themeExt(name: string): Extension {
   return editorThemes[name] ?? oneDark
 }

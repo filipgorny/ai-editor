@@ -14,6 +14,30 @@ service Scanner {
   // ScanApp robi głęboki skan pojedynczej aplikacji: ekstrakcja encji (klasy,
   // kontrolery, serwisy, moduły) i zapis pod jej app_id.
   rpc ScanApp(ScanAppRequest) returns (stream ScanEvent);
+  // Links analyzes a single source file (tree-sitter; LSP when available) and returns the
+  // navigable code links in it — import paths and imported-symbol usages — each resolved to
+  // the file (and definition line) it points at. Drives go-to-definition in the editor.
+  rpc Links(LinksRequest) returns (LinksResponse);
+}
+
+message LinksRequest {
+  string path = 1;    // absolute path of the analyzed file
+  string content = 2; // current (possibly unsaved) buffer content
+}
+
+// CodeLink is a clickable span in the source that resolves to a definition location.
+// Positions are 0-based; columns are byte offsets within the line.
+message CodeLink {
+  uint32 from_line = 1;
+  uint32 from_col = 2;
+  uint32 to_line = 3;
+  uint32 to_col = 4;
+  string target_path = 5; // absolute path of the resolved file ("" if unresolved)
+  uint32 target_line = 6; // 0-based line of the definition (0 if unknown)
+}
+
+message LinksResponse {
+  repeated CodeLink links = 1;
 }
 
 message ScanRequest {

@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package logs.v1;
+
+option go_package = "github.com/filipgorny/ai-architect/proto/logs/v1;logsv1";
+
+// Logs stores the application's log lines (console output, script logs, command errors) in its
+// own database. The gateway only forwards — all logic and storage live here.
+service Logs {
+  // Append stores a batch of log lines (the renderer flushes buffered logs periodically).
+  rpc Append(LogBatch) returns (Empty);
+  // ListLogs returns the most recent log lines (chronological), capped by the query limit.
+  rpc ListLogs(LogQuery) returns (LogList);
+  // Clear removes all stored logs.
+  rpc Clear(Empty) returns (Empty);
+}
+
+message Empty {}
+
+message LogEntry {
+  int64 id = 1;
+  int64 time = 2;    // unix milliseconds (when the line was produced)
+  string level = 3;  // "info" | "error"
+  string message = 4;
+  string source = 5; // optional origin, e.g. "lua", "console"
+}
+
+message LogBatch {
+  repeated LogEntry entries = 1;
+}
+
+message LogQuery {
+  int32 limit = 1; // 0 → default (last 500)
+}
+
+message LogList {
+  repeated LogEntry entries = 1;
+}

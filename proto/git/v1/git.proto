@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package git.v1;
+
+option go_package = "github.com/filipgorny/ai-architect/proto/git/v1;gitv1";
+
+// Git to serwis autorstwa i diff-review. Otwarty projekt WYSYŁA zawartość swojego
+// katalogu .git (upload strumieniowy), a serwis odpowiada na pytania o autorstwo
+// plików oraz różnicę gałęzi (review). Gateway pośredniczy — Electron nie rusza fs.
+service Git {
+  // UploadRepo przyjmuje strumień kawałków katalogu .git projektu i zapisuje go
+  // u siebie (kopia robocza historii). Po nim FileInfo/Review działają na kopii.
+  rpc UploadRepo(stream RepoChunk) returns (UploadResult);
+
+  // FileInfo zwraca autora OSTATNIEGO commitu dotykającego pliku (git log -1).
+  rpc FileInfo(FileInfoRequest) returns (FileInfoResponse);
+
+  // ReviewStatus zwraca pliki zmienione na bieżącej gałęzi względem bazowej
+  // (main/master przez merge-base) ze statusem new|modified|deleted|renamed.
+  rpc ReviewStatus(ReviewRequest) returns (ReviewStatusResponse);
+
+  // FileDiff zwraca numery linii (w wersji HEAD pliku) dodanych i zmienionych —
+  // do podświetlenia tła w edytorze (dodane = zielonkawe, zmienione = żółtawe).
+  rpc FileDiff(FileDiffRequest) returns (FileDiffResponse);
+}
+
+// RepoChunk — kawałek jednego pliku z katalogu .git. Strumień grupuje po rel_path;
+// eof=true zamyka plik. repo_path identyfikuje repozytorium (katalog projektu).
+message RepoChunk {
+  string repo_path = 1; // katalog projektu (tożsamość repo, ścieżka z hosta)
+  string rel_path = 2;  // ścieżka WEWNĄTRZ .git, np. "HEAD" / "objects/pack/x.pack"
+  bytes data = 3;       // częściowe bajty pliku rel_path
+  bool eof = 4;         // ostatni kawałek tego pliku → zapisz i zamknij
+}
+
+message UploadResult {
+  string repo_path = 1;
+  bool ok = 2;
+  int32 files = 3;       // ile plików odebrano
+  string head_branch = 4; // bieżąca gałąź (lub "" przy detached/HEAD)
+}
+
+message FileInfoRequest {
+  string repo_path = 1;
+  string file = 2; // ścieżka absolutna lub względna do repo
+}
+
+message FileInfoResponse {
+  bool tracked = 1;            // czy plik jest w historii
+  string last_author = 2;
+  string last_author_email = 3;
+  string last_commit_hash = 4;
+  int64 last_commit_time = 5;  // unix sekundy
+  string last_message = 6;
+}
+
+message ReviewRequest {
+  string repo_path = 1;
+  string base = 2; // opcjonalne wymuszenie gałęzi bazowej ("" → auto: main/master)
+}
+
+message ChangedFile {
+  string path = 1;     // względna do repo
+  string abs_path = 2; // repo_path + "/" + path
+  string status = 3;   // new | modified | deleted | renamed
+}
+
+message ReviewStatusResponse {
+  string base = 1; // użyta gałąź bazowa
+  string head = 2; // bieżąca gałąź / ref
+  repeated ChangedFile files = 3;
+}
+
+message FileDiffRequest {
+  string repo_path = 1;
+  string file = 2;
+  string base = 3;
+}
+
+message FileDiffResponse {
+  string status = 1;                 // new | modified | deleted | unchanged
+  repeated int32 added_lines = 2;    // linie (1-based, w HEAD) całkiem nowe → zielone
+  repeated int32 modified_lines = 3; // linie, które zastąpiły poprzednie → żółte
+}

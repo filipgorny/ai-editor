@@ -4,7 +4,13 @@ import { ThemeProvider, CssBaseline } from '@mui/material'
 import { theme } from './theme'
 import App from './App'
 import ErrorBoundary from './components/ErrorBoundary'
-import { installDevLogger, installKeyEvents } from './events'
+import {
+  installDevLogger,
+  installKeyEvents,
+  installConsoleCapture,
+  installLogPersist,
+  installErrorCapture
+} from './events'
 import './i18n'
 import './styles/global.scss'
 
@@ -29,6 +35,15 @@ installDevLogger()
 
 // Emit keyboard events on the app bus so scripts can bind keys/chords (see SCRIPTING.md).
 installKeyEvents()
+
+// Mirror every console.* call into the Logs window.
+installConsoleCapture()
+
+// Forward uncaught errors + unhandled promise rejections to the logs service.
+installErrorCapture()
+
+// Persist logs to the backend logs service (and load history) — always through the gateway.
+installLogPersist()
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>

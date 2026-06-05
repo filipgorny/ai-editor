@@ -10,6 +10,7 @@ const api = {
   startScanApp: (appId) => electron.ipcRenderer.send("app:scan:start", appId),
   readFile: (absPath) => electron.ipcRenderer.invoke("file:read", absPath),
   resolveImport: (from, spec) => electron.ipcRenderer.invoke("file:resolve", { from, spec }),
+  defLinks: (path, content) => electron.ipcRenderer.invoke("def:links", { path, content }),
   createFile: (dir, file, name) => electron.ipcRenderer.invoke("file:create", { dir, file, name }),
   createFolder: (dir, name) => electron.ipcRenderer.invoke("file:mkdir", { dir, name }),
   moveFile: (oldPath, targetDir) => electron.ipcRenderer.invoke("file:move", { oldPath, targetDir }),
@@ -19,17 +20,48 @@ const api = {
   fsList: (path) => electron.ipcRenderer.invoke("fs:list", path),
   fsFind: (path) => electron.ipcRenderer.invoke("fs:find", path),
   fsConventions: (path) => electron.ipcRenderer.invoke("fs:conventions", path),
+  // --- Git: autorstwo + diff-review (przez gateway → serwis git) ---
+  gitUpload: (repoPath) => electron.ipcRenderer.invoke("git:upload", repoPath),
+  gitFileInfo: (repoPath, file) => electron.ipcRenderer.invoke("git:fileInfo", { repoPath, file }),
+  gitReview: (repoPath, base) => electron.ipcRenderer.invoke("git:review", { repoPath, base: base ?? "" }),
+  gitFileDiff: (repoPath, file, base) => electron.ipcRenderer.invoke("git:fileDiff", { repoPath, file, base: base ?? "" }),
+  // --- Układ okien edytorów per projekt (lokalny SQLite) ---
+  getEditorLayout: (folder) => electron.ipcRenderer.invoke("editors:get", folder),
+  saveEditorLayout: (folder, data) => electron.ipcRenderer.invoke("editors:set", { folder, data }),
   saveViewport: (key, vp) => electron.ipcRenderer.invoke("viewport:set", { key, vp }),
   getViewport: (key) => electron.ipcRenderer.invoke("viewport:get", key),
   getSettings: () => electron.ipcRenderer.invoke("settings:get"),
   setSettings: (s) => electron.ipcRenderer.invoke("settings:set", s),
   aiSetProvider: (provider) => electron.ipcRenderer.invoke("ai:provider", provider),
+  claudeStatus: () => electron.ipcRenderer.invoke("claude:status"),
+  claudeLogin: () => electron.ipcRenderer.invoke("claude:login"),
+  // setup-token: otwiera przeglądarkę i wypisuje token w terminalu (do wklejenia w okienku).
+  claudeSetupToken: () => electron.ipcRenderer.invoke("claude:setupToken"),
+  // wyślij token do serwisu ai (kontener zapisuje go u siebie). Zwraca, czy token jest ustawiony.
+  claudeSaveToken: (token) => electron.ipcRenderer.invoke("claude:saveToken", token),
+  // czy serwis ai ma zapisany token Claude (źródło prawdy dla bramki logowania).
+  claudeTokenStatus: () => electron.ipcRenderer.invoke("claude:tokenStatus"),
   renameFile: (oldPath, fileBase, className, oldName) => electron.ipcRenderer.invoke("file:rename", { oldPath, fileBase, className, oldName }),
   saveFile: (path, content) => electron.ipcRenderer.invoke("file:save", { path, content }),
   aiEdit: (code, prompt, file) => electron.ipcRenderer.invoke("ai:edit", { code, prompt, file }),
   aiModel: () => electron.ipcRenderer.invoke("ai:model"),
   aiComplete: (prefix, suffix, file) => electron.ipcRenderer.invoke("ai:complete", { prefix, suffix, file }),
   aiReview: (code, file, lang) => electron.ipcRenderer.invoke("ai:review", { code, file, lang }),
+  // --- Agent AI ze skillami (bidi). aiAsk startuje turę; skille (read_file/list_dir/get_graph)
+  // przychodzą jako onAiSkill, a aplikacja odsyła wynik przez aiSkillResult. ---
+  aiAsk: (payload) => electron.ipcRenderer.send("ai:ask:start", payload),
+  aiSkillResult: (res) => electron.ipcRenderer.send("ai:skill:result", res),
+  aiAskCancel: () => electron.ipcRenderer.send("ai:ask:cancel"),
+  onAiEvent: (cb) => {
+    const handler = (_e, ev) => cb(ev);
+    electron.ipcRenderer.on("ai:event", handler);
+    return () => electron.ipcRenderer.removeListener("ai:event", handler);
+  },
+  onAiSkill: (cb) => {
+    const handler = (_e, req) => cb(req);
+    electron.ipcRenderer.on("ai:skill", handler);
+    return () => electron.ipcRenderer.removeListener("ai:skill", handler);
+  },
   lintFile: (code, file) => electron.ipcRenderer.invoke("lint:file", { code, file }),
   publishEvent: (ev) => electron.ipcRenderer.invoke("event:publish", ev),
   // --- User scripts (via gateway → scripting service; Postgres) ---
@@ -38,6 +70,10 @@ const api = {
   getScript: (id) => electron.ipcRenderer.invoke("scripts:get", id),
   saveScript: (s) => electron.ipcRenderer.invoke("scripts:save", s),
   deleteScript: (id) => electron.ipcRenderer.invoke("scripts:delete", id),
+  // --- App logs (via gateway → logs service; its own database) ---
+  appendLogs: (entries) => electron.ipcRenderer.invoke("logs:append", entries),
+  listLogs: (limit) => electron.ipcRenderer.invoke("logs:list", limit ?? 0),
+  clearLogs: () => electron.ipcRenderer.invoke("logs:clear"),
   onProgress: (cb) => {
     const handler = (_e, p) => cb(p);
     electron.ipcRenderer.on("scan:progress", handler);

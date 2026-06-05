@@ -44,6 +44,10 @@ func main() {
 	events := eventsv1.NewEventsClient(conn)
 	ag := agent.New(provider, cfg.LLM, events)
 
+	// Wczytaj token OAuth Claude zapisany w wolumenie, by `claude -p` był uwierzytelniony
+	// od razu po restarcie kontenera (logika i ścieżka — w llm/claude.go).
+	llm.LoadClaudeToken()
+
 	lis, err := net.Listen("tcp", cfg.Addr)
 
 	if err != nil {

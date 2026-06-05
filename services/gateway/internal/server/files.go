@@ -10,6 +10,7 @@ import (
 	aiv1 "github.com/filipgorny/ai-architect/proto/ai/v1"
 	filerv1 "github.com/filipgorny/ai-architect/proto/filer/v1"
 	gatewayv1 "github.com/filipgorny/ai-architect/proto/gateway/v1"
+	scannerv1 "github.com/filipgorny/ai-architect/proto/scanner/v1"
 )
 
 // --- Proxy operacji na plikach: gateway → filer (jedyny dotykający fs) ---
@@ -69,6 +70,30 @@ func (p *Proxy) ResolveImport(ctx context.Context, req *gatewayv1.ResolveRequest
 	resp, err := p.filer.Resolve(ctx, &filerv1.ResolveReq{From: req.GetFrom(), Spec: req.GetSpec()})
 
 	return toFileResult(resp), err
+}
+
+// Links proxies code-link analysis (go-to-definition) to the scanner.
+func (p *Proxy) Links(ctx context.Context, req *gatewayv1.LinkQuery) (*gatewayv1.CodeLinks, error) {
+	resp, err := p.scanner.Links(ctx, &scannerv1.LinksRequest{Path: req.GetPath(), Content: req.GetContent()})
+
+	if err != nil {
+		return nil, err
+	}
+
+	out := &gatewayv1.CodeLinks{Links: make([]*gatewayv1.CodeLink, 0, len(resp.GetLinks()))}
+
+	for _, l := range resp.GetLinks() {
+		out.Links = append(out.Links, &gatewayv1.CodeLink{
+			FromLine:   l.GetFromLine(),
+			FromCol:    l.GetFromCol(),
+			ToLine:     l.GetToLine(),
+			ToCol:      l.GetToCol(),
+			TargetPath: l.GetTargetPath(),
+			TargetLine: l.GetTargetLine(),
+		})
+	}
+
+	return out, nil
 }
 
 func toFileResult(r *filerv1.Result) *gatewayv1.FileResult {
@@ -188,20 +213,102 @@ func langInstr(lang string) string {
 	return " Odpowiadaj wyłącznie po polsku."
 }
 
+// agentInput odzwierciedla payload z frontu (App.tsx runAgent): polecenie + konteksty.
+// openEditorContent to ŻYWA (też niezapisana) treść aktywnego edytora — gdy jest, używamy
+// jej zamiast czytać z dysku.
+type agentInput struct {
+	Instruction     string `json:"instruction"`
+	SelectedElement *struct {
+		File string `json:"file"`
+	} `json:"selectedElement"`
+	OpenEditorFile    string `json:"openEditorFile"`
+	OpenEditorContent string `json:"openEditorContent"`
+}
+
+// contextFiles zwraca treść plików kontekstu (otwarty edytor + zaznaczony element) do promptu —
+// dzięki temu LLM modyfikuje plik znając jego całość, a op "write" niesie kompletny kod (a nie
+// tylko dopisywany fragment). Treść aktywnego edytora bierzemy z payloadu (żywa, może być
+// niezapisana); pozostałe pliki czytamy przez filer.
+func (p *Proxy) contextFiles(ctx context.Context, payload string) string {
+	var in agentInput
+
+	if json.Unmarshal([]byte(payload), &in) != nil {
+		return ""
+	}
+
+	type fileRef struct {
+		path    string
+		content string // żywa treść z edytora; puste = doczytaj z dysku
+	}
+
+	// Aktywny edytor pierwszy — wygrywa przy deduplikacji (żywa treść nad dyskową).
+	refs := []fileRef{{path: in.OpenEditorFile, content: in.OpenEditorContent}}
+
+	if in.SelectedElement != nil {
+		refs = append(refs, fileRef{path: in.SelectedElement.File})
+	}
+
+	seen := map[string]bool{}
+	var sb strings.Builder
+
+	for _, r := range refs {
+		if r.path == "" || seen[r.path] {
+			continue
+		}
+
+		seen[r.path] = true
+		content := r.content
+
+		if content == "" {
+			resp, err := p.filer.Read(ctx, &filerv1.PathReq{Path: r.path})
+
+			if err != nil {
+				continue
+			}
+
+			content = resp.GetContent()
+		}
+
+		if content == "" {
+			continue
+		}
+
+		sb.WriteString("\n\n--- Aktualna zawartość pliku " + r.path + " ---\n")
+		sb.WriteString(content)
+		sb.WriteString("\n--- koniec pliku ---")
+	}
+
+	return sb.String()
+}
+
 func (p *Proxy) AiAgent(ctx context.Context, req *gatewayv1.AiAgentRequest) (*gatewayv1.AiAgentResponse, error) {
-	system := "Jesteś agentem zarządzającym plikami projektu. Na podstawie polecenia użytkownika " +
-		"zwróć WYŁĄCZNIE JSON (bez markdown) w formacie: " +
+	system := "Jesteś agentem zarządzającym plikami projektu. WEJŚCIE ZAWSZE jest obiektem JSON " +
+		`z polami: {"instruction": "<polecenie użytkownika>", "selectedElement": {"kind","name","file"} | null, ` +
+		`"openEditorFile": "<ścieżka otwartego pliku>" | null}. Pola selectedElement/openEditorFile to KONTEKST — ` +
+		"do czego odnoszą się słowa to/ten/ta w poleceniu. " +
+		"Zwróć WYŁĄCZNIE JSON (bez markdown) w formacie: " +
 		`{"ops":[{"op":"create_file","path":"...","content":"..."},{"op":"write","path":"...","content":"..."},` +
 		`{"op":"delete","path":"..."},{"op":"rename","path":"stara","to":"nowa-nazwa-pliku"},` +
 		`{"op":"move","path":"plik","to":"katalog"},{"op":"mkdir","path":"katalog"}],"open":"sciezka-do-otwarcia","message":"krótkie podsumowanie po polsku"}. ` +
 		"Ścieżki względne odnoszą się do katalogu bazowego. Gdy tworzysz plik z klasą, wypełnij pole content kompletnym kodem. " +
-		"Wykonuj tylko to, o co prosi użytkownik."
+		"WAŻNE: przy op \"write\" pole content MUSI zawierać KOMPLETNĄ nową zawartość CAŁEGO pliku (z naniesioną zmianą), " +
+		"a nie sam fragment — w przeciwnym razie nadpiszesz plik i utracisz resztę kodu. Aktualną zawartość plików kontekstu " +
+		"masz poniżej; modyfikuj ją w całości. Wykonuj tylko to, o co prosi użytkownik."
+
+	prompt := "Katalog bazowy: " + req.GetDir() + "\nWejście (JSON):\n" + req.GetPrompt()
+
+	// Wklej aktualną treść plików kontekstu (czytaną przez filer — jedyny z montażem hosta),
+	// żeby LLM modyfikował plik znając jego pełną zawartość (op write = kompletny kod).
+	if files := p.contextFiles(ctx, req.GetPrompt()); files != "" {
+		prompt += files
+	}
 
 	resp, err := p.ai.Generate(ctx, &aiv1.GenerateRequest{
 		System:    system + langInstr(req.GetLang()),
-		Prompt:    "Katalog bazowy: " + req.GetDir() + "\nPolecenie: " + req.GetPrompt(),
+		Prompt:    prompt,
 		MaxTokens: 4096,
 		Dir:       req.GetDir(), // cwd dla Claude headless
+		Session:   req.GetDir(), // conversation scoped per project folder (chat history)
 	})
 
 	if err != nil {

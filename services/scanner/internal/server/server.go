@@ -2,7 +2,10 @@
 package server
 
 import (
+	"context"
+
 	scannerv1 "github.com/filipgorny/ai-architect/proto/scanner/v1"
+	"github.com/filipgorny/ai-architect/services/scanner/internal/links"
 	"github.com/filipgorny/ai-architect/services/scanner/internal/scan"
 )
 
@@ -33,4 +36,23 @@ func (s *Server) ScanApp(req *scannerv1.ScanAppRequest, stream scannerv1.Scanner
 	}
 
 	return s.scanner.ScanAppDir(stream.Context(), req.GetPath(), emit)
+}
+
+// Links analyzes one file and returns its navigable code links (go-to-definition).
+func (s *Server) Links(_ context.Context, req *scannerv1.LinksRequest) (*scannerv1.LinksResponse, error) {
+	found := links.Analyze(req.GetPath(), req.GetContent())
+	out := &scannerv1.LinksResponse{Links: make([]*scannerv1.CodeLink, 0, len(found))}
+
+	for _, l := range found {
+		out.Links = append(out.Links, &scannerv1.CodeLink{
+			FromLine:   l.FromLine,
+			FromCol:    l.FromCol,
+			ToLine:     l.ToLine,
+			ToCol:      l.ToCol,
+			TargetPath: l.TargetPath,
+			TargetLine: l.TargetLine,
+		})
+	}
+
+	return out, nil
 }

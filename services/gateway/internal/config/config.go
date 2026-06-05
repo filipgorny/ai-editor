@@ -15,6 +15,9 @@ type Config struct {
 	EventsAddr    string `yaml:"events_addr"`
 	FilerAddr     string `yaml:"filer_addr"`
 	ScriptingAddr string `yaml:"scripting_addr"`
+	LogsAddr      string `yaml:"logs_addr"`
+	ScannerAddr   string `yaml:"scanner_addr"`
+	GitAddr       string `yaml:"git_addr"`
 }
 
 func Default() Config {
@@ -26,6 +29,9 @@ func Default() Config {
 	c.EventsAddr = "127.0.0.1:50091"
 	c.FilerAddr = "127.0.0.1:50101"
 	c.ScriptingAddr = "127.0.0.1:50111"
+	c.LogsAddr = "127.0.0.1:50121"
+	c.ScannerAddr = "127.0.0.1:50051"
+	c.GitAddr = "127.0.0.1:50131"
 
 	return c
 }
@@ -69,6 +75,18 @@ func Load(path string) (Config, error) {
 
 	if v := os.Getenv("SCRIPTING_ADDR"); v != "" {
 		c.ScriptingAddr = v
+	}
+
+	if v := os.Getenv("LOGS_ADDR"); v != "" {
+		c.LogsAddr = v
+	}
+
+	if v := os.Getenv("SCANNER_ADDR"); v != "" {
+		c.ScannerAddr = v
+	}
+
+	if v := os.Getenv("GIT_ADDR"); v != "" {
+		c.GitAddr = v
 	}
 
 	return c, nil

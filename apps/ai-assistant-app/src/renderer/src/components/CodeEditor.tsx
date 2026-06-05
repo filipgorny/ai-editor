@@ -12,16 +12,23 @@ import styled from 'styled-components'
 import { EditorView, type ReactCodeMirrorRef } from '@uiw/react-codemirror'
 import CodeMirrorEditor from './CodeMirrorEditor'
 import { javascript } from '@codemirror/lang-javascript'
-import { themeExt } from './themes'
+import { themeExt, isRandomTheme, randomThemeName } from './themes'
 import { vim, getCM } from '@replit/codemirror-vim'
 import { Prec } from '@codemirror/state'
 import { ghostField, setGhostRemarks, remarkKey, type Remark } from './reviewGhost'
 import { copilotField, copilotKeymap, setCopilot } from './copilot'
 import { columnRuler } from './ruler'
+import { gotoDefExtension, type GotoCtx } from './gotodef'
+import { rainbowBrackets } from './rainbowBrackets'
+import { reviewField, reviewTheme, setReviewLines } from './reviewDecoration'
 import { relativeToRoot } from '../utils/path'
 import { colors } from '../styles/tokens'
+import { toast } from '../toast'
 
-export type EditorTarget = { path: string; gotoFn?: string }
+export type EditorTarget = { path: string; gotoFn?: string; gotoLine?: number; animate?: boolean }
+
+// Czas animacji pojawiania/znikania okna edytora (opacity 0↔1), w ms.
+export const EDITOR_FADE_MS = 600
 
 // specifierAt zwraca treść stringa w cudzysłowach pod kolumną (np. ścieżka importu).
 function specifierAt(lineText: string, col: number): string | null {
@@ -48,7 +55,15 @@ const editorTheme = Prec.highest(
     '.cm-editor': { height: '100%', minHeight: '100%' },
     '.cm-scroller': { fontFamily: 'Hack, monospace', minHeight: '100%' },
     '.cm-content': { fontFamily: 'Hack, monospace', minHeight: '100%' },
-    '.cm-gutters': { border: 'none', fontFamily: 'Hack, monospace', minHeight: '100%' }
+    '.cm-gutters': { border: 'none', fontFamily: 'Hack, monospace', minHeight: '100%' },
+    // Stała szerokość paska z numerami linii — nie skacze między plikami ani przy
+    // przewijaniu (rezerwuje miejsce na 4 cyfry; rośnie dopiero powyżej 9999 linii).
+    '.cm-lineNumbers .cm-gutterElement': {
+      minWidth: '4ch',
+      boxSizing: 'border-box',
+      padding: '0 8px',
+      textAlign: 'right'
+    }
   })
 )
 
@@ -65,6 +80,7 @@ const Win = styled.div`
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.65);
+  transition: opacity ${EDITOR_FADE_MS}ms ease;
 `
 
 const Header = styled.div`
@@ -157,8 +173,15 @@ export default function CodeEditor({
   onCopilotChange,
   vim: vimMode = true,
   onVimChange,
+  rainbow = true,
   theme = 'Czarny (domyślny)',
-  root = ''
+  root = '',
+  closing = false,
+  review = false,
+  initialSnap = false,
+  onSnapChange,
+  initialGeom,
+  onGeometry
 }: {
   target: EditorTarget | null
   onClose: () => void
@@ -172,22 +195,83 @@ export default function CodeEditor({
   onCopilotChange?: (on: boolean) => void
   vim?: boolean
   onVimChange?: (on: boolean) => void
+  rainbow?: boolean
   theme?: string
   root?: string
+  closing?: boolean
+  // tryb review — maluje tła zmienionych linii (dodane zielone, zmienione żółte)
+  review?: boolean
+  // initialSnap — otwórz okno od razu zesnapowane do obszaru grafu (gdy inny edytor
+  // jest zesnapowany do góry, nowo otwarty plik też ląduje zesnapowany).
+  initialSnap?: boolean
+  // onSnapChange — zgłasza, czy to okno jest zesnapowane do góry (obszar grafu), by host
+  // mógł otwierać kolejne pliki również zesnapowane.
+  onSnapChange?: (snapped: boolean) => void
+  // initialGeom — zapamiętana geometria okna (pozycja/rozmiar/snap/fullscreen) do
+  // odtworzenia po ponownym otwarciu projektu. Pierwszeństwo nad initialSnap/indexem.
+  initialGeom?: { x: number; y: number; w: number; h: number; snapped?: boolean; fullscreen?: boolean }
+  // onGeometry — zgłasza ustaloną geometrię okna (po przeciągnięciu/zmianie rozmiaru/
+  // snapie/fullscreenie), by host mógł ją zapisać per projekt.
+  onGeometry?: (path: string, geom: { x: number; y: number; w: number; h: number; snapped: boolean; fullscreen: boolean }) => void
 }) {
   const { t, i18n } = useTranslation()
-  // default editor window: centered, ~30% narrower than before
-  const [size, setSize] = useState({ w: Math.round(window.innerWidth * 0.5), h: Math.round(window.innerHeight * 0.8) })
-  const [pos, setPos] = useState({
-    x: Math.round((window.innerWidth - window.innerWidth * 0.5) / 2) + index * 30,
-    y: Math.round((window.innerHeight - window.innerHeight * 0.8) / 2) + index * 30
-  })
+  // Fade in on mount (opacity 0→1); `closing` fades back out (1→0) before removal.
+  const [shown, setShown] = useState(false)
+
+  useEffect(() => {
+    const id = window.requestAnimationFrame(() => setShown(true))
+
+    return () => window.cancelAnimationFrame(id)
+  }, [])
+
+  // If opened snapped (because another window is snapped to the top), register this
+  // window's snap with the host so the state survives closing the original.
+  useEffect(() => {
+    if (initialSnap) {
+      onSnapChange?.(true)
+    }
+  }, [])
+  // Initial window layout: restored geometry (reopened project) if present, else centered
+  // (~half width) / filling the graph area when opened snapped (see initialSnap).
+  const [layout] = useState(() =>
+    initialGeom
+      ? { pos: { x: initialGeom.x, y: initialGeom.y }, size: { w: initialGeom.w, h: initialGeom.h } }
+      : initialEditorLayout(!!initialSnap, index)
+  )
+  const [size, setSize] = useState(layout.size)
+  const [pos, setPos] = useState(layout.pos)
+  // Whether this window currently fills the graph area ("top" snap). Reported up so the
+  // host can open the next file snapped too.
+  const snapRef = useRef(!!initialSnap || !!initialGeom?.snapped)
+  // Reaktywny odpowiednik snapRef (do renderu: zesnapowane okno nie ma cienia).
+  const [snapped, setSnapped] = useState(!!initialSnap || !!initialGeom?.snapped)
+  // Rozmiar sprzed snapu do góry — po wyjęciu okna ze snapu wraca do niego (nie zostaje
+  // w rozmiarze sceny). null → użyj domyślnego układu pływającego.
+  const preSnapRef = useRef<{ w: number; h: number } | null>(null)
+
+  // clearSnap drops the top-snap state (e.g. on a manual resize) and notifies the host.
+  const clearSnap = (): void => {
+    if (snapRef.current) {
+      snapRef.current = false
+      setSnapped(false)
+      onSnapChange?.(false)
+    }
+  }
 
   const startDrag = (e: ReactMouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     onActivate?.()
     const start = { mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y, w: size.w, h: size.h }
+    // Snap target: the graph area (right of the file tree, below the toolbar/tabs, above the
+    // agent bar). Captured at drag start; used for the "drag up to fill the graph" snap.
+    const stage = document.getElementById('graph-stage')?.getBoundingClientRect()
+    // Czy przeciąganie kończy się snapem do góry (wypełnia obszar grafu) — zgłaszane
+    // w górę przy puszczeniu, by nowo otwierane pliki mogły się dopasować.
+    let snapped = snapRef.current
+    // Czy okno było zesnapowane już na starcie przeciągania — wtedy wyjęcie go ze snapu
+    // przywraca rozmiar sprzed snapu (a nie zostaje w rozmiarze sceny).
+    const wasSnapped = snapRef.current
 
     const move = (ev: MouseEvent) => {
       // Snap NA ŻYWO tylko przy samej KRAWĘDZI EKRANU (wąska strefa, by nie skakać).
@@ -196,6 +280,22 @@ export default function CodeEditor({
       const usable = window.innerWidth - TREE
       const halfW = Math.round(usable / 2)
       const fullH = window.innerHeight
+
+      // Drag UP over the toolbar → fill the whole graph area (not the tree/toolbar/agent bar).
+      if (stage && ev.clientY <= stage.top + 6) {
+        // wchodząc w snap z rozmiaru pływającego — zapamiętaj go, by móc wrócić
+        if (!wasSnapped) {
+          preSnapRef.current = { w: start.w, h: start.h }
+        }
+
+        snapped = true
+        setPos({ x: Math.round(stage.left), y: Math.round(stage.top) })
+        setSize({ w: Math.round(stage.width), h: Math.round(stage.height) })
+
+        return
+      }
+
+      snapped = false
 
       if (ev.clientX <= SNAP) {
         setPos({ x: TREE, y: 0 }) // lewa połowa zaczyna się przy drzewie plików
@@ -211,7 +311,17 @@ export default function CodeEditor({
         return
       }
 
-      // poza strefą snap — zwykłe przesuwanie, przywróć pierwotny rozmiar
+      // Wyjęcie zesnapowanego okna ze snapu → wróć do rozmiaru sprzed snapu, pod kursorem.
+      if (wasSnapped) {
+        const rs = preSnapRef.current ?? initialEditorLayout(false, index).size
+
+        setSize(rs)
+        setPos({ x: Math.round(ev.clientX - rs.w / 2), y: Math.round(ev.clientY - 12) })
+
+        return
+      }
+
+      // poza strefą snap — zwykłe przesuwanie, zachowaj rozmiar
       setSize({ w: start.w, h: start.h })
       setPos({ x: start.px + ev.clientX - start.mx, y: start.py + ev.clientY - start.my })
     }
@@ -219,6 +329,12 @@ export default function CodeEditor({
     const up = () => {
       window.removeEventListener('mousemove', move)
       window.removeEventListener('mouseup', up)
+
+      if (snapped !== snapRef.current) {
+        snapRef.current = snapped
+        setSnapped(snapped)
+        onSnapChange?.(snapped)
+      }
     }
 
     window.addEventListener('mousemove', move)
@@ -235,6 +351,7 @@ export default function CodeEditor({
       e.preventDefault()
       e.stopPropagation()
       onActivate?.()
+      clearSnap() // ręczna zmiana rozmiaru wyprowadza okno ze snapu do góry
       const s = { mx: e.clientX, my: e.clientY, w: size.w, h: size.h, x: pos.x, y: pos.y }
 
       const move = (ev: MouseEvent) => {
@@ -281,6 +398,7 @@ export default function CodeEditor({
     e.preventDefault()
     e.stopPropagation()
     onActivate?.()
+    clearSnap() // ręczna zmiana rozmiaru wyprowadza okno ze snapu do góry
     const start = { mx: e.clientX, my: e.clientY, w: size.w, h: size.h }
 
     const move = (ev: MouseEvent) => {
@@ -303,7 +421,49 @@ export default function CodeEditor({
   const [loading, setLoading] = useState(false)
   const [prompt, setPrompt] = useState('')
   const [busy, setBusy] = useState(false)
-  const [fullscreen, setFullscreen] = useState(false)
+  const [fullscreen, setFullscreen] = useState(!!initialGeom?.fullscreen)
+
+  // Gdy okno jest zesnapowane do góry (wypełnia obszar grafu), podążaj za zmianą rozmiaru /
+  // maksymalizacją okna głównego — przelicz pozycję i rozmiar do aktualnego #graph-stage.
+  useEffect(() => {
+    const onResize = (): void => {
+      if (!snapRef.current || fullscreen || minimized) {
+        return
+      }
+
+      window.requestAnimationFrame(() => {
+        const stage = document.getElementById('graph-stage')?.getBoundingClientRect()
+
+        if (!stage) {
+          return
+        }
+
+        setPos({ x: Math.round(stage.left), y: Math.round(stage.top) })
+        setSize({ w: Math.round(stage.width), h: Math.round(stage.height) })
+      })
+    }
+
+    window.addEventListener('resize', onResize)
+
+    return () => window.removeEventListener('resize', onResize)
+  }, [fullscreen, minimized])
+
+  // Zgłoś ustaloną geometrię okna do hosta (zapis per projekt). Odroczone, by nie
+  // spamować podczas ciągłego przeciągania/zmiany rozmiaru — zapisujemy stan końcowy.
+  const onGeomRef = useRef(onGeometry)
+  onGeomRef.current = onGeometry
+
+  useEffect(() => {
+    if (!target) {
+      return
+    }
+
+    const id = window.setTimeout(() => {
+      onGeomRef.current?.(target.path, { x: pos.x, y: pos.y, w: size.w, h: size.h, snapped, fullscreen })
+    }, 250)
+
+    return () => window.clearTimeout(id)
+  }, [pos.x, pos.y, size.w, size.h, snapped, fullscreen, target?.path])
   const [model, setModel] = useState('')
   const [saved, setSaved] = useState(false)
   // uwagi ghost: ESLint (żółte/czerwone) + recenzja AI (szare).
@@ -365,6 +525,18 @@ export default function CodeEditor({
   const gotoDefRef = useRef(gotoDef)
   gotoDefRef.current = gotoDef
 
+  // Go-to-definition context (stable ref, read by hover-click and the Vim `gd`): fetch links
+  // from the scanner for this file, and open a resolved target at its definition line.
+  const gotoCtxRef = useRef<GotoCtx | null>(null)
+  gotoCtxRef.current = {
+    fetch: (content) => (target ? window.api.defLinks(target.path, content) : Promise.resolve([])),
+    open: (path, line) => onOpen?.({ path, gotoLine: line })
+  }
+
+  // W trybie „różne" (ciemne/jasne) każde okno losuje własny motyw RAZ (stabilny przez całe
+  // życie okna); zwykły motyw przechodzi bez zmian. Nowo otwarty plik = nowe okno = nowy los.
+  const resolvedTheme = useMemo(() => (isRandomTheme(theme) ? randomThemeName(theme) : theme), [theme])
+
   const extensions = useMemo(
     () => [
       copilotKeymap, // Tab akceptuje podpowiedź Copilota (przed vim)
@@ -391,17 +563,24 @@ export default function CodeEditor({
           }
 
           e.preventDefault()
+          // Stop the click bubbling to the source window's onActivate, so the file we open
+          // becomes (and stays) the active window instead of landing behind this one.
+          e.stopPropagation()
           gotoDefRef.current(spec)
 
           return true
         }
       }),
+      gotoDefExtension(gotoCtxRef),
+      ...(rainbow ? [rainbowBrackets()] : []),
       ghostField,
+      reviewField,
+      reviewTheme,
       columnRuler(80),
-      themeExt(theme),
+      themeExt(resolvedTheme),
       editorTheme
     ],
-    [vimMode, theme]
+    [vimMode, rainbow, resolvedTheme, target?.path]
   )
 
   // Wstrzyknięcie uwag do edytora efektem (bez rekonfiguracji → dymki nie znikają).
@@ -429,9 +608,17 @@ export default function CodeEditor({
     window.api
       .readFile(target.path)
       .then((c) => {
-        setContent(c)
         setOriginal(c)
         setLoading(false)
+
+        // Agent-opened files type their content in live (empty → final).
+        if (target.animate) {
+          setContent('')
+          requestAnimationFrame(() => animateDiff('', c))
+        } else {
+          setContent(c)
+        }
+
         // event: wejście do pliku
         window.api.publishEvent({ type: 'open', title: t('events.open'), file: target.path })
       })
@@ -441,6 +628,43 @@ export default function CodeEditor({
         appBus.emit('editor:load-error', { path: target.path })
       })
   }, [target?.path])
+
+  // Tryb review: pobierz diff pliku (gałąź vs baza) i pomaluj tła linii — dodane
+  // zielonkawo, zmienione żółtawo. Wyłączenie review czyści podświetlenie.
+  useEffect(() => {
+    const view = ref.current?.view
+
+    if (!view || !target) {
+      return
+    }
+
+    if (!review || loading) {
+      view.dispatch({ effects: setReviewLines.of({ added: [], modified: [] }) })
+
+      return
+    }
+
+    let cancelled = false
+
+    window.api
+      .gitFileDiff(root, target.path)
+      .then((d) => {
+        if (cancelled) {
+          return
+        }
+
+        const v = ref.current?.view
+
+        if (v) {
+          v.dispatch({ effects: setReviewLines.of({ added: d?.addedLines ?? [], modified: d?.modifiedLines ?? [] }) })
+        }
+      })
+      .catch(() => undefined)
+
+    return () => {
+      cancelled = true
+    }
+  }, [review, root, target?.path, loading])
 
   // Ctrl/Cmd+S → zapis.
   useEffect(() => {
@@ -546,6 +770,44 @@ export default function CodeEditor({
     }
   }, [content, target?.path, target?.gotoFn])
 
+  // Scroll to a 0-based line (go-to-definition target from the scanner).
+  useEffect(() => {
+    if (target?.gotoLine == null) {
+      return
+    }
+
+    const sig = target.path + '@' + target.gotoLine
+
+    if (scrolledFor.current === sig) {
+      return
+    }
+
+    let cancelled = false
+
+    const timer = window.setTimeout(() => {
+      const view = ref.current?.view
+
+      if (cancelled || !view) {
+        return
+      }
+
+      const idx = Math.min(Math.max(target.gotoLine!, 0), view.state.doc.lines - 1)
+      const line = view.state.doc.line(idx + 1)
+
+      view.dispatch({
+        selection: { anchor: line.from },
+        effects: EditorView.scrollIntoView(line.from, { y: 'start', yMargin: 6 })
+      })
+      view.focus()
+      scrolledFor.current = sig
+    }, 150)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [content, target?.path, target?.gotoLine])
+
   // ESLint: od razu po otwarciu i po każdej edycji (lekki debounce).
   useEffect(() => {
     if (!target) {
@@ -628,10 +890,20 @@ export default function CodeEditor({
         .then((raw) => {
           const vv = ref.current?.view
 
-          // obetnij to, co już jest napisane w bieżącej linii (model lubi powtarzać)
-          const text = stripOverlap(prefix, raw)
+          if (!vv) {
+            return
+          }
 
-          if (vv && vv.state.selection.main.head === p && text && text.trim()) {
+          // Ignore stale responses: only show the ghost if the cursor AND the text before
+          // it are still exactly what we asked about — otherwise a slow, outdated completion
+          // would flash on top of the current one (looks like a doubled suggestion).
+          if (vv.state.selection.main.head !== p || vv.state.doc.sliceString(0, p) !== prefix) {
+            return
+          }
+
+          const text = sanitizeCompletion(prefix, suffix, raw)
+
+          if (text && text.trim()) {
             vv.dispatch({ effects: setCopilot.of({ from: p, text }) })
           }
         })
@@ -767,7 +1039,8 @@ export default function CodeEditor({
   const runAi = async (text?: string) => {
     const ask = (text ?? prompt).trim()
 
-    if (!target || !ask || busy) {
+    // No busy guard: a hung AI call must never trap the prompt field.
+    if (!target || !ask) {
       return
     }
 
@@ -782,7 +1055,11 @@ export default function CodeEditor({
       if (next && next !== before) {
         animateDiff(before, next)
         appBus.emit('editor:ai-edit', { path: target.path })
+      } else {
+        toast.info(t('editor.aiNoChange'))
       }
+    } catch (e) {
+      toast.error(t('agent.error', { message: String((e as Error)?.message || e) }))
     } finally {
       setBusy(false)
     }
@@ -869,8 +1146,17 @@ export default function CodeEditor({
       }}
       style={
         fullscreen
-          ? { left: 0, top: 0, width: '100vw', height: '100vh', borderRadius: 0, zIndex: active ? 1300 : 1200 }
-          : { left: pos.x, top: pos.y, width: size.w, height: size.h, zIndex: active ? 1300 : 1200 }
+          ? { left: 0, top: 0, width: '100vw', height: '100vh', borderRadius: 0, boxShadow: 'none', zIndex: active ? 1300 : 1200, opacity: closing || !shown ? 0 : 1 }
+          : {
+              left: pos.x,
+              top: pos.y,
+              width: size.w,
+              height: size.h,
+              // zesnapowane do obszaru grafu → bez cienia i bez zaokrągleń (wtapia się w tło)
+              ...(snapped ? { boxShadow: 'none', borderRadius: 0 } : null),
+              zIndex: active ? 1300 : 1200,
+              opacity: closing || !shown ? 0 : 1
+            }
       }
     >
       <Header
@@ -896,11 +1182,14 @@ export default function CodeEditor({
           startIcon={<SaveIcon />}
           onClick={save}
           variant={dirty ? 'contained' : 'text'}
-          sx={
-            dirty
+          sx={{
+            // stała szerokość i padding — zmiana wariantu (tło przy dirty) nie zmienia rozmiaru
+            minWidth: 96,
+            px: 2,
+            ...(dirty
               ? { bgcolor: '#da3633', color: '#fff', '&:hover': { bgcolor: '#b62324' } }
-              : { color: '#8b949e' }
-          }
+              : { color: '#8b949e' })
+          }}
         >
           {t('editor.save')}
         </Button>
@@ -954,31 +1243,6 @@ export default function CodeEditor({
         )}
       </EditorWrap>
 
-      <PromptBar>
-        <PromptInput
-          rows={2}
-          className={busy ? 'ai-thinking' : undefined}
-          style={{ ['--ai-accent' as string]: colors.controller }}
-          placeholder={t('agent.placeholderEditor')}
-          value={prompt}
-          disabled={busy}
-          onChange={(e) => setPrompt(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault()
-              runAi()
-            }
-          }}
-        />
-        <Button variant="contained" size="small" onClick={() => runAi()} disabled={busy} sx={{ minWidth: 96 }}>
-          {busy ? (
-            <CircularProgress size={16} color="inherit" />
-          ) : (
-            (model.includes(':') ? model.slice(model.indexOf(':') + 1) : model) || t('agent.send')
-          )}
-        </Button>
-      </PromptBar>
-
       {!fullscreen && (
         <>
           <div onMouseDown={startEdge({ top: true })} style={{ position: 'absolute', top: 0, left: 12, right: 12, height: 6, cursor: 'ns-resize', zIndex: 10 }} />
@@ -1020,6 +1284,30 @@ function findFunctionLine(content: string, fn: string): number {
   return -1
 }
 
+// sanitizeCompletion cleans a raw model completion before showing it as ghost text:
+// it trims what the model re-typed from the current line, drops a tail that just repeats
+// the rest of the line after the cursor, and collapses a wholesale doubled suggestion —
+// all of which otherwise show up as a duplicated suggestion.
+function sanitizeCompletion(prefix: string, suffix: string, raw: string): string {
+  let text = stripOverlap(prefix, raw)
+
+  // The model re-emitted the rest of the current line after the cursor — drop the echo.
+  const suffixLine = suffix.split('\n', 1)[0]
+
+  if (suffixLine && text.length > suffixLine.length && text.endsWith(suffixLine)) {
+    text = text.slice(0, text.length - suffixLine.length)
+  }
+
+  // Some local models emit the completion twice back-to-back — collapse "XX" → "X".
+  const half = text.length / 2
+
+  if (Number.isInteger(half) && half >= 4 && /\w/.test(text) && text.slice(0, half) === text.slice(half)) {
+    text = text.slice(0, half)
+  }
+
+  return text
+}
+
 // stripOverlap usuwa z początku podpowiedzi tekst, który już jest w bieżącej linii
 // (model często powtarza, np. po „import" zwraca „import …").
 function stripOverlap(before: string, sugg: string): string {
@@ -1037,4 +1325,35 @@ function stripOverlap(before: string, sugg: string): string {
 
 function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// initialEditorLayout computes a new editor window's starting position/size. With
+// `snap`, it opens filling the graph-stage area (matching the top-snap), so a file
+// opened while another editor is snapped to the top lands snapped too; otherwise it
+// opens centered at ~half width, fanned out by index.
+function initialEditorLayout(
+  snap: boolean,
+  index: number
+): { pos: { x: number; y: number }; size: { w: number; h: number } } {
+  if (snap) {
+    const stage = document.getElementById('graph-stage')?.getBoundingClientRect()
+
+    if (stage) {
+      return {
+        pos: { x: Math.round(stage.left), y: Math.round(stage.top) },
+        size: { w: Math.round(stage.width), h: Math.round(stage.height) }
+      }
+    }
+  }
+
+  const w = Math.round(window.innerWidth * 0.5)
+  const h = Math.round(window.innerHeight * 0.8)
+
+  return {
+    pos: {
+      x: Math.round((window.innerWidth - w) / 2) + index * 30,
+      y: Math.round((window.innerHeight - h) / 2) + index * 30
+    },
+    size: { w, h }
+  }
 }

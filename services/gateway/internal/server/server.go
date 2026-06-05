@@ -15,11 +15,15 @@ import (
 	eventsv1 "github.com/filipgorny/ai-architect/proto/events/v1"
 	filerv1 "github.com/filipgorny/ai-architect/proto/filer/v1"
 	gatewayv1 "github.com/filipgorny/ai-architect/proto/gateway/v1"
+	gitv1 "github.com/filipgorny/ai-architect/proto/git/v1"
+	logsv1 "github.com/filipgorny/ai-architect/proto/logs/v1"
+	scannerv1 "github.com/filipgorny/ai-architect/proto/scanner/v1"
 	scriptingv1 "github.com/filipgorny/ai-architect/proto/scripting/v1"
 )
 
-// Proxy to jedyny punkt wejścia dla Electrona — przekazuje do designera (graf),
-// ai (LLM), events (Redis), filer (operacje na plikach) i scripting (skrypty w Postgresie).
+// Proxy to jedyny punkt wejścia dla Electrona — przekazuje do designera (graf), ai (LLM),
+// events (Redis), filer (operacje na plikach), scripting (skrypty), logs (Postgres) oraz
+// scanner (analiza kodu: go-to-definition).
 type Proxy struct {
 	gatewayv1.UnimplementedGatewayServer
 
@@ -28,6 +32,9 @@ type Proxy struct {
 	events    eventsv1.EventsClient
 	filer     filerv1.FilerClient
 	scripting scriptingv1.ScriptingClient
+	logs      logsv1.LogsClient
+	scanner   scannerv1.ScannerClient
+	git       gitv1.GitClient
 }
 
 func New(
@@ -36,8 +43,20 @@ func New(
 	events eventsv1.EventsClient,
 	filer filerv1.FilerClient,
 	scripting scriptingv1.ScriptingClient,
+	logs logsv1.LogsClient,
+	scanner scannerv1.ScannerClient,
+	git gitv1.GitClient,
 ) *Proxy {
-	return &Proxy{client: client, ai: ai, events: events, filer: filer, scripting: scripting}
+	return &Proxy{
+		client:    client,
+		ai:        ai,
+		events:    events,
+		filer:     filer,
+		scripting: scripting,
+		logs:      logs,
+		scanner:   scanner,
+		git:       git,
+	}
 }
 
 var fence = regexp.MustCompile("(?s)^```[a-zA-Z]*\n(.*?)\n```\\s*$")
@@ -155,6 +174,26 @@ func (p *Proxy) AiSetProvider(ctx context.Context, req *gatewayv1.AiProviderRequ
 	}
 
 	return &gatewayv1.AiModelResponse{Name: resp.GetName()}, nil
+}
+
+func (p *Proxy) AiSetClaudeToken(ctx context.Context, req *gatewayv1.AiClaudeTokenRequest) (*gatewayv1.AiClaudeTokenStatus, error) {
+	resp, err := p.ai.SetClaudeToken(ctx, &aiv1.SetClaudeTokenRequest{Token: req.GetToken()})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &gatewayv1.AiClaudeTokenStatus{HasToken: resp.GetHasToken()}, nil
+}
+
+func (p *Proxy) AiClaudeStatus(ctx context.Context, _ *gatewayv1.Empty) (*gatewayv1.AiClaudeTokenStatus, error) {
+	resp, err := p.ai.ClaudeStatus(ctx, &aiv1.ClaudeStatusRequest{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &gatewayv1.AiClaudeTokenStatus{HasToken: resp.GetHasToken()}, nil
 }
 
 func (p *Proxy) PublishEvent(ctx context.Context, in *gatewayv1.EventInput) (*gatewayv1.Event, error) {

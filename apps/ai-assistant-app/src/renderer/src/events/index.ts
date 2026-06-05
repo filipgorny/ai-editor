@@ -1,6 +1,8 @@
 export { appBus } from './bus'
 export type { AppEventMap, AppEventName, KeyEvent } from './bus'
 export { installKeyEvents, normCombo, bindCombo, clearBoundCombos } from './keys'
+export { logBus, installConsoleCapture, installLogPersist, installErrorCapture } from './logs'
+export type { LogEntry, LogLevel } from './logs'
 
 import { appBus } from './bus'
 

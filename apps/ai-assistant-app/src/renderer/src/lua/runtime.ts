@@ -22,11 +22,21 @@ let enginePromise: Promise<LuaEngine> | null = null
 // Every appBus subscription a script makes, so disposeLua() can detach them all.
 const unsubscribers: Array<() => void> = []
 
+// One factory shared by the run engine and the validator engine (so the wasm loads once).
+let factory: LuaFactory | null = null
+
+function getFactory(): LuaFactory {
+  if (!factory) {
+    factory = new LuaFactory(glueWasmUrl)
+  }
+
+  return factory
+}
+
 async function getEngine(): Promise<LuaEngine> {
   if (!enginePromise) {
     enginePromise = (async () => {
-      const factory = new LuaFactory(glueWasmUrl)
-      const lua = await factory.createEngine()
+      const lua = await getFactory().createEngine()
 
       installBridge(lua)
 
@@ -35,6 +45,40 @@ async function getEngine(): Promise<LuaEngine> {
   }
 
   return enginePromise
+}
+
+// A separate engine used ONLY to compile (not run) scripts for validation, so it never touches
+// the live script state.
+let validatorPromise: Promise<LuaEngine> | null = null
+
+async function getValidator(): Promise<LuaEngine> {
+  if (!validatorPromise) {
+    validatorPromise = getFactory().createEngine()
+  }
+
+  return validatorPromise
+}
+
+// validateLua compiles the source with Lua `load` (no execution). Returns the first syntax error
+// (1-based line + message), or null when the code is valid.
+export async function validateLua(code: string): Promise<{ line: number; message: string } | null> {
+  if (!code.trim()) {
+    return null
+  }
+
+  const lua = await getValidator()
+
+  lua.global.set('__src', code)
+  const err = await lua.doString('local f, e = load(__src, "=script"); if f then return nil end; return e')
+
+  if (!err) {
+    return null
+  }
+
+  // Lua errors look like:  script:3: '=' expected near 'foo'
+  const m = String(err).match(/:(\d+):\s*([\s\S]*)$/)
+
+  return { line: m ? parseInt(m[1], 10) : 1, message: (m ? m[2] : String(err)).trim() }
 }
 
 // installBridge exposes the script API as Lua globals. JS values passed into a Lua callback are
@@ -88,7 +132,12 @@ function installBridge(lua: LuaEngine): void {
     appBus.emit(name as AppEventName, (payload ?? {}) as never)
   )
 
-  g.set('log', (...args: unknown[]) => console.info('[lua]', ...args))
+  // console.info is mirrored into the Logs window by installConsoleCapture().
+  g.set('log', (...args: unknown[]) => {
+    const msg = args.map((a) => (a !== null && typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ')
+
+    console.info('[lua]', msg)
+  })
 
   // register("hr", fn, "summary") — define a new Commander command backed by a Lua function.
   g.set('register', (name: string, fn: (arg: string) => unknown, summary?: string) => {

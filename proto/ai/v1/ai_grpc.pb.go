@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             v7.34.1
-// source: ai/v1/ai.proto
+// source: proto/ai/v1/ai.proto
 
 package aiv1
 
@@ -19,10 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Ai_Ask_FullMethodName         = "/ai.v1.Ai/Ask"
-	Ai_Generate_FullMethodName    = "/ai.v1.Ai/Generate"
-	Ai_Model_FullMethodName       = "/ai.v1.Ai/Model"
-	Ai_SetProvider_FullMethodName = "/ai.v1.Ai/SetProvider"
+	Ai_Ask_FullMethodName            = "/ai.v1.Ai/Ask"
+	Ai_Generate_FullMethodName       = "/ai.v1.Ai/Generate"
+	Ai_Model_FullMethodName          = "/ai.v1.Ai/Model"
+	Ai_SetProvider_FullMethodName    = "/ai.v1.Ai/SetProvider"
+	Ai_SetClaudeToken_FullMethodName = "/ai.v1.Ai/SetClaudeToken"
+	Ai_ClaudeStatus_FullMethodName   = "/ai.v1.Ai/ClaudeStatus"
 )
 
 // AiClient is the client API for Ai service.
@@ -32,8 +34,10 @@ const (
 // Ai to agent ze skillami (czytanie pliku, sprawdzanie eventów). PLANUJE przed
 // wykonaniem, a postęp (plan, użyte narzędzia, odpowiedź) strumieniuje.
 type AiClient interface {
-	// Ask to agent ze skillami i planowaniem (streaming).
-	Ask(ctx context.Context, in *AskRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AskEvent], error)
+	// Ask to agent ze skillami — DWUKIERUNKOWY stream. Aplikacja wysyła start (zadanie +
+	// kontekst) oraz odpowiedzi na żądania skilli; serwer strumieniuje plan, użyte narzędzia,
+	// żądania skilli (read_file/list_dir/get_graph wykonywane przez aplikację) i odpowiedź.
+	Ask(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[AskClientMsg, AskEvent], error)
 	// Generate to proste wywołanie LLM — wszystko inne (np. opis plików w
 	// scannerze) idzie przez ten serwis, by LLM był w jednym miejscu.
 	Generate(ctx context.Context, in *GenerateRequest, opts ...grpc.CallOption) (*GenerateResponse, error)
@@ -41,6 +45,11 @@ type AiClient interface {
 	Model(ctx context.Context, in *ModelRequest, opts ...grpc.CallOption) (*ModelResponse, error)
 	// SetProvider podmienia dostawcę LLM w locie (np. ollama → claude headless).
 	SetProvider(ctx context.Context, in *SetProviderRequest, opts ...grpc.CallOption) (*ModelResponse, error)
+	// SetClaudeToken zapisuje długoterminowy token OAuth (claude setup-token) używany
+	// przez `claude -p` w trybie headless. Serwis persystuje go u siebie (wolumen).
+	SetClaudeToken(ctx context.Context, in *SetClaudeTokenRequest, opts ...grpc.CallOption) (*ClaudeTokenStatus, error)
+	// ClaudeStatus mówi, czy serwis ma zapisany token Claude (do bramki logowania w UI).
+	ClaudeStatus(ctx context.Context, in *ClaudeStatusRequest, opts ...grpc.CallOption) (*ClaudeTokenStatus, error)
 }
 
 type aiClient struct {
@@ -51,24 +60,18 @@ func NewAiClient(cc grpc.ClientConnInterface) AiClient {
 	return &aiClient{cc}
 }
 
-func (c *aiClient) Ask(ctx context.Context, in *AskRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AskEvent], error) {
+func (c *aiClient) Ask(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[AskClientMsg, AskEvent], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &Ai_ServiceDesc.Streams[0], Ai_Ask_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[AskRequest, AskEvent]{ClientStream: stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
+	x := &grpc.GenericClientStream[AskClientMsg, AskEvent]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Ai_AskClient = grpc.ServerStreamingClient[AskEvent]
+type Ai_AskClient = grpc.BidiStreamingClient[AskClientMsg, AskEvent]
 
 func (c *aiClient) Generate(ctx context.Context, in *GenerateRequest, opts ...grpc.CallOption) (*GenerateResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -100,6 +103,26 @@ func (c *aiClient) SetProvider(ctx context.Context, in *SetProviderRequest, opts
 	return out, nil
 }
 
+func (c *aiClient) SetClaudeToken(ctx context.Context, in *SetClaudeTokenRequest, opts ...grpc.CallOption) (*ClaudeTokenStatus, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ClaudeTokenStatus)
+	err := c.cc.Invoke(ctx, Ai_SetClaudeToken_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aiClient) ClaudeStatus(ctx context.Context, in *ClaudeStatusRequest, opts ...grpc.CallOption) (*ClaudeTokenStatus, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ClaudeTokenStatus)
+	err := c.cc.Invoke(ctx, Ai_ClaudeStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AiServer is the server API for Ai service.
 // All implementations must embed UnimplementedAiServer
 // for forward compatibility.
@@ -107,8 +130,10 @@ func (c *aiClient) SetProvider(ctx context.Context, in *SetProviderRequest, opts
 // Ai to agent ze skillami (czytanie pliku, sprawdzanie eventów). PLANUJE przed
 // wykonaniem, a postęp (plan, użyte narzędzia, odpowiedź) strumieniuje.
 type AiServer interface {
-	// Ask to agent ze skillami i planowaniem (streaming).
-	Ask(*AskRequest, grpc.ServerStreamingServer[AskEvent]) error
+	// Ask to agent ze skillami — DWUKIERUNKOWY stream. Aplikacja wysyła start (zadanie +
+	// kontekst) oraz odpowiedzi na żądania skilli; serwer strumieniuje plan, użyte narzędzia,
+	// żądania skilli (read_file/list_dir/get_graph wykonywane przez aplikację) i odpowiedź.
+	Ask(grpc.BidiStreamingServer[AskClientMsg, AskEvent]) error
 	// Generate to proste wywołanie LLM — wszystko inne (np. opis plików w
 	// scannerze) idzie przez ten serwis, by LLM był w jednym miejscu.
 	Generate(context.Context, *GenerateRequest) (*GenerateResponse, error)
@@ -116,6 +141,11 @@ type AiServer interface {
 	Model(context.Context, *ModelRequest) (*ModelResponse, error)
 	// SetProvider podmienia dostawcę LLM w locie (np. ollama → claude headless).
 	SetProvider(context.Context, *SetProviderRequest) (*ModelResponse, error)
+	// SetClaudeToken zapisuje długoterminowy token OAuth (claude setup-token) używany
+	// przez `claude -p` w trybie headless. Serwis persystuje go u siebie (wolumen).
+	SetClaudeToken(context.Context, *SetClaudeTokenRequest) (*ClaudeTokenStatus, error)
+	// ClaudeStatus mówi, czy serwis ma zapisany token Claude (do bramki logowania w UI).
+	ClaudeStatus(context.Context, *ClaudeStatusRequest) (*ClaudeTokenStatus, error)
 	mustEmbedUnimplementedAiServer()
 }
 
@@ -126,7 +156,7 @@ type AiServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAiServer struct{}
 
-func (UnimplementedAiServer) Ask(*AskRequest, grpc.ServerStreamingServer[AskEvent]) error {
+func (UnimplementedAiServer) Ask(grpc.BidiStreamingServer[AskClientMsg, AskEvent]) error {
 	return status.Error(codes.Unimplemented, "method Ask not implemented")
 }
 func (UnimplementedAiServer) Generate(context.Context, *GenerateRequest) (*GenerateResponse, error) {
@@ -137,6 +167,12 @@ func (UnimplementedAiServer) Model(context.Context, *ModelRequest) (*ModelRespon
 }
 func (UnimplementedAiServer) SetProvider(context.Context, *SetProviderRequest) (*ModelResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SetProvider not implemented")
+}
+func (UnimplementedAiServer) SetClaudeToken(context.Context, *SetClaudeTokenRequest) (*ClaudeTokenStatus, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetClaudeToken not implemented")
+}
+func (UnimplementedAiServer) ClaudeStatus(context.Context, *ClaudeStatusRequest) (*ClaudeTokenStatus, error) {
+	return nil, status.Error(codes.Unimplemented, "method ClaudeStatus not implemented")
 }
 func (UnimplementedAiServer) mustEmbedUnimplementedAiServer() {}
 func (UnimplementedAiServer) testEmbeddedByValue()            {}
@@ -160,15 +196,11 @@ func RegisterAiServer(s grpc.ServiceRegistrar, srv AiServer) {
 }
 
 func _Ai_Ask_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(AskRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(AiServer).Ask(m, &grpc.GenericServerStream[AskRequest, AskEvent]{ServerStream: stream})
+	return srv.(AiServer).Ask(&grpc.GenericServerStream[AskClientMsg, AskEvent]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Ai_AskServer = grpc.ServerStreamingServer[AskEvent]
+type Ai_AskServer = grpc.BidiStreamingServer[AskClientMsg, AskEvent]
 
 func _Ai_Generate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GenerateRequest)
@@ -224,6 +256,42 @@ func _Ai_SetProvider_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Ai_SetClaudeToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetClaudeTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AiServer).SetClaudeToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Ai_SetClaudeToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AiServer).SetClaudeToken(ctx, req.(*SetClaudeTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ai_ClaudeStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClaudeStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AiServer).ClaudeStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Ai_ClaudeStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AiServer).ClaudeStatus(ctx, req.(*ClaudeStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Ai_ServiceDesc is the grpc.ServiceDesc for Ai service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -243,13 +311,22 @@ var Ai_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "SetProvider",
 			Handler:    _Ai_SetProvider_Handler,
 		},
+		{
+			MethodName: "SetClaudeToken",
+			Handler:    _Ai_SetClaudeToken_Handler,
+		},
+		{
+			MethodName: "ClaudeStatus",
+			Handler:    _Ai_ClaudeStatus_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "Ask",
 			Handler:       _Ai_Ask_Handler,
 			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
-	Metadata: "ai/v1/ai.proto",
+	Metadata: "proto/ai/v1/ai.proto",
 }

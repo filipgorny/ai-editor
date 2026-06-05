@@ -3,14 +3,22 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "predev": "docker compose up -d postgres redis",
-    "dev": "concurrently -k -n events,ai,filer,scanner,designer,scripting,gateway,app -c gray,blue,red,magenta,yellow,white,cyan,green \"pnpm run dev:events\" \"pnpm run dev:ai\" \"pnpm run dev:filer\" \"pnpm run dev:scanner\" \"pnpm run dev:designer\" \"pnpm run dev:scripting\" \"pnpm run dev:gateway\" \"pnpm run dev:app\"",
+    "predev": "docker compose -f docker-compose.yml -f docker-compose.dev.yaml up -d --build",
+    "dev": "pnpm run dev:app",
+    "down": "docker compose -f docker-compose.yml -f docker-compose.dev.yaml down",
+    "restart": "docker compose -f docker-compose.yml -f docker-compose.dev.yaml up -d --build",
+    "logs": "docker compose -f docker-compose.yml -f docker-compose.dev.yaml logs -f",
+    "up:prod": "docker compose -f docker-compose.yml up -d --build",
+    "predev:native": "docker compose up -d postgres redis",
+    "dev:native": "concurrently -k -n events,ai,filer,scanner,designer,scripting,logs,git,gateway,app -c gray,blue,red,magenta,yellow,white,grey,greenBright,cyan,green \"pnpm run dev:events\" \"pnpm run dev:ai\" \"pnpm run dev:filer\" \"pnpm run dev:scanner\" \"pnpm run dev:designer\" \"pnpm run dev:scripting\" \"pnpm run dev:logs\" \"pnpm run dev:git\" \"pnpm run dev:gateway\" \"pnpm run dev:app\"",
     "dev:events": "nodemon --quiet --watch services/events --watch proto --ext go --signal SIGTERM --exec \"go run ./services/events/cmd/events\"",
     "dev:filer": "nodemon --quiet --watch services/filer --watch proto --ext go --signal SIGTERM --exec \"go run ./services/filer/cmd/filer\"",
     "dev:ai": "nodemon --quiet --watch services/ai --watch proto --watch llm --ext go --signal SIGTERM --exec \"go run ./services/ai/cmd/ai\"",
     "dev:scanner": "nodemon --quiet --watch services/scanner --watch plugins --watch proto --ext go --signal SIGTERM --exec \"go run ./services/scanner/cmd/scanner\"",
     "dev:designer": "nodemon --quiet --watch services/designer --watch proto --ext go --signal SIGTERM --exec \"go run ./services/designer/cmd/designer\"",
     "dev:scripting": "nodemon --quiet --watch services/scripting --watch proto --ext go --signal SIGTERM --exec \"go run ./services/scripting/cmd/scripting\"",
+    "dev:logs": "nodemon --quiet --watch services/logs --watch proto --ext go --signal SIGTERM --exec \"go run ./services/logs/cmd/logs\"",
+    "dev:git": "nodemon --quiet --watch services/git --watch proto --ext go --signal SIGTERM --exec \"go run ./services/git/cmd/git\"",
     "dev:gateway": "nodemon --quiet --watch services/gateway --watch proto --ext go --signal SIGTERM --exec \"go run ./services/gateway/cmd/gateway\"",
     "dev:app": "pnpm --filter @ai-architect/assistant-app dev"
   },
@@ -19,6 +27,6 @@
     "nodemon": "^3.1.9"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["electron", "esbuild", "@parcel/watcher", "protobufjs"]
+    "onlyBuiltDependencies": ["electron", "esbuild", "@parcel/watcher", "protobufjs", "better-sqlite3"]
   }
 }
