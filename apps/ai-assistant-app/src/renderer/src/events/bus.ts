@@ -5,6 +5,10 @@
 // scripts) can react to them without tight coupling. The bus is exposed globally as
 // window.appBus — the hook point for scripts.
 
+// ViewKey is type-only (a string-literal union) — importing it here does not create a
+// runtime cycle with views/types.ts (which type-imports appBus back).
+import type { ViewKey } from '../views/types'
+
 // AppEventMap — the event catalog: name → payload shape. Source of truth for EVENTS.md.
 export type AppEventMap = {
   // — Project / scanning —
@@ -62,6 +66,35 @@ export type AppEventMap = {
   // — Commander (see COMMANDS.md) —
   'command:run': { name: string; arg: string }
   'command:error': { name: string; arg: string; message: string }
+
+  // — Multi-view shell (see VIEWS / the view registry) —
+  // App switched the active view (ALT+n, Shift+Tab, rail click). Views subscribe to know
+  // when they become active.
+  'view:change': { from: ViewKey | null; to: ViewKey }
+  // Any component asks App to switch views (deep-link / 'open in editor'); App is the only
+  // listener that mutates the active view.
+  'view:request': { to: ViewKey }
+
+  // — AI prompt area —
+  // Escape pressed anywhere: focus the bottom AI prompt textarea. AgentBar subscribes.
+  'ai:focus': { source?: string }
+  // A vim ':' command-line was submitted from the AI area; Commander/vim handles it, it is
+  // NOT sent to the LLM. Commander subscribes and sets handled=true when consumed.
+  'ai:command': { text: string; handled: boolean }
+
+  // — Telescope finder (Esc+Space) —
+  'telescope:open': Record<string, never>
+  'telescope:pick': { absPath: string; line?: number }
+
+  // — Editor window navigation (ALT+arrow / mouse back-forward in the editor view) —
+  'editor:nav': { dir: 'prev' | 'next' }
+
+  // — Tasks / stats / terminal / browser / deployment views —
+  'tasks:active-change': { id: number; title: string; branch?: string }
+  'stats:change': { keystrokes: number; lines: number; tasks: number }
+  'terminal:title': { id: string; title: string }
+  'browser:navigate': { id: string; url: string }
+  'deployment:dirty': { changed: boolean }
 
   // — Keyboard (see keys.ts / SCRIPTING.md). 'key:<combo>' variants are emitted dynamically. —
   key: KeyEvent

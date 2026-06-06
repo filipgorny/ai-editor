@@ -62,6 +62,9 @@ function open() {
     d.exec(
       "CREATE TABLE IF NOT EXISTS app_state (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL)"
     );
+    d.exec(
+      'CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, description TEXT NOT NULL DEFAULT "", status TEXT NOT NULL DEFAULT "todo", jira_key TEXT NOT NULL DEFAULT "", branch TEXT NOT NULL DEFAULT "", active INTEGER NOT NULL DEFAULT 0, project TEXT NOT NULL DEFAULT "", created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)'
+    );
     db = d;
   } catch (e) {
     console.error("[db] better-sqlite3 niedostępny — fallback do electron-store:", e.message);
@@ -102,6 +105,154 @@ function kvSet(key, value) {
     return;
   }
   store$1().set(key, value);
+}
+function rowToTask(r) {
+  return {
+    id: r.id,
+    title: r.title,
+    description: r.description,
+    status: r.status || "todo",
+    jiraKey: r.jira_key || void 0,
+    branch: r.branch || void 0,
+    active: !!r.active,
+    project: r.project,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at
+  };
+}
+function fallbackTasks() {
+  return kvGet("tasks:all") ?? [];
+}
+function setFallbackTasks(list) {
+  kvSet("tasks:all", list);
+}
+function tasksList(project) {
+  const d = open();
+  if (d) {
+    const rows = project ? d.prepare("SELECT * FROM tasks WHERE project = ? ORDER BY id DESC").all(project) : d.prepare("SELECT * FROM tasks ORDER BY id DESC").all();
+    return rows.map(rowToTask);
+  }
+  const all = fallbackTasks();
+  return all.filter((t) => !project || t.project === project).sort((a, b) => b.id - a.id);
+}
+function tasksSave(t) {
+  const now = Date.now();
+  const d = open();
+  if (d) {
+    if (t.id) {
+      d.prepare(
+        "UPDATE tasks SET title = ?, description = ?, status = ?, jira_key = ?, branch = ?, project = ?, updated_at = ? WHERE id = ?"
+      ).run(t.title, t.description ?? "", t.status ?? "todo", t.jiraKey ?? "", t.branch ?? "", t.project, now, t.id);
+      const row2 = d.prepare("SELECT * FROM tasks WHERE id = ?").get(t.id);
+      return rowToTask(row2);
+    }
+    const res = d.prepare(
+      "INSERT INTO tasks (title, description, status, jira_key, branch, active, project, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)"
+    ).run(t.title, t.description ?? "", t.status ?? "todo", t.jiraKey ?? "", t.branch ?? "", t.project, now, now);
+    const row = d.prepare("SELECT * FROM tasks WHERE id = ?").get(Number(res.lastInsertRowid));
+    return rowToTask(row);
+  }
+  const all = fallbackTasks();
+  if (t.id) {
+    const idx = all.findIndex((x) => x.id === t.id);
+    if (idx >= 0) {
+      const merged = {
+        ...all[idx],
+        title: t.title,
+        description: t.description ?? "",
+        status: t.status ?? all[idx].status,
+        jiraKey: t.jiraKey,
+        branch: t.branch,
+        project: t.project,
+        updatedAt: now
+      };
+      all[idx] = merged;
+      setFallbackTasks(all);
+      return merged;
+    }
+  }
+  const nextId = all.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+  const created = {
+    id: nextId,
+    title: t.title,
+    description: t.description ?? "",
+    status: t.status ?? "todo",
+    jiraKey: t.jiraKey,
+    branch: t.branch,
+    active: false,
+    project: t.project,
+    createdAt: now,
+    updatedAt: now
+  };
+  all.push(created);
+  setFallbackTasks(all);
+  return created;
+}
+function tasksDelete(id) {
+  const d = open();
+  if (d) {
+    const res = d.prepare("DELETE FROM tasks WHERE id = ?").run(id);
+    return res.changes > 0;
+  }
+  const all = fallbackTasks();
+  const next = all.filter((t) => t.id !== id);
+  setFallbackTasks(next);
+  return next.length !== all.length;
+}
+function tasksSetActive(id) {
+  const now = Date.now();
+  const d = open();
+  if (d) {
+    const tx = d.transaction(() => {
+      d.prepare("UPDATE tasks SET active = 0, updated_at = ? WHERE active = 1").run(now);
+      d.prepare("UPDATE tasks SET active = 1, updated_at = ? WHERE id = ?").run(now, id);
+    });
+    tx();
+    const row = d.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
+    return rowToTask(row);
+  }
+  const all = fallbackTasks();
+  let found = null;
+  for (const t of all) {
+    const active = t.id === id;
+    if (t.active !== active) {
+      t.active = active;
+      t.updatedAt = now;
+    }
+    if (active) {
+      found = t;
+    }
+  }
+  setFallbackTasks(all);
+  return found ?? tasksList("")[0];
+}
+function jiraGetConfig() {
+  return kvGet("jira:config");
+}
+function jiraSetConfig(cfg) {
+  kvSet("jira:config", cfg);
+}
+function todayKey() {
+  return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+}
+function freshStats() {
+  return { keystrokes: 0, lines: 0, tasks: 0, day: todayKey() };
+}
+function statsGet() {
+  const cur = kvGet("stats:daily");
+  const today = todayKey();
+  if (!cur || cur.day !== today) {
+    const next = freshStats();
+    kvSet("stats:daily", next);
+    return next;
+  }
+  return cur;
+}
+function statsBump(field, by = 1) {
+  const cur = statsGet();
+  const next = { ...cur, [field]: cur[field] + by };
+  kvSet("stats:daily", next);
+  return next;
 }
 electron.app.setName("Blink");
 electron.app.commandLine.appendSwitch("class", "Blink");
@@ -271,7 +422,10 @@ function createWindow() {
     icon: path.join(electron.app.getAppPath(), "build", "icon.png"),
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.js"),
-      sandbox: false
+      sandbox: false,
+      // Enable <webview> for the in-app web browser view (view 7). The renderer still
+      // gates whether webviews are created via browserSetEnabled.
+      webviewTag: true
     }
   });
   if (saved?.maximized) {
@@ -315,8 +469,268 @@ function createWindow() {
   });
   return win;
 }
+let ptyModule;
+function loadPty() {
+  if (ptyModule !== void 0) {
+    return ptyModule;
+  }
+  try {
+    ptyModule = require("node-pty");
+  } catch (e) {
+    console.error("[pty] node-pty unavailable:", e.message);
+    ptyModule = null;
+  }
+  return ptyModule ?? null;
+}
+const ptys = /* @__PURE__ */ new Map();
+function defaultShell() {
+  if (process.platform === "win32") {
+    return process.env.COMSPEC || "cmd.exe";
+  }
+  return process.env.SHELL || "/bin/bash";
+}
+function normalizeUrl(raw) {
+  const s = raw.trim();
+  if (!s) {
+    return "";
+  }
+  if (/^https?:\/\//i.test(s)) {
+    return s;
+  }
+  if (/^[\w-]+(\.[\w-]+)+(\/|$|:)/.test(s) || s === "localhost" || s.startsWith("localhost:")) {
+    return "https://" + s;
+  }
+  return "https://duckduckgo.com/?q=" + encodeURIComponent(s);
+}
+function browserHistoryKey(id) {
+  return "browser:history:" + id;
+}
+function pushBrowserHistory(id, url) {
+  const list = kvGet(browserHistoryKey(id)) ?? [];
+  list.push({ url, title: "", ts: Date.now() });
+  kvSet(browserHistoryKey(id), list.slice(-200));
+}
+const TELESCOPE_SKIP = /* @__PURE__ */ new Set(["node_modules", ".git", "dist", "out", ".next", "build", ".cache", "vendor", "target"]);
+function hasRipgrep() {
+  return new Promise((resolve) => {
+    child_process.execFile("rg", ["--version"], { timeout: 3e3 }, (err) => resolve(!err));
+  });
+}
+async function walkFiles(root, cap) {
+  const out = [];
+  const walk = async (dir) => {
+    if (out.length >= cap) {
+      return;
+    }
+    let entries;
+    try {
+      entries = await promises.readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const e of entries) {
+      if (out.length >= cap) {
+        return;
+      }
+      if (e.name.startsWith(".") && e.name !== ".env") ;
+      if (e.isDirectory()) {
+        if (!TELESCOPE_SKIP.has(e.name) && !e.name.startsWith(".")) {
+          await walk(path.join(dir, e.name));
+        }
+      } else if (e.isFile()) {
+        out.push(path.join(dir, e.name));
+      }
+    }
+  };
+  await walk(root);
+  return out;
+}
+function telescopeRgContent(query, root, limit) {
+  return new Promise((resolve) => {
+    const args = [
+      "--vimgrep",
+      "--no-heading",
+      "--smart-case",
+      "--max-count",
+      "5",
+      "-g",
+      "!node_modules",
+      "-g",
+      "!.git",
+      "-g",
+      "!dist",
+      "-g",
+      "!out",
+      query,
+      root
+    ];
+    child_process.execFile("rg", args, { timeout: 8e3, maxBuffer: 8 * 1024 * 1024 }, (_err, stdout) => {
+      const hits = [];
+      const lines = (stdout || "").split("\n");
+      for (const raw of lines) {
+        if (hits.length >= limit) {
+          break;
+        }
+        const m = raw.match(/^(.*?):(\d+):(\d+):(.*)$/);
+        if (!m) {
+          continue;
+        }
+        const absPath = m[1];
+        hits.push({
+          path: path.relative(root, absPath),
+          absPath,
+          line: Number(m[2]),
+          preview: m[4].slice(0, 200),
+          kind: "content"
+        });
+      }
+      resolve(hits);
+    });
+  });
+}
+async function telescopeWalkContent(query, files, limit) {
+  const hits = [];
+  const needle = query.toLowerCase();
+  for (const abs of files) {
+    if (hits.length >= limit) {
+      break;
+    }
+    try {
+      const st = await promises.stat(abs);
+      if (st.size > 1024 * 1024) {
+        continue;
+      }
+      const text = await promises.readFile(abs, "utf8");
+      if (text.includes("\0")) {
+        continue;
+      }
+      const fileLines = text.split("\n");
+      for (let i = 0; i < fileLines.length; i++) {
+        if (hits.length >= limit) {
+          break;
+        }
+        if (fileLines[i].toLowerCase().includes(needle)) {
+          hits.push({
+            path: abs,
+            absPath: abs,
+            line: i + 1,
+            preview: fileLines[i].trim().slice(0, 200),
+            kind: "content"
+          });
+        }
+      }
+    } catch {
+    }
+  }
+  return hits;
+}
+async function telescopeFind(query, opts) {
+  const root = opts?.root || "";
+  const limit = opts?.limit ?? 50;
+  if (!root || !query.trim()) {
+    return [];
+  }
+  const files = await walkFiles(root, 5e3);
+  const needle = query.toLowerCase();
+  const nameHits = [];
+  for (const abs of files) {
+    if (nameHits.length >= limit) {
+      break;
+    }
+    const rel = path.relative(root, abs);
+    if (rel.toLowerCase().includes(needle)) {
+      nameHits.push({ path: rel, absPath: abs, kind: "name" });
+    }
+  }
+  if (opts?.content === false) {
+    return nameHits.slice(0, limit);
+  }
+  let contentHits = [];
+  if (await hasRipgrep()) {
+    contentHits = (await telescopeRgContent(query, root, limit)).map((h) => ({
+      ...h,
+      path: path.relative(root, h.absPath)
+    }));
+  } else {
+    const walked = await telescopeWalkContent(query, files, limit);
+    contentHits = walked.map((h) => ({ ...h, path: path.relative(root, h.absPath) }));
+  }
+  return [...nameHits, ...contentHits].slice(0, limit * 2);
+}
+function runGit(repoPath, args) {
+  return new Promise((resolve, reject) => {
+    child_process.execFile("git", ["-C", repoPath, ...args], { timeout: 15e3 }, (err, stdout, stderr) => {
+      if (err) {
+        reject(new Error(stderr || err.message));
+        return;
+      }
+      resolve(stdout.trim());
+    });
+  });
+}
+async function gitCurrentBranch(repoPath) {
+  const branch = await runGit(repoPath, ["rev-parse", "--abbrev-ref", "HEAD"]);
+  const status = await runGit(repoPath, ["status", "--porcelain"]);
+  return { branch, dirty: status.length > 0 };
+}
+async function gitCreateBranch(repoPath, name, base) {
+  const existing = await runGit(repoPath, ["branch", "--list", name]).catch(() => "");
+  if (existing.trim()) {
+    await runGit(repoPath, ["checkout", name]);
+    return { branch: name, created: false };
+  }
+  const args = base ? ["checkout", "-b", name, base] : ["checkout", "-b", name];
+  await runGit(repoPath, args);
+  return { branch: name, created: true };
+}
+async function gitCheckoutBranch(repoPath, name) {
+  await runGit(repoPath, ["checkout", name]);
+  return { branch: name };
+}
+async function jiraImport() {
+  const cfg = jiraGetConfig();
+  if (!cfg || !cfg.baseUrl || !cfg.email || !cfg.token) {
+    return [];
+  }
+  const base = cfg.baseUrl.replace(/\/$/, "");
+  const jql = encodeURIComponent(`project = ${cfg.project} ORDER BY updated DESC`);
+  const url = `${base}/rest/api/2/search?jql=${jql}&maxResults=50&fields=summary,description,status`;
+  const auth = Buffer.from(`${cfg.email}:${cfg.token}`).toString("base64");
+  const res = await fetch(url, {
+    headers: { Authorization: `Basic ${auth}`, Accept: "application/json" }
+  });
+  if (!res.ok) {
+    throw new Error(`Jira HTTP ${res.status}`);
+  }
+  const body = await res.json();
+  const issues = body.issues ?? [];
+  const existing = tasksList(cfg.project);
+  const byKey = new Map(existing.filter((t) => t.jiraKey).map((t) => [t.jiraKey, t]));
+  for (const issue of issues) {
+    const fields = issue.fields ?? {};
+    const statusName = (fields.status?.name || "").toLowerCase();
+    const status = statusName.includes("done") || statusName.includes("closed") ? "done" : statusName.includes("progress") ? "doing" : "todo";
+    const prev = byKey.get(issue.key);
+    tasksSave({
+      id: prev?.id,
+      title: fields.summary || issue.key,
+      description: typeof fields.description === "string" ? fields.description : "",
+      status,
+      jiraKey: issue.key,
+      branch: prev?.branch,
+      project: cfg.project
+    });
+  }
+  return tasksList(cfg.project);
+}
 function registerIpc(win) {
   electron.ipcMain.handle("app:lastFolder", () => store.get("lastFolder", ""));
+  electron.ipcMain.handle("app:setLastFolder", (_e, folder) => {
+    if (folder) {
+      store.set("lastFolder", folder);
+    }
+    return true;
+  });
   electron.ipcMain.handle("dialog:pickFolder", async () => {
     const res = await electron.dialog.showOpenDialog(win, { properties: ["openDirectory"] });
     if (res.canceled || res.filePaths.length === 0) {
@@ -424,6 +838,11 @@ function registerIpc(win) {
   electron.ipcMain.handle("editors:get", (_e, folder) => kvGet("editors:" + folder));
   electron.ipcMain.handle("editors:set", (_e, p) => {
     kvSet("editors:" + p.folder, p.data);
+    return true;
+  });
+  electron.ipcMain.handle("state:get", (_e, key) => kvGet(key));
+  electron.ipcMain.handle("state:set", (_e, p) => {
+    kvSet(p.key, p.value);
     return true;
   });
   electron.ipcMain.handle("git:upload", (_e, repoPath) => uploadGit(repoPath));
@@ -602,6 +1021,122 @@ function registerIpc(win) {
     }
   });
   electron.ipcMain.on("ai:ask:cancel", () => cancelAsk());
+  electron.ipcMain.on("term:start", (e, opts) => {
+    const mod = loadPty();
+    if (!mod) {
+      e.sender.send("term:exit", { id: opts.id, code: -1 });
+      return;
+    }
+    const prev = ptys.get(opts.id);
+    if (prev) {
+      try {
+        prev.kill();
+      } catch {
+      }
+      ptys.delete(opts.id);
+    }
+    try {
+      const proc = mod.spawn(opts.shell || defaultShell(), [], {
+        name: "xterm-color",
+        cols: opts.cols || 80,
+        rows: opts.rows || 24,
+        cwd: opts.cwd || os.homedir(),
+        env: process.env
+      });
+      ptys.set(opts.id, proc);
+      proc.onData((data) => {
+        if (!e.sender.isDestroyed()) {
+          e.sender.send("term:data", { id: opts.id, data });
+        }
+      });
+      proc.onExit(({ exitCode }) => {
+        ptys.delete(opts.id);
+        if (!e.sender.isDestroyed()) {
+          e.sender.send("term:exit", { id: opts.id, code: exitCode });
+        }
+      });
+    } catch (err) {
+      console.error("[pty] spawn failed:", err.message);
+      e.sender.send("term:exit", { id: opts.id, code: -1 });
+    }
+  });
+  electron.ipcMain.on("term:write", (_e, p) => {
+    const proc = ptys.get(p.id);
+    if (proc) {
+      try {
+        proc.write(p.data);
+      } catch {
+      }
+    }
+  });
+  electron.ipcMain.on("term:resize", (_e, p) => {
+    const proc = ptys.get(p.id);
+    if (proc) {
+      try {
+        proc.resize(p.cols, p.rows);
+      } catch {
+      }
+    }
+  });
+  electron.ipcMain.on("term:kill", (_e, id) => {
+    const proc = ptys.get(id);
+    if (proc) {
+      try {
+        proc.kill();
+      } catch {
+      }
+      ptys.delete(id);
+    }
+  });
+  electron.ipcMain.handle("browser:setEnabled", (_e, enabled) => {
+    kvSet("browser:enabled", !!enabled);
+    return !!enabled;
+  });
+  electron.ipcMain.handle("browser:navigate", (_e, p) => {
+    const url = normalizeUrl(p.url);
+    if (url) {
+      pushBrowserHistory(p.id, url);
+    }
+    return { url };
+  });
+  electron.ipcMain.handle("browser:history", (_e, id) => kvGet(browserHistoryKey(id)) ?? []);
+  electron.ipcMain.handle("tasks:list", (_e, project) => tasksList(project ?? ""));
+  electron.ipcMain.handle("tasks:save", (_e, t) => tasksSave(t));
+  electron.ipcMain.handle("tasks:delete", (_e, id) => tasksDelete(id));
+  electron.ipcMain.handle("tasks:setActive", (_e, id) => tasksSetActive(id));
+  electron.ipcMain.handle("jira:getConfig", () => jiraGetConfig());
+  electron.ipcMain.handle("jira:setConfig", (_e, cfg) => {
+    jiraSetConfig(cfg);
+    return true;
+  });
+  electron.ipcMain.handle("jira:import", () => jiraImport());
+  electron.ipcMain.handle(
+    "telescope:find",
+    (_e, p) => telescopeFind(p.query, p.opts)
+  );
+  electron.ipcMain.handle("stats:get", () => statsGet());
+  electron.ipcMain.handle(
+    "stats:bump",
+    (_e, p) => statsBump(p.field, p.by)
+  );
+  electron.ipcMain.handle("git:currentBranch", (_e, repoPath) => gitCurrentBranch(repoPath));
+  electron.ipcMain.handle(
+    "git:createBranch",
+    (_e, p) => gitCreateBranch(p.repoPath, p.name, p.base)
+  );
+  electron.ipcMain.handle(
+    "git:checkoutBranch",
+    (_e, p) => gitCheckoutBranch(p.repoPath, p.name)
+  );
+  win.on("closed", () => {
+    for (const proc of ptys.values()) {
+      try {
+        proc.kill();
+      } catch {
+      }
+    }
+    ptys.clear();
+  });
 }
 electron.app.whenReady().then(() => {
   electron.Menu.setApplicationMenu(null);

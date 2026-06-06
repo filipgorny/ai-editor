@@ -4,7 +4,39 @@ import { Decoration, type DecorationSet, WidgetType, EditorView } from '@codemir
 export type Remark = { line: number; text: string; color?: string; prefix?: string }
 export type Dismiss = (key: string) => void
 
+// Border/tail color for AI review comment bubbles (a calm blue, distinct from the yellow/
+// red lint bubbles) and the speech-bubble prefix glyph used to mark them.
+export const reviewBubbleColor = '#58a6ff'
+export const reviewBubblePrefix = '\u{1F4AC}' // 💬
+
 export const remarkKey = (r: Remark): string => r.line + ':' + r.text
+
+// filterToChangedLines — keep only the remarks whose line is in the changed-line set
+// (added ∪ modified). Review mode shows AI comment bubbles ONLY next to changed code, so
+// the AI-review remarks are run through this before being handed to the editor. A line is
+// considered "near" a change if it is within `slop` lines of a changed one — the LLM often
+// anchors a comment one line off from the exact diff hunk.
+export function filterToChangedLines(
+  remarks: Remark[],
+  changed: { added: number[]; modified: number[] },
+  slop = 1
+): Remark[] {
+  const lines = new Set<number>([...changed.added, ...changed.modified])
+
+  if (lines.size === 0) {
+    return []
+  }
+
+  return remarks.filter((r) => {
+    for (let d = -slop; d <= slop; d++) {
+      if (lines.has(r.line + d)) {
+        return true
+      }
+    }
+
+    return false
+  })
+}
 
 // Uwagi wstrzykujemy efektem (nie przez rekonfigurację rozszerzeń) — dzięki temu
 // edytor się nie przebudowuje i dymki nie znikają same.

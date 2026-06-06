@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Handle, Position } from 'reactflow'
 import { useTranslation } from 'react-i18next'
 import styled, { css, keyframes } from 'styled-components'
@@ -5,6 +6,11 @@ import { Controller, Node } from '../model'
 import { colors, kindColor } from '../styles/tokens'
 import { useEditor } from './EditorContext'
 import { useGit, useGitAuthor, reviewColor, type ReviewStatus } from './GitContext'
+import { detectImplemented } from './GraphView'
+
+// Kinds that represent real code entities (classes/functions) whose implementation
+// status we surface on the card (implemented vs auto-created empty stub).
+const CODE_KINDS = new Set(['class', 'function', 'service', 'controller', 'component', 'module'])
 
 // Breathing yellow glow for the selected node.
 const breathe = keyframes`
@@ -78,6 +84,18 @@ const ReviewTag = styled.span<{ $color: string }>`
   background: ${(p) => p.$color};
 `
 
+// ImplTag — small pill showing whether a code entity already has real code (green)
+// or is still an empty auto-created stub (muted), shown in the code-diagram view.
+const ImplTag = styled.span<{ $done: boolean }>`
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: ${colors.bg};
+  background: ${(p) => (p.$done ? '#3fb950' : '#6e7681')};
+`
+
 const FnList = styled.div`
   padding: 8px 12px;
   max-height: 160px;
@@ -127,6 +145,31 @@ export default function NodeCard({ data, selected }: { data: Node; selected?: bo
   const status = review && data.absFile ? (statusByAbs[data.absFile] as ReviewStatus | undefined) : undefined
   const color = status ? reviewColor[status] : kColor
 
+  // Resolve whether this code entity already has real code (vs empty stub). Lazy: read
+  // the file once per node; undefined while resolving (no badge shown yet).
+  const isCodeKind = CODE_KINDS.has(data.kind) && !!data.absFile
+  const [implemented, setImplemented] = useState<boolean | undefined>(undefined)
+
+  useEffect(() => {
+    if (!isCodeKind) {
+      return
+    }
+
+    let alive = true
+
+    detectImplemented(data)
+      .then((v) => {
+        if (alive) {
+          setImplemented(v)
+        }
+      })
+      .catch(() => undefined)
+
+    return () => {
+      alive = false
+    }
+  }, [isCodeKind, data])
+
   return (
     <Card $color={color} $selected={selected}>
       <Handle type="target" position={Position.Left} style={{ background: color }} />
@@ -135,6 +178,11 @@ export default function NodeCard({ data, selected }: { data: Node; selected?: bo
         <Badge $color={kColor}>{data.kind}</Badge>
         {route ? <RouteLabel>{route}</RouteLabel> : null}
         {status ? <ReviewTag $color={reviewColor[status]}>{t('review.status.' + status)}</ReviewTag> : null}
+        {isCodeKind && implemented !== undefined ? (
+          <ImplTag $done={implemented} title={t(implemented ? 'graph.implemented' : 'graph.stub')}>
+            {t(implemented ? 'graph.implemented' : 'graph.stub')}
+          </ImplTag>
+        ) : null}
         <Name $selected={selected}>
           {data.kind === 'folder' ? '📁 ' : ''}
           {data.name}

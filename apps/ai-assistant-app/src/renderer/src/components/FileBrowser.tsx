@@ -1,9 +1,10 @@
 import { useEffect, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
-import { Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material'
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material'
 import { colors } from '../styles/tokens'
-import { reviewColor, type ReviewStatus } from './GitContext'
+import { reviewColor, useGit, type ReviewStatus } from './GitContext'
+import ContextMenu, { type MenuItemDef } from './ContextMenu'
 import { toast } from '../toast'
 
 // Plik zmieniony w trybie review (z serwisu git).
@@ -13,6 +14,7 @@ type Entry = { name: string; path: string; dir: boolean }
 type Listing = { path: string; parent: string; entries: Entry[] }
 
 // Wpis, na którym otwarto menu kontekstowe / który jest przeciągany.
+// `dir: true` z pustą ścieżką oznacza menu na pustym tle drzewka (cel = root).
 type TreeItem = { path: string; name: string; dir: boolean }
 
 // Akcje drzewka przekazywane w dół do rekurencyjnego Dir.
@@ -21,6 +23,9 @@ type TreeActions = {
   onContext: (e: ReactMouseEvent, item: TreeItem) => void
   onMove: (src: string, destDir: string) => void
 }
+
+// Tryb dialogu tworzenia nowego wpisu w wybranym katalogu.
+type CreateState = { kind: 'file' | 'folder'; dir: string }
 
 // Stały lewy panel — od paska otwartych edytorów do ramki promptu AI.
 const Panel = styled.div`
@@ -182,15 +187,29 @@ const Dir2 = styled.span`
 `
 
 // FileBrowser — stały lewy panel z drzewem plików (filer przez gateway). W trybie
-// review pokazuje PŁASKĄ listę tylko zmienionych plików (z serwisu git). Wiersze mają
-// menu kontekstowe (Zmień nazwę / Usuń) i obsługują drag & drop (przenoszenie do katalogu).
+// review pokazuje PŁASKĄ listę tylko zmienionych plików (źródło prawdy: GitContext,
+// z fallbackiem na propsy review/changed dla zgodności wstecznej).
+//
+// Wiersze i puste tło mają menu kontekstowe (ContextMenu): na katalogu/pustym tle —
+// „dodaj plik" / „dodaj folder"; na istniejącym wpisie — „zmień nazwę" / „usuń". Obsługują
+// też drag & drop (przenoszenie do katalogu) przez window.api.moveFile.
+//
+// PROPSY DLA FAZY INTEGRACJI (App.tsx):
+//  - root: string                        — folder projektu (korzeń drzewa)
+//  - version: number                     — bump wymusza ponowne wczytanie listingów
+//  - onOpenFile(p: string)               — otwórz plik w edytorze (App.openFile)
+//  - onChanged?(path: string)            — wywoływane po move/rename/delete/create; App robi rescan
+//  - review?: boolean (opcjonalny)       — fallback, gdy GitContext niedostępny
+//  - changed?: Changed[] (opcjonalny)    — fallback listy zmienionych plików dla review
+// Tryb review jest brany z GitContext (useGit) — props `review`/`changed` to tylko fallback;
+// App nie musi przekazywać nic nowego, jeśli owija drzewo w GitContext.Provider (już to robi).
 export default function FileBrowser({
   root,
   version,
   onOpenFile,
   onChanged,
-  review = false,
-  changed = []
+  review: reviewProp = false,
+  changed: changedProp = []
 }: {
   root: string
   version: number
@@ -200,20 +219,29 @@ export default function FileBrowser({
   changed?: Changed[]
 }) {
   const { t } = useTranslation()
+  const git = useGit()
   const [base, setBase] = useState(root)
-  const [menu, setMenu] = useState<{ x: number; y: number; item: TreeItem } | null>(null)
+  const [menu, setMenu] = useState<{ x: number; y: number; items: MenuItemDef[] } | null>(null)
   const [renaming, setRenaming] = useState<TreeItem | null>(null)
   const [renameVal, setRenameVal] = useState('')
+  const [creating, setCreating] = useState<CreateState | null>(null)
+  const [createVal, setCreateVal] = useState('')
+
+  // Review mode + lista zmienionych plików: źródło prawdy to GitContext; gdy provider go
+  // nie dostarcza (np. testy / brak repo), wracamy do propsów.
+  const review = git.review || reviewProp
+  const changed: Changed[] =
+    Object.keys(git.statusByAbs).length > 0
+      ? Object.entries(git.statusByAbs).map(([absPath, status]) => ({
+          absPath,
+          path: root && absPath.startsWith(root + '/') ? absPath.slice(root.length + 1) : absPath,
+          status
+        }))
+      : changedProp
 
   useEffect(() => {
     setBase(root) // zawsze folder projektu (bez fallbacku do home)
   }, [root])
-
-  const openContext = (e: ReactMouseEvent, item: TreeItem): void => {
-    e.preventDefault()
-    e.stopPropagation()
-    setMenu({ x: e.clientX, y: e.clientY, item })
-  }
 
   const doMove = async (src: string, destDir: string): Promise<void> => {
     const parent = src.slice(0, src.lastIndexOf('/'))
@@ -278,6 +306,73 @@ export default function FileBrowser({
     }
   }
 
+  // startCreate otwiera dialog tworzenia pliku/folderu w wybranym katalogu (z menu
+  // kontekstowego na katalogu lub na pustym tle, gdzie celem jest korzeń projektu).
+  const startCreate = (kind: 'file' | 'folder', dir: string): void => {
+    setMenu(null)
+    setCreateVal('')
+    setCreating({ kind, dir })
+  }
+
+  const confirmCreate = async (): Promise<void> => {
+    const state = creating
+    const name = createVal.trim()
+
+    setCreating(null)
+
+    if (!state || !name) {
+      return
+    }
+
+    // createFile(dir, fileName, className) — pusty className = zwykły, pusty plik (bez AI).
+    const res =
+      state.kind === 'folder'
+        ? await window.api.createFolder(state.dir, name).catch(() => '')
+        : await window.api.createFile(state.dir, name, '').catch(() => '')
+
+    if (res) {
+      toast.success(t('files.created'))
+      onChanged?.(res)
+
+      if (state.kind === 'file') {
+        onOpenFile(res)
+      }
+    } else {
+      toast.error(t('files.opFailed'))
+    }
+  }
+
+  // openContext buduje listę pozycji menu zależną od celu: katalog → dodaj plik/folder +
+  // zmień nazwę/usuń; plik → zmień nazwę/usuń; puste tło (dir z pustą ścieżką) → tylko dodaj.
+  const openContext = (e: ReactMouseEvent, item: TreeItem): void => {
+    e.preventDefault()
+    e.stopPropagation()
+    const targetDir = item.dir ? item.path || base : base
+    const isRoot = item.dir && !item.path
+    const items: MenuItemDef[] = []
+
+    if (item.dir) {
+      items.push({ label: t('files.addFile'), onClick: () => startCreate('file', targetDir) })
+      items.push({ label: t('files.addFolder'), onClick: () => startCreate('folder', targetDir) })
+    }
+
+    if (!isRoot) {
+      items.push({ label: t('files.rename'), onClick: () => startRename(item) })
+      items.push({ label: t('files.delete'), onClick: () => doDelete(item) })
+    }
+
+    setMenu({ x: e.clientX, y: e.clientY, items })
+  }
+
+  // Menu na pustym tle drzewka (cel = korzeń projektu).
+  const openEmptyContext = (e: ReactMouseEvent): void => {
+    if (!base) {
+      return
+    }
+
+    openContext(e, { path: '', name: base.split(/[\\/]/).pop() || base, dir: true })
+  }
+
   if (review) {
     return (
       <Panel>
@@ -320,7 +415,7 @@ export default function FileBrowser({
       <Head>
         <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{base || t('files.fallback')}</span>
       </Head>
-      <Tree>
+      <Tree onContextMenu={openEmptyContext}>
         {base ? (
           <Dir
             key={base}
@@ -334,15 +429,7 @@ export default function FileBrowser({
         ) : null}
       </Tree>
 
-      <Menu
-        open={!!menu}
-        onClose={() => setMenu(null)}
-        anchorReference="anchorPosition"
-        anchorPosition={menu ? { top: menu.y, left: menu.x } : undefined}
-      >
-        <MenuItem onClick={() => menu && startRename(menu.item)}>{t('files.rename')}</MenuItem>
-        <MenuItem onClick={() => menu && doDelete(menu.item)}>{t('files.delete')}</MenuItem>
-      </Menu>
+      {menu && <ContextMenu x={menu.x} y={menu.y} items={menu.items} onClose={() => setMenu(null)} />}
 
       <Dialog open={!!renaming} onClose={() => setRenaming(null)} maxWidth="xs" fullWidth>
         <DialogTitle>{t('files.rename')}</DialogTitle>
@@ -366,6 +453,32 @@ export default function FileBrowser({
           <Button onClick={() => setRenaming(null)}>{t('common.close')}</Button>
           <Button variant="contained" onClick={confirmRename} disabled={!renameVal.trim()}>
             {t('files.rename')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={!!creating} onClose={() => setCreating(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>{creating?.kind === 'folder' ? t('files.addFolder') : t('files.addFile')}</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            fullWidth
+            size="small"
+            label={creating?.kind === 'folder' ? t('files.newFolderPrompt') : t('files.newFilePrompt')}
+            value={createVal}
+            onChange={(e) => setCreateVal(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                confirmCreate()
+              }
+            }}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCreating(null)}>{t('common.close')}</Button>
+          <Button variant="contained" onClick={confirmCreate} disabled={!createVal.trim()}>
+            {t('files.create')}
           </Button>
         </DialogActions>
       </Dialog>

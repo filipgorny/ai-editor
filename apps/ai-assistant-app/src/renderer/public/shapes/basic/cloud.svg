@@ -1,0 +1,8 @@
+<svg width={40} height={26} viewBox="0 0 40 26">
+<path
+d="M9 22 A7 7 0 0 1 8 10 A8 8 0 0 1 22 5 A6 6 0 0 1 32 12 A6 6 0 0 1 30 22 Z"
+{...common}
+strokeLinejoin="round"
+/>
+</svg>
+

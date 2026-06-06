@@ -21,6 +21,8 @@ declare global {
     h?: number
     snapped?: boolean
     fullscreen?: boolean
+    cursor?: number
+    scroll?: number
   }
   type EditorLayout = { editors: EditorWin[]; active?: string; minimized?: string[]; snapped?: string[] }
 
@@ -41,6 +43,26 @@ declare global {
     | { type: 'error'; message: string }
   type AiSkillRequest = { id: string; name: string; args: string }
   type AiSkillResult = { id: string; content?: string; error?: string }
+
+  // Task — a tracked task (tasks view). status drives the column; active marks the
+  // single in-progress task. jiraKey/branch link it to Jira + the auto-created branch.
+  type Task = {
+    id: number
+    title: string
+    description: string
+    status: 'todo' | 'doing' | 'done'
+    jiraKey?: string
+    branch?: string
+    active: boolean
+    project: string
+    createdAt: number
+    updatedAt: number
+  }
+  type JiraConfig = { baseUrl: string; email: string; token: string; project: string }
+  // Stats — daily counters shown in the topbar; day = YYYY-MM-DD (resets daily).
+  type Stats = { keystrokes: number; lines: number; tasks: number; day: string }
+  // TelescopeHit — one result row from the Esc+Space finder (filename or content match).
+  type TelescopeHit = { path: string; absPath: string; line?: number; preview?: string; kind: 'name' | 'content' }
 
   interface Window {
     api: {
@@ -95,6 +117,9 @@ declare global {
       ): Promise<{ status: string; addedLines: number[]; modifiedLines: number[] }>
       getEditorLayout(folder: string): Promise<EditorLayout | null>
       saveEditorLayout(folder: string, data: EditorLayout): Promise<boolean>
+      getState<T = unknown>(key: string): Promise<T | null>
+      setState(key: string, value: unknown): Promise<boolean>
+      setLastFolder(folder: string): Promise<boolean>
       saveViewport(key: string, vp: { x: number; y: number; zoom: number }): Promise<boolean>
       getViewport(key: string): Promise<{ x: number; y: number; zoom: number } | null>
       getSettings(): Promise<{
@@ -104,6 +129,9 @@ declare global {
         wallpaper?: string
         gitBlame?: 'off' | 'last'
         rainbowBrackets?: boolean
+        vim?: boolean
+        copilot?: boolean
+        eachFnColor?: boolean
       }>
       setSettings(s: {
         provider?: string
@@ -112,6 +140,9 @@ declare global {
         wallpaper?: string
         gitBlame?: 'off' | 'last'
         rainbowBrackets?: boolean
+        vim?: boolean
+        copilot?: boolean
+        eachFnColor?: boolean
       }): Promise<boolean>
       aiSetProvider(provider: string): Promise<string>
       claudeStatus(): Promise<{ loggedIn: boolean; email: string; method: string; installed: boolean }>
@@ -152,6 +183,51 @@ declare global {
       watchProject(path: string): void
       stopWatch(): void
       onFsChange(cb: (ev: { path: string; op: string; dir: boolean }) => void): () => void
+
+      // ---- Terminal PTY (view 6) ----
+      termStart(opts: { id: string; cwd?: string; cols?: number; rows?: number; shell?: string }): void
+      termWrite(id: string, data: string): void
+      termResize(id: string, cols: number, rows: number): void
+      termKill(id: string): void
+      onTermData(cb: (ev: { id: string; data: string }) => void): () => void
+      onTermExit(cb: (ev: { id: string; code: number }) => void): () => void
+
+      // ---- Web browser (view 7) ----
+      browserSetEnabled(enabled: boolean): Promise<boolean>
+      browserNavigate(id: string, url: string): Promise<{ url: string }>
+      browserHistory(id: string): Promise<{ url: string; title: string; ts: number }[]>
+
+      // ---- Tasks store (view 4) ----
+      tasksList(project: string): Promise<Task[]>
+      tasksSave(t: {
+        id?: number
+        title: string
+        description?: string
+        status?: string
+        jiraKey?: string
+        branch?: string
+        project: string
+      }): Promise<Task>
+      tasksDelete(id: number): Promise<boolean>
+      tasksSetActive(id: number): Promise<Task>
+      jiraGetConfig(): Promise<JiraConfig | null>
+      jiraSetConfig(cfg: JiraConfig): Promise<boolean>
+      jiraImport(): Promise<Task[]>
+
+      // ---- Telescope finder (Esc+Space) ----
+      telescopeFind(
+        query: string,
+        opts?: { root?: string; limit?: number; content?: boolean }
+      ): Promise<TelescopeHit[]>
+
+      // ---- Stats counters (topbar) ----
+      statsGet(): Promise<Stats>
+      statsBump(field: 'keystrokes' | 'lines' | 'tasks', by?: number): Promise<Stats>
+
+      // ---- Git auto-branch (tasks view) ----
+      gitCurrentBranch(repoPath: string): Promise<{ branch: string; dirty: boolean }>
+      gitCreateBranch(repoPath: string, name: string, base?: string): Promise<{ branch: string; created: boolean }>
+      gitCheckoutBranch(repoPath: string, name: string): Promise<{ branch: string }>
     }
   }
 }

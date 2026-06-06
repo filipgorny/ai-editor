@@ -1,34 +1,38 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { mergeAppGraphs, type RawGraph } from './utils/mergeGraph'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
-import { Button } from '@mui/material'
 import { ThemeProvider } from '@mui/material/styles'
 import { makeTheme } from './theme'
-import { accentBy } from './styles/accents'
-import FolderOpenIcon from '@mui/icons-material/FolderOpen'
-import SettingsIcon from '@mui/icons-material/Settings'
-import CodeIcon from '@mui/icons-material/Code'
-import TerminalIcon from '@mui/icons-material/Terminal'
-import RateReviewIcon from '@mui/icons-material/RateReview'
-import { AppNode, GatewayMapper, Graph, Node, ScanProgress } from './model'
-import GraphView from './components/GraphView'
+import { Node } from './model'
 import ScanModal from './components/ScanModal'
 import SettingsDialog from './components/SettingsDialog'
 import ScriptsDialog from './components/ScriptsDialog'
 import LogsDialog from './components/LogsDialog'
 import ClaudeLoginDialog from './components/ClaudeLoginDialog'
-import AiAskModal, { type AskUserPrompt } from './components/AiAskModal'
+import AiAskModal from './components/AiAskModal'
 import ToastHost from './components/ToastHost'
 import AgentBar from './components/AgentBar'
 import EditorTabs from './components/EditorTabs'
 import FileBrowser from './components/FileBrowser'
-import CodeEditor, { type EditorTarget, EDITOR_FADE_MS } from './components/CodeEditor'
+import CodeEditor from './components/CodeEditor'
 import { EditorContext } from './components/EditorContext'
-import { GitContext, type GitState, type BlameMode, type ReviewStatus } from './components/GitContext'
+import { GitContext } from './components/GitContext'
+import TopBar from './components/TopBar'
 import { appBus } from './events'
 import { commander } from './commander/Commander'
-import { colors } from './styles/tokens'
+import { VIEWS, DEFAULT_VIEW } from './views/registry'
+import type { ViewContext, ViewKey } from './views/types'
+import ViewRail from './views/ViewRail'
+import ViewHost from './views/ViewHost'
+import { useViewKeys } from './hooks/useViewKeys'
+import Telescope, { useTelescopeChord } from './components/Telescope'
+import { installKeystrokeCounter } from './components/TopBarStats'
+import { useAppSettings } from './hooks/useAppSettings'
+import { useProjectScan } from './hooks/useProjectScan'
+import { useEditors } from './hooks/useEditors'
+import { useDiskWatch } from './hooks/useDiskWatch'
+import { useGitReview } from './hooks/useGitReview'
+import { useAiAgent } from './hooks/useAiAgent'
+import { useFileOps } from './hooks/useFileOps'
 
 const Layout = styled.div`
   height: 100vh;
@@ -36,1035 +40,212 @@ const Layout = styled.div`
   flex-direction: column;
 `
 
-const TopBar = styled.header`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-bottom: 1px solid ${colors.border};
-  background: ${colors.panel};
-`
-
-const ProjectName = styled.div`
-  font-family: monospace;
-  font-size: 16px;
-  font-weight: 600;
-  color: #fff;
-`
-
-// Wiersz głównej zawartości: lewy panel plików + graf (od paska edytorów do promptu).
+// Wiersz głównej zawartości: lewy pasek widoków + panel plików + aktywny widok
+// (od paska edytorów do promptu).
 const Content = styled.div`
   flex: 1;
   display: flex;
   min-height: 0;
 `
 
-const Stage = styled.main`
-  flex: 1;
-  position: relative;
-  min-width: 0;
-`
-
-const Empty = styled.div`
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  color: ${colors.muted};
-  text-align: center;
-`
-
-// How long an agent-opened editor window stays (after the live typing) before it
-// fades out and closes — enough to see the change without lingering.
-const AGENT_WINDOW_DWELL_MS = 2600
-
-type Mode = 'idle' | 'scanning' | 'graph'
-type View = { type: 'project' } | { type: 'app'; appId: number; name: string }
-
-// Default global script, seeded once into the scripting service: Shift+Tab cycles to the
-// next editor window so you can flip between open files.
+// Default global script, seeded once into the scripting service. Shift+Tab is now owned by
+// the multi-view shell (cycle views — see useViewKeys), and ALT+Left/Right cycle editor
+// windows, so the seeded default binds editor-window cycling to Ctrl+Tab / Ctrl+Shift+Tab
+// instead (editable: users can rebind or repoint these to any chord/command).
 const DEFAULT_SCRIPT = {
-  name: 'Window cycle (Shift+Tab)',
-  content: `-- Shift+Tab: switch to the next open editor window (cycle through files).
-onKey("shift+tab", function()
+  name: 'Window cycle (Ctrl+Tab)',
+  content: `-- Ctrl+Tab / Ctrl+Shift+Tab: cycle through open editor windows (files).
+-- (Shift+Tab cycles VIEWS; ALT+Left/Right also cycle editor windows.)
+onKey("ctrl+tab", function()
   cmd("tabs", "next")
+end)
+
+onKey("ctrl+shift+tab", function()
+  cmd("tabs", "prev")
 end)
 `
 }
 
 export default function App() {
-  const { t, i18n } = useTranslation()
-  const [mode, setMode] = useState<Mode>('idle')
-  const [folder, setFolder] = useState('')
-  // monorepo graph (raw) + internal graphs of inline-expanded apps; merged below
-  const [rawBase, setRawBase] = useState<RawGraph | null>(null)
-  const [rawApps, setRawApps] = useState<Record<number, RawGraph>>({})
-  const rawAppsRef = useRef<Record<number, RawGraph>>({})
-  // what the in-flight scan is for (drives onScanEnd). null = none / initial scan.
-  const scanKind = useRef<'project' | 'refresh' | { app: number } | null>(null)
-  const [progress, setProgress] = useState<ScanProgress>(ScanProgress.initial())
-  const [log, setLog] = useState<string[]>([])
-  const [error, setError] = useState('')
-  const [title, setTitle] = useState('ai-architect')
-  const [nav, setNav] = useState({ back: false, fwd: false })
-  const [editors, setEditors] = useState<EditorTarget[]>([])
-  const [activeEditor, setActiveEditor] = useState('')
-  const [minimized, setMinimized] = useState<Set<string>>(new Set())
-  // editors currently fading out (opacity 1→0) before removal
-  const [closingEditors, setClosingEditors] = useState<Set<string>>(new Set())
-  // editor windows snapped to fill the graph area ("top" snap). When any is snapped, a
-  // newly opened file opens snapped too.
-  const [snappedTop, setSnappedTop] = useState<Set<string>>(new Set())
-  // geometria okien edytorów per ścieżka (pozycja/rozmiar/snap/fullscreen) — zapamiętywana
-  // per projekt i odtwarzana przy ponownym otwarciu (SQLite w procesie main).
-  type EditorGeom = { x: number; y: number; w: number; h: number; snapped: boolean; fullscreen: boolean }
-  const [layoutByPath, setLayoutByPath] = useState<Record<string, EditorGeom>>({})
-  // czy układ edytorów dla bieżącego folderu został już odtworzony (bramkuje zapis,
-  // by świeżo wczytany stan nie został nadpisany pustym przy montażu).
-  const restoredFolder = useRef('')
-  // wersja systemu plików — bump po operacji, by drzewo plików się odświeżyło
-  const [fsVersion, setFsVersion] = useState(0)
-  // globalne ustawienia edytorów (wspólne dla wszystkich okien)
-  const [vimOn, setVimOn] = useState(true)
-  const [copilotOn, setCopilotOn] = useState(true)
-  const [rainbow, setRainbow] = useState(true) // kolorowanie par nawiasów w edytorze
-  const [editorTheme, setEditorTheme] = useState('Czarny (domyślny)')
-  const [wallpaper, setWallpaper] = useState('') // graph background image url
-  const [accent, setAccent] = useState('blue') // app accent (button colour) theme
-  const muiTheme = useMemo(() => makeTheme(accent), [accent])
+  // activeView drives the view shell (rail + ViewHost). scanning is an independent
+  // overlay flag (ScanModal) that no longer hijacks the whole stage.
+  const [activeView, setActiveView] = useState<ViewKey>(DEFAULT_VIEW)
   const [focusPath, setFocusPath] = useState('')
   // last-clicked graph node — highlighted, and its info is sent with the AI prompt
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
-  // git: tryb autorstwa na klockach (off/last) + czy kopia .git jest już wgrana
-  const [gitBlame, setGitBlame] = useState<BlameMode>('off')
-  const [gitReady, setGitReady] = useState(false)
-  // tryb review: zmienione pliki (gałąź vs baza) ze statusem
-  const [review, setReview] = useState(false)
-  const [reviewFiles, setReviewFiles] = useState<{ path: string; absPath: string; status: ReviewStatus }[]>([])
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [scriptsOpen, setScriptsOpen] = useState(false)
   const [logsOpen, setLogsOpen] = useState(false)
   const [claudeLoginOpen, setClaudeLoginOpen] = useState(false)
-  const [agentBusy, setAgentBusy] = useState(false)
-  const [agentReply, setAgentReply] = useState('')
-  // pytanie zadane przez agenta (skill ask_user) → modal z wariantami; null = brak
-  const [pendingAsk, setPendingAsk] = useState<AskUserPrompt | null>(null)
-  // ostatnio otwarty folder (kontekst dla agenta — domyślny katalog nowych plików)
-  const lastDir = useRef('')
+  // Telescope (Esc+Space) finder overlay — controlled open state.
+  const [telescopeOpen, setTelescopeOpen] = useState(false)
   // czy próbowaliśmy już zasiać domyślny skrypt (raz na sesję)
   const seeded = useRef(false)
 
-  const pending = useRef<View>({ type: 'project' })
-  const [navKey, setNavKey] = useState(0) // ++ przy NAWIGACJI (drill/back) — graf fituje/resetuje rozwinięcia
-  const scannedProjectId = useRef('')
-  const history = useRef<View[]>([])
-  const index = useRef(-1)
+  // switchView changes the active view and announces it on the bus ('view:change').
+  // The single mutator of activeView — rail clicks, ALT+n, Shift+Tab and deep-links
+  // ('view:request') all funnel through here. activeViewRef keeps the latest value for
+  // bus handlers registered once (so the 'from' field is accurate without re-subscribing).
+  const activeViewRef = useRef<ViewKey>(activeView)
+  activeViewRef.current = activeView
 
-  // merged graph: monorepo + expanded apps (apps expand in place like folders)
-  const graph = useMemo(
-    () =>
-      rawBase
-        ? GatewayMapper.graph(
-            mergeAppGraphs(rawBase, rawApps) as unknown as Parameters<typeof GatewayMapper.graph>[0]
-          )
-        : null,
-    [rawBase, rawApps]
+  const switchView = useCallback((to: ViewKey): void => {
+    const from = activeViewRef.current
+
+    if (from === to) {
+      return
+    }
+
+    activeViewRef.current = to
+    setActiveView(to)
+    // 'view:change' is integration-owned (not yet in AppEventMap) → emit with a cast,
+    // the same pattern keys.ts uses for dynamic event names.
+    appBus.emit('view:change' as never, { from, to } as never)
+  }, [])
+
+  // Visual / editor settings + persistence. Prompts for Claude login when the saved
+  // provider is Claude but no token is present.
+  const settings = useAppSettings(() => setClaudeLoginOpen(true))
+  const {
+    vimOn,
+    setVimOn,
+    copilotOn,
+    setCopilotOn,
+    rainbow,
+    setRainbow,
+    eachFnColor,
+    setEachFnColor,
+    editorTheme,
+    setEditorTheme,
+    wallpaper,
+    setWallpaper,
+    accent,
+    setAccent,
+    gitBlame,
+    setGitBlame
+  } = settings
+
+  const muiTheme = useMemo(() => makeTheme(accent), [accent])
+
+  // Graph / scan / navigation. Reveals the code-diagram view once the initial scan ends.
+  const scan = useProjectScan(() => switchView('diagram'))
+  const {
+    folder,
+    graph,
+    graphRef,
+    scanning,
+    progress,
+    log,
+    error,
+    navKey,
+    fsVersion,
+    pickAndScan,
+    refreshForPath,
+    refreshCurrentView,
+    expandApp
+  } = scan
+
+  // Per-view editor workspaces (editor / diagram each independent).
+  const editors = useEditors(activeView, folder)
+  const {
+    ws,
+    workspaces,
+    allEditors,
+    editorScope,
+    scopeRef,
+    lastDir,
+    patchWorkspace,
+    openFile,
+    closeEditor,
+    closeEditorAnimated,
+    selectEditor,
+    minimizeEditor,
+    setEditorSnap,
+    onEditorGeometry,
+    onEditorCursor,
+    cycleEditor
+  } = editors
+
+  // Per-view shell flags from the registry: which views show the left file tree and which
+  // host editor windows + their tab strip (only the editor and code-diagram views do).
+  const activeDef = useMemo(() => VIEWS.find((v) => v.key === activeView), [activeView])
+  const showsFileTree = !!activeDef?.showsFileTree
+  const hostsEditors = !!activeDef?.hostsEditors
+
+  // Persistent union tab strip (every view): map a tab's owning scope onto its canonical
+  // view, switch to that view, then activate / restore the file in THAT scope's workspace.
+  // scopeView — 'editor' scope ↔ 'editor' view, 'diagram' scope ↔ 'diagram' view.
+  const scopeView = (scope: 'editor' | 'diagram'): ViewKey => scope
+
+  const selectUnionTab = useCallback(
+    (path: string): void => {
+      const tab = allEditors.find((t) => t.path === path)
+
+      if (!tab) {
+        return
+      }
+
+      switchView(scopeView(tab.scope))
+      patchWorkspace(tab.scope, (w) => {
+        const minimized = new Set(w.minimized)
+        minimized.delete(path)
+
+        return { minimized, activeEditor: path }
+      })
+      appBus.emit('editor:activate', { path })
+    },
+    [allEditors, switchView, patchWorkspace]
   )
 
-  useEffect(() => {
-    rawAppsRef.current = rawApps
-  }, [rawApps])
+  const closeUnionTab = useCallback(
+    (path: string): void => {
+      const tab = allEditors.find((t) => t.path === path)
 
-  // Najnowszy graf pod ręką dla skilla get_graph (handler AI rejestrujemy raz, bez deps).
-  const graphRef = useRef<Graph | null>(null)
-
-  useEffect(() => {
-    graphRef.current = graph
-  }, [graph])
-
-  // Load persisted visual settings (accent / editor theme / wallpaper) on startup.
-  // settingsLoaded guards the persist effects below so they don't clobber the store
-  // with defaults before the load completes.
-  const settingsLoaded = useRef(false)
-
-  useEffect(() => {
-    let cancelled = false
-
-    window.api.getSettings().then(async (s) => {
-      if (s?.appTheme) {
-        setAccent(s.appTheme)
-      }
-
-      if (s?.editorTheme) {
-        setEditorTheme(s.editorTheme)
-      }
-
-      if (s?.wallpaper !== undefined) {
-        setWallpaper(s.wallpaper)
-      }
-
-      if (s?.rainbowBrackets !== undefined) {
-        setRainbow(s.rainbowBrackets)
-      }
-
-      if (s?.gitBlame === 'off' || s?.gitBlame === 'last') {
-        setGitBlame(s.gitBlame)
-      }
-
-      settingsLoaded.current = true
-
-      // Apply the saved LLM provider to the ai service on startup — otherwise it always
-      // starts on the config default (ollama), ignoring a "Claude" selection until the user
-      // re-saves Settings. Retried a few times to ride out the backend coming up.
-      const provider = s?.provider
-
-      if (provider) {
-        for (let i = 0; i < 5 && !cancelled; i++) {
-          try {
-            await window.api.aiSetProvider(provider)
-            break
-          } catch {
-            await new Promise((r) => setTimeout(r, 1500))
-          }
-        }
-      }
-
-      // Claude headless needs an OAuth token on the server — prompt for one if it's missing.
-      if (provider === 'claude' && !cancelled) {
-        const hasToken = await window.api.claudeTokenStatus().catch(() => false)
-
-        if (!hasToken && !cancelled) {
-          setClaudeLoginOpen(true)
-        }
-      }
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  // Re-check Claude login whenever the user switches the provider to Claude in Settings.
-  useEffect(() => {
-    return appBus.on('settings:provider-change', async ({ provider }) => {
-      if (provider !== 'claude') {
+      if (!tab) {
         return
       }
 
-      const hasToken = await window.api.claudeTokenStatus().catch(() => false)
+      appBus.emit('editor:close', { path })
+      patchWorkspace(tab.scope, (w) => {
+        const minimized = new Set(w.minimized)
+        minimized.delete(path)
 
-      if (!hasToken) {
-        setClaudeLoginOpen(true)
-      }
-    })
-  }, [])
+        const snappedTop = new Set(w.snappedTop)
+        snappedTop.delete(path)
 
-  // Persist each visual setting when it changes (merged server-side).
-  useEffect(() => {
-    document.documentElement.style.setProperty('--accent', accentBy(accent).color)
-
-    if (settingsLoaded.current) {
-      window.api.setSettings({ appTheme: accent })
-    }
-  }, [accent])
-
-  useEffect(() => {
-    if (settingsLoaded.current) {
-      window.api.setSettings({ editorTheme })
-    }
-  }, [editorTheme])
-
-  useEffect(() => {
-    if (settingsLoaded.current) {
-      window.api.setSettings({ wallpaper })
-    }
-  }, [wallpaper])
-
-  useEffect(() => {
-    if (settingsLoaded.current) {
-      window.api.setSettings({ rainbowBrackets: rainbow })
-    }
-  }, [rainbow])
-
-  useEffect(() => {
-    if (settingsLoaded.current) {
-      window.api.setSettings({ gitBlame })
-    }
-  }, [gitBlame])
-
-  // Serwis git czyta repozytorium WPROST z dysku (widzi też niezacommitowane
-  // zmiany w drzewie roboczym), więc nic nie wysyłamy — gotowość zależy tylko od
-  // tego, czy jest otwarty projekt.
-  useEffect(() => {
-    setGitReady(!!folder)
-  }, [folder])
-
-  // Start aplikacji: automatycznie otwórz ostatnio edytowany projekt.
-  useEffect(() => {
-    window.api.lastFolder().then((f) => {
-      setFolder(f)
-
-      if (f) {
-        appBus.emit('project:open', { folder: f })
-        scanProject(f)
-      }
-    })
-  }, [])
-
-  useEffect(() => {
-    const offProgress = window.api.onProgress((raw) => {
-      const p = GatewayMapper.progress(raw)
-
-      setProgress(p)
-      appBus.emit('scan:progress', {
-        currentFile: p.currentFile,
-        filesDone: p.filesDone,
-        entitiesDone: p.entitiesDone
+        return { editors: w.editors.filter((e) => e.path !== path), minimized, snappedTop }
       })
-
-      if (p.projectId) {
-        scannedProjectId.current = p.projectId
-      }
-
-      if (p.message) {
-        setLog((prev) => [...prev.slice(-300), p.message])
-      }
-    })
-
-    const offEnd = window.api.onScanEnd(async () => {
-      const kind = scanKind.current
-      scanKind.current = null
-
-      // inline-expand / per-app refresh: re-fetch that app and merge it in place
-      if (kind && typeof kind === 'object') {
-        const appId = kind.app
-        const raw = (await window.api.getAppGraph(appId)) as RawGraph
-        setRawApps((prev) => ({ ...prev, [appId]: raw }))
-        appBus.emit('scan:end', { kind: 'expand' })
-
-        return
-      }
-
-      // silent refresh after a file op: re-fetch base + all expanded apps in place
-      if (kind === 'refresh') {
-        const base = (await window.api.getGraph(Number(scannedProjectId.current) || 0)) as RawGraph
-        setRawBase(base)
-
-        for (const id of Object.keys(rawAppsRef.current).map(Number)) {
-          const r = (await window.api.getAppGraph(id)) as RawGraph
-          setRawApps((prev) => ({ ...prev, [id]: r }))
-        }
-
-        appBus.emit('scan:end', { kind: 'refresh' })
-
-        return
-      }
-
-      // initial project scan ('project' or null) → fresh monorepo graph (apps collapsed)
-      const base = (await window.api.getGraph(Number(scannedProjectId.current) || 0)) as RawGraph
-      setRawBase(base)
-      setRawApps({})
-      setMode('graph')
-      setNavKey((n) => n + 1)
-      appBus.emit('scan:end', { kind: 'project' })
-    })
-
-    const offError = window.api.onScanError((m) => {
-      setError(m)
-      appBus.emit('scan:error', { message: m })
-    })
-
-    return () => {
-      offProgress()
-      offEnd()
-      offError()
-    }
-  }, [])
-
-  // Przyciski myszy: wstecz / dalej w historii otwartych nodów.
-  useEffect(() => {
-    const onMouse = (e: MouseEvent) => {
-      if (e.button === 3) {
-        e.preventDefault()
-        back()
-      }
-
-      if (e.button === 4) {
-        e.preventDefault()
-        forward()
-      }
-    }
-
-    window.addEventListener('mouseup', onMouse)
-
-    return () => window.removeEventListener('mouseup', onMouse)
-  }, [])
-
-  const syncNav = () => {
-    setNav({ back: index.current > 0, fwd: index.current < history.current.length - 1 })
-  }
-
-  // Apps no longer drill into a separate scene — they expand inline. applyView only
-  // re-applies the monorepo (project) graph (used by back/forward).
-  const applyView = async (_v: View, nav = true) => {
-    const raw = (await window.api.getGraph(Number(scannedProjectId.current) || 0)) as RawGraph
-
-    setRawBase(raw)
-    setTitle('ai-architect')
-    setMode('graph')
-
-    if (nav) {
-      setNavKey((n) => n + 1)
-    }
-  }
-
-  const pushView = async (v: View) => {
-    history.current = [...history.current.slice(0, index.current + 1), v]
-    index.current = history.current.length - 1
-    syncNav()
-    await applyView(v)
-  }
-
-  const back = async () => {
-    if (index.current <= 0) {
-      return
-    }
-
-    index.current--
-    syncNav()
-    appBus.emit('nav:back', {})
-    await applyView(history.current[index.current])
-  }
-
-  const forward = async () => {
-    if (index.current >= history.current.length - 1) {
-      return
-    }
-
-    index.current++
-    syncNav()
-    appBus.emit('nav:forward', {})
-    await applyView(history.current[index.current])
-  }
-
-  const resetProgress = () => {
-    setError('')
-    setLog([])
-    setProgress(ScanProgress.initial())
-  }
-
-  const scanProject = (path: string) => {
-    if (!path) {
-      return
-    }
-
-    pending.current = { type: 'project' }
-    scanKind.current = 'project'
-    resetProgress()
-    setMode('scanning')
-    appBus.emit('scan:start', { kind: 'project', path })
-    window.api.startScan(path)
-  }
-
-  // appIdForPath finds the expanded app whose directory contains the given path.
-  const appIdForPath = (path: string): number | null => {
-    for (const [appIdStr, g] of Object.entries(rawAppsRef.current)) {
-      const root = (g.nodes ?? []).find((n) => n.id === 'folder:.')
-      const dir = typeof root?.file === 'string' ? root.file : ''
-
-      if (dir && path.startsWith(dir)) {
-        return Number(appIdStr)
-      }
-    }
-
-    return null
-  }
-
-  // refreshForPath silently refreshes the graph after a file op. A file inside an
-  // expanded app triggers a deep re-scan of THAT app (so its internals update); a
-  // monorepo-level change re-scans the project. Both update the graph in place.
-  const refreshForPath = (path: string) => {
-    setFsVersion((n) => n + 1) // also refresh the file tree (filer)
-
-    if (scanKind.current != null) {
-      return // a scan is already in flight
-    }
-
-    const appId = appIdForPath(path)
-
-    if (appId != null) {
-      scanKind.current = { app: appId } // reuse the inline-expand flow: deep-scan + re-merge
-      window.api.startScanApp(appId)
-
-      return
-    }
-
-    scanKind.current = 'refresh'
-    window.api.startScan(folder)
-  }
-
-  // refreshCurrentView — refresh without a specific path (re-scans the project).
-  const refreshCurrentView = () => {
-    setFsVersion((n) => n + 1)
-
-    if (scanKind.current != null) {
-      return
-    }
-
-    scanKind.current = 'refresh'
-    window.api.startScan(folder)
-  }
-
-  // Keep the latest refresh fn for the disk watcher (avoids a stale closure without
-  // re-subscribing on every render).
-  const refreshRef = useRef(refreshForPath)
-  refreshRef.current = refreshForPath
-
-  // React to on-disk changes: the filer watches the project tree (gateway → main →
-  // here) so the graph reflects files created/removed/renamed outside the app —
-  // including those written by `claude -p` in headless mode.
-  useEffect(() => {
-    if (!folder) {
-      return
-    }
-
-    // Guard against a stale preload (dev): the watcher API only exists after a full
-    // `pnpm dev` restart, so skip cleanly instead of crashing the renderer.
-    if (typeof window.api.watchProject !== 'function' || typeof window.api.onFsChange !== 'function') {
-      return
-    }
-
-    window.api.watchProject(folder)
-
-    let timer: number | undefined
-    let pending = ''
-
-    const off = window.api.onFsChange((ev) => {
-      appBus.emit('disk:change', {
-        path: ev.path,
-        op: ev.op as 'create' | 'write' | 'remove' | 'rename' | 'chmod',
-        dir: ev.dir
-      })
-
-      // Only structural changes (new/removed/renamed entries) reshape the graph;
-      // plain content writes (incl. the app's own saves) are ignored to avoid loops.
-      if (ev.op === 'write' || ev.op === 'chmod') {
-        return
-      }
-
-      pending = ev.path
-      window.clearTimeout(timer)
-      // Debounce bursts (e.g. a git checkout) into a single refresh.
-      timer = window.setTimeout(() => {
-        appBus.emit('disk:refresh', { path: pending })
-        refreshRef.current(pending)
-      }, 400)
-    })
-
-    return () => {
-      window.clearTimeout(timer)
-      off()
-      window.api.stopWatch()
-    }
-  }, [folder])
-
-  const pickAndScan = async () => {
-    const picked = await window.api.pickFolder()
-
-    if (picked) {
-      setFolder(picked)
-      appBus.emit('project:open', { folder: picked })
-      scanProject(picked)
-    }
-  }
-
-  // openFile otwiera (lub aktywuje) okno edytora; można mieć kilka naraz.
-  // animate=true → zawartość „wpisuje się" na żywo (gdy plik otwiera agent).
-  const openFile = (absFile: string, fn?: string, animate = false, gotoLine?: number) => {
-    lastDir.current = absFile.replace(/[\\/][^\\/]+$/, '') // zapamiętaj folder
-    appBus.emit('editor:open', { path: absFile })
-
-    setEditors((prev) =>
-      prev.some((e) => e.path === absFile)
-        ? prev.map((e) => (e.path === absFile ? { path: absFile, gotoFn: fn, gotoLine, animate } : e))
-        : [...prev, { path: absFile, gotoFn: fn, gotoLine, animate }]
-    )
-
-    setActiveEditor(absFile)
-    setMinimized((prev) => {
-      if (!prev.has(absFile)) {
-        return prev
-      }
-
-      const next = new Set(prev)
-      next.delete(absFile)
-
-      return next
-    })
-  }
-
-  const closeEditor = (path: string) => {
-    appBus.emit('editor:close', { path })
-    setEditors((prev) => prev.filter((e) => e.path !== path))
-    setMinimized((prev) => {
-      const next = new Set(prev)
-      next.delete(path)
-
-      return next
-    })
-    setSnappedTop((prev) => {
-      if (!prev.has(path)) {
-        return prev
-      }
-
-      const next = new Set(prev)
-      next.delete(path)
-
-      return next
-    })
-  }
-
-  // setEditorSnap records whether an editor window is snapped to the top (graph area), so
-  // that opening another file while one is snapped opens the new window snapped too.
-  const setEditorSnap = (path: string, snapped: boolean): void => {
-    setSnappedTop((prev) => {
-      if (snapped === prev.has(path)) {
-        return prev
-      }
-
-      const next = new Set(prev)
-
-      if (snapped) {
-        next.add(path)
-      } else {
-        next.delete(path)
-      }
-
-      return next
-    })
-  }
-
-  // onEditorGeometry zapamiętuje geometrię okna danego pliku (zgłaszaną przez CodeEditor).
-  const onEditorGeometry = (path: string, g: EditorGeom): void => {
-    setLayoutByPath((prev) => {
-      const c = prev[path]
-
-      if (c && c.x === g.x && c.y === g.y && c.w === g.w && c.h === g.h && c.snapped === g.snapped && c.fullscreen === g.fullscreen) {
-        return prev
-      }
-
-      return { ...prev, [path]: g }
-    })
-  }
-
-  // Po otwarciu projektu ODTWÓRZ zapamiętany układ okien edytorów (SQLite per folder):
-  // te same pliki, w tych samych miejscach/rozmiarach, zesnapowane/zminimalizowane jak były.
-  useEffect(() => {
-    restoredFolder.current = ''
-
-    // Guard a stale preload (dev): the editor-layout API only exists after a full
-    // `pnpm dev` restart, so skip cleanly instead of crashing the renderer.
-    if (!folder || typeof window.api.getEditorLayout !== 'function') {
-      restoredFolder.current = folder
-      return
-    }
-
-    let cancelled = false
-
-    window.api
-      .getEditorLayout(folder)
-      .then((data) => {
-        if (cancelled) {
-          return
-        }
-
-        const wins = data?.editors ?? []
-        const geom: Record<string, EditorGeom> = {}
-
-        for (const w of wins) {
-          if (w.x != null && w.y != null && w.w != null && w.h != null) {
-            geom[w.path] = { x: w.x, y: w.y, w: w.w, h: w.h, snapped: !!w.snapped, fullscreen: !!w.fullscreen }
-          }
-        }
-
-        setLayoutByPath(geom)
-        setEditors(wins.map((w) => ({ path: w.path })))
-        setMinimized(new Set(data?.minimized ?? []))
-        setSnappedTop(new Set(data?.snapped ?? []))
-        setActiveEditor(data?.active ?? '')
-        restoredFolder.current = folder
-      })
-      .catch(() => {
-        restoredFolder.current = folder
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [folder])
-
-  // Zapisz układ okien edytorów dla bieżącego projektu (odroczony zapis do SQLite).
-  // Bramkowane przez restoredFolder, by nie nadpisać świeżo wczytanego stanu pustym.
-  useEffect(() => {
-    if (!folder || restoredFolder.current !== folder || typeof window.api.saveEditorLayout !== 'function') {
-      return
-    }
-
-    const id = window.setTimeout(() => {
-      const data: EditorLayout = {
-        editors: editors.map((e) => {
-          const g = layoutByPath[e.path]
-
-          return g ? { path: e.path, ...g } : { path: e.path }
-        }),
-        active: activeEditor,
-        minimized: [...minimized],
-        snapped: [...snappedTop]
-      }
-
-      window.api.saveEditorLayout(folder, data)
-    }, 500)
-
-    return () => window.clearTimeout(id)
-  }, [folder, editors, activeEditor, minimized, snappedTop, layoutByPath])
-
-  // closeEditorAnimated fades the window out (opacity 1→0) before removing it.
-  const closeEditorAnimated = (path: string) => {
-    setClosingEditors((prev) => new Set(prev).add(path))
-
-    window.setTimeout(() => {
-      closeEditor(path)
-      setClosingEditors((prev) => {
-        const next = new Set(prev)
-        next.delete(path)
-
-        return next
-      })
-    }, EDITOR_FADE_MS)
-  }
-
-  // Klik w zakładkę: przywróć (jeśli zminimalizowane) i uaktywnij.
-  const selectEditor = (path: string) => {
-    appBus.emit('editor:activate', { path })
-    setMinimized((prev) => {
-      const next = new Set(prev)
-      next.delete(path)
-
-      return next
-    })
-    setActiveEditor(path)
-  }
-
-  const minimizeEditor = (path: string) => {
-    appBus.emit('editor:minimize', { path })
-    setMinimized((prev) => new Set(prev).add(path))
-  }
-
-  // runAgent — prompt AI w głównym widoku. Agent (gateway → ai/filer) wykonuje
-  // operacje na plikach; nowy plik domyślnie w ostatnio otwartym folderze.
-  // --- Agent ze skillami (Ask): treści/graf/pytania dobiera SKILLAMI wykonywanymi przez
-  // aplikację (read_file/list_dir/get_graph/ask_user). Jeden aktywny przebieg. ---
-
-  // serializeGraph zwraca zwięzłą strukturę grafu dla skilla get_graph.
-  const serializeGraph = (): string => {
-    const g = graphRef.current
-
-    if (!g) {
-      return '(brak grafu — projekt nie został zeskanowany)'
-    }
-
-    const nodes = g.nodes().map((n) => ({ id: n.id, kind: n.kind, name: n.name, file: n.absFile || n.file }))
-    const edges = g.dependencies().map((d) => ({ from: d.from, to: d.to }))
-
-    return JSON.stringify({ nodes, edges })
-  }
-
-  // runSkill wykonuje żądanie skilla po stronie aplikacji. Zwraca treść, albo undefined gdy
-  // odpowiedź przyjdzie później (ask_user — po wyborze w modalu).
-  const runSkill = async (req: AiSkillRequest): Promise<string | undefined> => {
-    if (req.name === 'read_file') {
-      const live = commander.activeEditor()
-
-      if (live && live.path === req.args) {
-        return live.content // żywa (też niezapisana) treść otwartego pliku
-      }
-
-      return window.api.readFile(req.args)
-    }
-
-    if (req.name === 'list_dir') {
-      return JSON.stringify(await window.api.fsList(req.args))
-    }
-
-    if (req.name === 'get_graph') {
-      return serializeGraph()
-    }
-
-    if (req.name === 'ask_user') {
-      let q: { question?: string; options?: string[] } = {}
-
-      try {
-        q = JSON.parse(req.args)
-      } catch {
-        q = { question: req.args, options: [] }
-      }
-
-      setPendingAsk({ id: req.id, question: q.question || req.args, options: q.options ?? [] })
-
-      return undefined
-    }
-
-    return `nieznany skill: ${req.name}`
-  }
-
-  // runAsk startuje turę agenta ze skillami (Q&A + read_file/get_graph + ask_user).
-  const runAsk = (prompt: string): void => {
-    const dir = lastDir.current || folder
-    const sel = selectedNode
-
-    setAgentBusy(true)
-    setAgentReply('')
-    appBus.emit('agent:start', { prompt, dir })
-
-    window.api.aiAsk({
-      prompt,
-      dir,
-      lang: i18n.language,
-      context: {
-        instruction: prompt,
-        openFile: activeEditor || '',
-        selectedKind: sel?.kind ?? '',
-        selectedName: sel?.name ?? '',
-        selectedFile: sel ? sel.absFile || sel.file || '' : ''
-      }
-    })
-  }
-
-  // onAskChoose — wybór w modalu wraca jako wynik skilla ask_user; agent kontynuuje.
-  const onAskChoose = (answer: string): void => {
-    if (pendingAsk) {
-      window.api.aiSkillResult({ id: pendingAsk.id, content: answer })
-      setPendingAsk(null)
-    }
-  }
-
-  // Nasłuch (raz): zdarzenia agenta (plan/narzędzie/odpowiedź) + wykonywanie skilli.
-  useEffect(() => {
-    const offEvent = window.api.onAiEvent((ev) => {
-      if (ev.type === 'answer') {
-        setAgentReply(ev.answer)
-        setAgentBusy(false)
-        appBus.emit('agent:success', { ops: 0, message: ev.answer })
-      } else if (ev.type === 'done') {
-        setAgentBusy(false)
-      } else if (ev.type === 'error') {
-        setAgentReply(t('agent.error', { message: ev.message }))
-        setAgentBusy(false)
-        appBus.emit('agent:error', { message: ev.message })
-      }
-    })
-
-    const offSkill = window.api.onAiSkill(async (req) => {
-      try {
-        const content = await runSkill(req)
-
-        if (content === undefined) {
-          return // ask_user — wynik odeśle modal po wyborze
-        }
-
-        window.api.aiSkillResult({ id: req.id, content })
-      } catch (e) {
-        window.api.aiSkillResult({ id: req.id, error: String((e as Error)?.message || e) })
-      }
-    })
-
-    return () => {
-      offEvent()
-      offSkill()
-    }
-  }, [])
-
-  const runAgent = async (prompt: string) => {
-    const dir = lastDir.current || folder
-
-    if (!dir) {
-      return
-    }
-
-    // Snapshot which files are already open — agent windows opened just to show a
-    // write get auto-closed afterwards; pre-existing ones stay.
-    const openBefore = new Set(editors.map((e) => e.path))
-
-    setAgentBusy(true)
-    appBus.emit('agent:start', { prompt, dir })
-
-    // Send a JSON payload: the user's instruction + the selected graph element and/or
-    // the file currently open in the editor (context for "this"/"that"). Dołączamy ŻYWĄ
-    // treść aktywnego edytora (też niezapisaną), by agent edytował dokładnie to, co widać.
-    const sel = selectedNode
-    const activeEd = commander.activeEditor()
-    const payload = JSON.stringify({
-      instruction: prompt,
-      selectedElement: sel
-        ? { kind: sel.kind, name: sel.name, file: sel.absFile || sel.file || '' }
-        : null,
-      openEditorFile: activeEd?.path || activeEditor || null,
-      openEditorContent: activeEd?.content ?? null
-    })
-
-    try {
-      const res = await window.api.aiAgent(payload, dir, i18n.language)
-
-      // zawsze pokaż coś w dymku (komunikat, podsumowanie operacji albo info)
-      const reply =
-        res?.message ||
-        (res?.ops?.length ? t('agent.opsDone', { count: res.ops.length }) : t('agent.noOps'))
-
-      setAgentReply(reply)
-      appBus.emit('agent:success', { ops: res?.ops?.length ?? 0, message: reply })
-
-      // Fire a granular bus event per executed op, so anything listening to the
-      // file events (scripts, loggers) reacts to AI-agent changes the same way it
-      // does to manual ones. FileOp only carries the resulting path.
-      for (const op of res?.ops ?? []) {
-        emitFileOpEvent(op.op, op.path)
-      }
-
-      // Files the agent wrote — show each in an editor window (typing in live).
-      // Only real file writes open an editor; folder ops (mkdir) never do.
-      const written = (res?.ops ?? [])
-        .filter((op) => op.op === 'create_file' || op.op === 'write')
-        .map((op) => op.path)
-
-      for (const p of written) {
-        openFile(p, undefined, true) // animate = live typing
-      }
-
-      // Windows opened only to show the write (not open beforehand) fade out and
-      // close once the user has had a moment to see the change.
-      const transient = written.filter((p) => !openBefore.has(p))
-
-      if (transient.length) {
-        window.setTimeout(() => {
-          for (const p of transient) {
-            closeEditorAnimated(p)
-          }
-        }, AGENT_WINDOW_DWELL_MS)
-      }
-
-      if (res?.ops?.length) {
-        const p = res.openPath || res.ops[0].path
-        setFocusPath(p)
-        refreshForPath(p) // refresh the app/project that the ops touched
-      }
-    } catch (e) {
-      const message = String((e as Error)?.message || e)
-
-      setAgentReply(t('agent.error', { message }))
-      appBus.emit('agent:error', { message })
-    } finally {
-      setAgentBusy(false)
-    }
-  }
-
-  // „Dodaj element" — folder: utwórz katalog; klasa: utwórz plik w katalogu
-  // docelowym (folderu z menu lub roota), AI wypełnia pustą klasę, otwórz + rescan.
-  const addElement = async (name: string, file: string, kind: 'class' | 'function' | 'folder', targetDir?: string) => {
-    const base = targetDir || folder
-
-    if (!base) {
-      return
-    }
-
-    if (kind === 'folder') {
-      const dir = await window.api.createFolder(base, file)
-      window.api.publishEvent({ type: 'create', title: t('events.createFolder'), file: dir })
-      appBus.emit('folder:create', { path: dir })
-      refreshForPath(dir) // deep-rescan the app that contains the new folder
-
-      return
-    }
-
-    const path = await window.api.createFile(base, file, name)
-
-    if (!path) {
-      return
-    }
-
-    // AI wypełnia pustą klasę/funkcję o podanej nazwie.
-    const what = kind === 'function' ? `pustą funkcję o nazwie ${name}` : `pustą klasę o nazwie ${name}`
-    const generated = await window.api
-      .aiEdit('', `Utwórz ${what}. Zwróć tylko kod, bez komentarzy.`, path)
-      .catch(() => '')
-
-    if (generated && generated.trim()) {
-      await window.api.saveFile(path, generated)
-    }
-
-    openFile(path)
-    window.api.publishEvent({ type: 'create', title: t('events.createElement'), file: path })
-    appBus.emit('file:create', { path, kind })
-    setFocusPath(path)
-    refreshForPath(path) // deep-rescan the app so the new class appears on the graph
-  }
-
-  // „Zmień nazwę" — zmień nazwę klasy w kodzie i nazwę pliku, otwórz nowy plik.
-  const renameElement = async (node: Node, className: string, fileBase: string) => {
-    if (!node.absFile) {
-      return
-    }
-
-    const path = await window.api.renameFile(node.absFile, fileBase, className, node.name)
-
-    if (path) {
-      openFile(path)
-      window.api.publishEvent({ type: 'rename', title: t('events.rename'), file: path })
-      appBus.emit('file:rename', { from: node.absFile, to: path })
-      setFocusPath(path)
-      refreshForPath(path)
-    }
-  }
-
-  // „Przenieś plik" (przeciągnięcie linii do folderu) — przenieś na dysku + rescan.
-  const moveFile = async (node: Node, targetDir: string) => {
-    if (!node.absFile) {
-      return
-    }
-
-    const path = await window.api.moveFile(node.absFile, targetDir)
-    window.api.publishEvent({ type: 'move', title: t('events.move'), file: path })
-    appBus.emit('file:move', { from: node.absFile, to: path })
-    setFocusPath(path)
-    refreshForPath(path)
-  }
-
-  // „Usuń element" — usuń plik/folder (przez gateway → filer) i odśwież graf.
-  const deleteElement = async (node: Node, path: string) => {
-    if (!window.confirm(t('graph.deleteConfirm', { name: node.name }))) {
-      return
-    }
-
-    await window.api.deleteFile(path)
-    window.api.publishEvent({ type: 'delete', title: t('events.delete'), file: path })
-    appBus.emit('file:delete', { path })
-    refreshForPath(path)
-  }
-
-  // Dwuklik w węzeł: serwis → drill-down; encja (klasa/serwis/funkcja) → edytor pliku.
-  // Inline-expand an app: deep-scan it (silent) then merge its internal graph under
-  // the app node. The monorepo graph stays visible the whole time.
-  const expandApp = (appId: number) => {
-    if (rawAppsRef.current[appId] || scanKind.current != null) {
-      return // already loaded or a scan is in flight
-    }
-
-    scanKind.current = { app: appId }
-    appBus.emit('nav:app-expand', { appId })
-    appBus.emit('scan:start', { kind: 'app', appId })
-    window.api.startScanApp(appId)
-  }
+    },
+    [allEditors, patchWorkspace]
+  )
+
+  // React to on-disk changes (filer watcher) → refresh the graph for the changed path.
+  useDiskWatch(folder, refreshForPath)
+
+  // Git review mode (driven by the active view) + git context for blocks/editor.
+  const { review, reviewFiles, gitState } = useGitReview(folder, activeView, gitBlame)
+
+  // AI agent (Ask + file-writing agent) wired to the live editor / graph / file ops.
+  const { agentBusy, agentReply, pendingAsk, runAsk, runAgent, onAskChoose, clearReply } = useAiAgent({
+    folder,
+    selectedNode,
+    activeEditorPath: ws.activeEditor,
+    graphRef,
+    lastDir,
+    openFile,
+    closeEditorAnimated,
+    refreshForPath,
+    setFocusPath,
+    getOpenEditors: () => ws.editors
+  })
+
+  // File operations from the graph context menu (add / rename / move / delete).
+  const { addElement, renameElement, moveFile, deleteElement } = useFileOps({
+    folder,
+    openFile,
+    refreshForPath,
+    setFocusPath
+  })
 
   // Wire app-level actions into the Commander (open/close editors, switch tabs, pick a
   // project, run the agent). Re-wired when editors/folder change so closures stay fresh.
@@ -1074,8 +255,8 @@ export default function App() {
       closeEditor,
       selectEditor,
       minimizeEditor,
-      listEditors: () => editors.map((e) => e.path),
-      activePath: () => activeEditor,
+      listEditors: () => workspaces[scopeRef.current].editors.map((e) => e.path),
+      activePath: () => workspaces[scopeRef.current].activeEditor,
       pickProject: pickAndScan,
       refresh: refreshCurrentView,
       runAgent,
@@ -1089,7 +270,7 @@ export default function App() {
         return folder ? folder.replace(/[\\/]$/, '') + '/' + rel : rel
       }
     })
-  }, [editors, activeEditor, folder])
+  }, [workspaces, folder])
 
   // Auto-load stored Lua scripts for the open project from the scripting service (global +
   // project-pinned). Runs only when scripts exist (so the WASM runtime isn't pulled in
@@ -1144,54 +325,114 @@ export default function App() {
     }
   }, [folder])
 
-  // Przełącznik trybu review: wgrywa świeżą kopię .git (bieżący stan gałęzi),
-  // pobiera listę zmienionych plików (gałąź vs baza) i włącza koloryzację.
-  const toggleReview = async () => {
-    if (review) {
-      setReview(false)
-      setReviewFiles([])
-      appBus.emit('review:toggle', { on: false })
+  // Ordered view keys (registry order) for the keyboard shortcuts (ALT+n, Shift+Tab).
+  const viewOrder = useMemo(() => VIEWS.map((v) => v.key), [])
 
-      return
+  // Global view keybindings: ALT+n select, Shift+Tab cycle, ALT+arrows editor nav,
+  // Escape → AI area. Implemented over the bus so they can become editable scripts later.
+  useViewKeys({ order: viewOrder, active: activeView, setActive: switchView })
+
+  // Telescope (Esc+Space) chord: the hook flips the overlay open. The 'telescope:open' bus
+  // event (deep-links / scripts) can open it too; both funnel into setTelescopeOpen.
+  useTelescopeChord(() => setTelescopeOpen(true))
+
+  useEffect(() => {
+    return appBus.on('telescope:open', () => setTelescopeOpen(true))
+  }, [])
+
+  // Global keystroke counter — batches keydowns and flushes to statsBump every ~2.5s so
+  // the topbar's daily counter updates without an IPC call per key.
+  useEffect(() => installKeystrokeCounter(), [])
+
+  // onTelescopePick — Telescope selection: open the file at the matched line and jump to
+  // the editor view. Also re-broadcast on the bus for any other listener.
+  const onTelescopePick = useCallback(
+    (absPath: string, line?: number): void => {
+      openFile(absPath, undefined, true, line)
+      switchView('editor')
+      appBus.emit('telescope:pick', { absPath, line })
+      setTelescopeOpen(false)
+    },
+    [switchView]
+  )
+
+  // Deep-links: any component may ask App to switch views ('view:request'); App is the
+  // only mutator of activeView. ALT+arrows emit 'editor:nav' which we resolve here.
+  useEffect(() => {
+    const offReq = appBus.on('view:request' as never, (p: { to: ViewKey }) => {
+      if (p?.to) {
+        switchView(p.to)
+      }
+    })
+
+    const offNav = appBus.on('editor:nav' as never, (p: { dir: 'prev' | 'next' }) => {
+      cycleEditor(p?.dir === 'prev' ? 'prev' : 'next')
+    })
+
+    return () => {
+      offReq()
+      offNav()
     }
+  }, [switchView, cycleEditor])
 
-    if (!folder) {
-      return
-    }
-
-    const res = await window.api.gitReview(folder).catch(() => null)
-    const files = (res?.files ?? []).map((f) => ({
-      path: f.path,
-      absPath: f.absPath,
-      status: f.status as ReviewStatus
-    }))
-
-    setReviewFiles(files)
-    setReview(true)
-    appBus.emit('review:toggle', { on: true, count: files.length })
-  }
-
-  // Mapa abs. ścieżka → status (dla klocków grafu w trybie review).
-  const reviewStatus = useMemo(() => {
-    const m: Record<string, ReviewStatus> = {}
-
-    for (const f of reviewFiles) {
-      m[f.absPath] = f.status
-    }
-
-    return m
-  }, [reviewFiles])
-
-  // Wartość kontekstu gita dla klocków/edytora. blame bramkowany przez gitReady,
-  // by nie odpytywać serwisu przed wgraniem kopii .git.
-  const gitState: GitState = useMemo(
+  // ViewContext — the single object every view receives. Memoized over its live fields so
+  // keepMounted views (editor/terminal/browser) don't re-render on unrelated App updates.
+  // The 'viewKey'/'active' fields are filled in per-view by ViewHost; here we default them.
+  const viewCtx: ViewContext = useMemo(
     () => ({
-      repoRoot: folder,
-      blame: gitReady ? gitBlame : 'off',
+      viewKey: activeView,
+      active: true,
+      folder,
+      graph,
+      selectedNode,
+      navKey,
+      editors: ws.editors,
+      activeEditorPath: ws.activeEditor,
+      minimized: ws.minimized,
+      wallpaper,
+      editorTheme,
+      vimOn,
+      copilotOn,
+      rainbow,
+      accent,
+      focusPath,
       review,
-      statusByAbs: reviewStatus
+      reviewFiles,
+      openFile,
+      closeEditor,
+      selectEditor,
+      minimizeEditor,
+      expandApp,
+      addElement,
+      renameElement,
+      moveFile,
+      deleteElement,
+      setSelectedNode,
+      bus: appBus,
+      api: window.api
     }),
-    [folder, gitReady, gitBlame, review, reviewStatus]
+    // Functions are stable enough (closures rebuilt each render); only live values gate
+    // the memo so keepMounted views aren't churned needlessly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      activeView,
+      folder,
+      graph,
+      selectedNode,
+      navKey,
+      ws.editors,
+      ws.activeEditor,
+      ws.minimized,
+      wallpaper,
+      editorTheme,
+      vimOn,
+      copilotOn,
+      rainbow,
+      accent,
+      focusPath,
+      review,
+      reviewFiles
+    ]
   )
 
   return (
@@ -1199,103 +440,67 @@ export default function App() {
     <EditorContext.Provider value={openFile}>
     <GitContext.Provider value={gitState}>
       <Layout>
-        <TopBar>
-        <ProjectName>{title === 'ai-architect' ? folder.split('/').pop() || '' : title}</ProjectName>
-        <div style={{ flex: 1 }} />
-        <Button variant={folder ? 'text' : 'contained'} size="small" startIcon={<FolderOpenIcon />} onClick={pickAndScan}>
-          {folder ? t('topbar.changeProject') : t('topbar.pickProject')}
-        </Button>
-        <Button size="small" startIcon={<SettingsIcon />} onClick={() => setSettingsOpen(true)}>
-          {t('topbar.settings')}
-        </Button>
-        <Button size="small" startIcon={<CodeIcon />} onClick={() => setScriptsOpen(true)}>
-          {t('topbar.scripts')}
-        </Button>
-        <Button size="small" startIcon={<TerminalIcon />} onClick={() => setLogsOpen(true)}>
-          {t('topbar.logs')}
-        </Button>
-        {mode === 'graph' && (
-          <Button
-            size="small"
-            variant={review ? 'contained' : 'outlined'}
-            color={review ? 'warning' : 'primary'}
-            startIcon={<RateReviewIcon />}
-            onClick={toggleReview}
-          >
-            {review ? t('review.end') : t('review.start')}
-          </Button>
-        )}
-      </TopBar>
+        <TopBar
+          folder={folder}
+          onPickProject={pickAndScan}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onOpenScripts={() => setScriptsOpen(true)}
+          onOpenLogs={() => setLogsOpen(true)}
+        />
 
+      {/* Persistent editor tab strip on EVERY view: the UNION of open files across all
+          editor workspaces. Clicking a tab switches to the view that hosts that file's
+          window and activates it. The active tab is the active file of the currently active
+          scope (only when that view hosts editors). Minimized tabs (any scope) show greyed. */}
       <EditorTabs
-        editors={editors}
-        active={activeEditor}
-        minimized={minimized}
-        onSelect={selectEditor}
-        onClose={closeEditor}
+        editors={allEditors}
+        active={hostsEditors ? ws.activeEditor : ''}
+        minimized={new Set([...workspaces.editor.minimized, ...workspaces.diagram.minimized])}
+        onSelect={selectUnionTab}
+        onClose={closeUnionTab}
       />
 
       <Content>
-        <FileBrowser
-          root={folder}
-          version={fsVersion}
-          onOpenFile={(p) => openFile(p)}
-          onChanged={(p) => refreshForPath(p)}
-          review={review}
-          changed={reviewFiles}
-        />
+        <ViewRail views={VIEWS} active={activeView} onSelect={switchView} />
 
-        <Stage id="graph-stage">
-        {mode === 'graph' && graph ? (
-          <GraphView
-            graph={graph}
-            selectedId={selectedNode?.id}
-            onSelect={setSelectedNode}
-            onNodeClick={(node) => {
-              if (node.absFile) {
-                openFile(node.absFile) // file → editor (apps are handled inline by GraphView)
-              }
-            }}
-            onExpandApp={(appId) => expandApp(appId)}
-            wallpaper={wallpaper}
-            onAddElement={addElement}
-            onRename={renameElement}
-            onMoveFile={moveFile}
-            onDelete={deleteElement}
-            focusPath={focusPath}
-            navKey={navKey}
+        {/* Left panel: the file tree shows ONLY on views that work on files (editor /
+            code-diagram). In review mode it stays visible but renders the flat "Changed
+            Files" list instead of the tree; every other view hides it entirely. */}
+        {(showsFileTree || review) && (
+          <FileBrowser
+            root={folder}
+            version={fsVersion}
+            onOpenFile={(p) => openFile(p)}
+            onChanged={(p) => refreshForPath(p)}
+            review={review}
+            changed={reviewFiles}
           />
-        ) : (
-          <Empty>
-            <h2>{t('empty.title')}</h2>
-            {folder ? (
-              <Button variant="outlined" onClick={() => scanProject(folder)}>
-                {t('empty.scanLast', { folder })}
-              </Button>
-            ) : null}
-          </Empty>
         )}
-        </Stage>
+
+        <ViewHost views={VIEWS} active={activeView} ctx={viewCtx} />
       </Content>
 
-      {mode === 'graph' && (
-        <AgentBar
-          onSubmit={runAsk}
-          busy={agentBusy}
-          reply={agentReply}
-          onClearReply={() => setAgentReply('')}
-        />
-      )}
+      {/* AgentBar is pinned at the bottom for EVERY view — the AI always knows what's on
+          screen and can help, regardless of the active view. */}
+      <AgentBar
+        onSubmit={runAsk}
+        busy={agentBusy}
+        reply={agentReply}
+        onClearReply={clearReply}
+      />
 
-      <ScanModal open={mode === 'scanning'} progress={progress} log={log} error={error} />
-        {editors.map((t, i) => (
+      <ScanModal open={scanning} progress={progress} log={log} error={error} />
+        {/* Floating editor windows live at the root (position:fixed) so they survive view
+            switches; they render only for views that host editors (editor / code-diagram)
+            and show that view's OWN workspace (independent open-files list). */}
+        {hostsEditors && ws.editors.map((t, i) => (
           <CodeEditor
             key={t.path}
             target={t}
             index={i}
-            active={activeEditor === t.path}
-            onActivate={() => setActiveEditor(t.path)}
-            minimized={minimized.has(t.path)}
+            active={ws.activeEditor === t.path}
+            onActivate={() => patchWorkspace(scopeRef.current, { activeEditor: t.path })}
+            minimized={ws.minimized.has(t.path)}
             onMinimize={() => minimizeEditor(t.path)}
             onClose={() => closeEditor(t.path)}
             onOpen={(nt) => openFile(nt.path, nt.gotoFn, false, nt.gotoLine)}
@@ -1304,14 +509,16 @@ export default function App() {
             copilot={copilotOn}
             onCopilotChange={setCopilotOn}
             rainbow={rainbow}
+            eachFnColor={eachFnColor}
             theme={editorTheme}
             root={folder}
-            closing={closingEditors.has(t.path)}
+            closing={ws.closingEditors.has(t.path)}
             review={review}
-            initialSnap={snappedTop.size > 0}
+            initialSnap={ws.snappedTop.size > 0 || review}
             onSnapChange={(snapped) => setEditorSnap(t.path, snapped)}
-            initialGeom={layoutByPath[t.path]}
+            initialGeom={ws.layoutByPath[t.path]}
             onGeometry={onEditorGeometry}
+            onCursor={onEditorCursor}
           />
         ))}
         <SettingsDialog
@@ -1327,45 +534,29 @@ export default function App() {
           onBlameChange={setGitBlame}
           rainbow={rainbow}
           onRainbowChange={setRainbow}
+          vimOn={vimOn}
+          onVimChange={setVimOn}
+          copilotOn={copilotOn}
+          onCopilotChange={setCopilotOn}
+          eachFnColor={eachFnColor}
+          onEachFnColorChange={setEachFnColor}
         />
         <ScriptsDialog open={scriptsOpen} onClose={() => setScriptsOpen(false)} project={folder} theme={editorTheme} />
         <LogsDialog open={logsOpen} onClose={() => setLogsOpen(false)} />
         <ClaudeLoginDialog open={claudeLoginOpen} onClose={() => setClaudeLoginOpen(false)} />
         <AiAskModal ask={pendingAsk} onChoose={onAskChoose} />
+        {/* Telescope (Esc+Space) file + content finder. Root-level portal above editors;
+            a pick opens the file and switches to the editor view. */}
+        <Telescope
+          open={telescopeOpen}
+          onClose={() => setTelescopeOpen(false)}
+          root={folder}
+          onOpenFile={onTelescopePick}
+        />
         <ToastHost />
       </Layout>
     </GitContext.Provider>
     </EditorContext.Provider>
     </ThemeProvider>
   )
-}
-
-// emitFileOpEvent maps an AI-agent FileOp (op name + resulting path) onto the
-// app's file-event bus. rename/move carry only the resulting path, so `from` is
-// left empty; plain `write` is a content edit (no structural file event).
-function emitFileOpEvent(op: string, path: string): void {
-  switch (op) {
-    case 'create_file':
-      appBus.emit('file:create', { path, kind: 'class' })
-      break
-
-    case 'mkdir':
-      appBus.emit('folder:create', { path })
-      break
-
-    case 'delete':
-      appBus.emit('file:delete', { path })
-      break
-
-    case 'rename':
-      appBus.emit('file:rename', { from: '', to: path })
-      break
-
-    case 'move':
-      appBus.emit('file:move', { from: '', to: path })
-      break
-
-    default:
-      break
-  }
 }

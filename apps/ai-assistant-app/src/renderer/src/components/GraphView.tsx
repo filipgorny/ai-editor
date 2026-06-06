@@ -24,6 +24,65 @@ type Pos = { x: number; y: number }
 type Link = { from: string; to: string; kind: string }
 type FileConvention = 'dash' | 'camel'
 
+// Pseudo-project key under which per-node AI descriptions are persisted (reusing the
+// existing scripts store — same pattern as browser macros). The script name is the
+// node id, the content is the free-text description that helps the AI generate code.
+const DESC_PROJECT = '__descriptions__'
+
+// loadDescription reads a node's persisted AI description (empty string when none).
+async function loadDescription(nodeId: string): Promise<string> {
+  const list = await window.api.listScripts(DESC_PROJECT).catch(() => [] as Script[])
+  const hit = list.find((s) => s.name === nodeId)
+
+  return hit?.content ?? ''
+}
+
+// saveDescription upserts a node's AI description in the scripts store.
+async function saveDescription(nodeId: string, text: string): Promise<void> {
+  const list = await window.api.listScripts(DESC_PROJECT).catch(() => [] as Script[])
+  const existing = list.find((s) => s.name === nodeId)
+
+  await window.api
+    .saveScript({ id: existing?.id, name: nodeId, content: text, project: DESC_PROJECT })
+    .catch(() => undefined)
+}
+
+// detectImplemented decides whether a class/function file already has REAL code (vs an
+// empty auto-created stub). The scanner only reports method NAMES, so we read the file
+// and look for a non-trivial body inside the entity's braces — an empty class/function
+// (only declarations, `{}`, or `// TODO`) counts as NOT implemented, enabling code gen.
+// Exported so NodeCard can show the same implemented/stub badge on the diagram.
+export async function detectImplemented(node: Node): Promise<boolean> {
+  if (!node.absFile) {
+    return false
+  }
+
+  const src = await window.api.readFile(node.absFile).catch(() => '')
+
+  if (!src.trim()) {
+    return false
+  }
+
+  // Strip comments + whitespace so a stub padded with TODOs still reads as empty.
+  const stripped = src
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\/\/[^\n]*/g, '')
+    .replace(/#[^\n]*/g, '')
+
+  // Bodies of any { ... } block in the file; if every block is empty the entity is a stub.
+  const bodies: string[] = stripped.match(/\{([\s\S]*?)\}/g) ?? []
+  const hasFilledBody = bodies.some((b) => b.replace(/[{}]/g, '').trim().length > 0)
+
+  if (hasFilledBody) {
+    return true
+  }
+
+  // No braces at all (e.g. an arrow/expression export) → treat any real statement as code.
+  const meaningful = stripped.replace(/\s+/g, '').replace(/[{}();,]/g, '')
+
+  return meaningful.length > 24
+}
+
 // baseName zwraca nazwę pliku bez katalogów i rozszerzenia (np. users.service).
 function baseName(path: string): string {
   const file = path.split(/[\\/]/).pop() ?? ''
@@ -186,6 +245,19 @@ export default function GraphView({
   const [renameNode, setRenameNode] = useState<Node | null>(null)
   const [renameClass, setRenameClass] = useState('')
   const [renameFile, setRenameFile] = useState('')
+  // Code-diagram (item 1) state. Implementation status per node id — drives whether
+  // "Generate code" is enabled (true = already has real code) and the card badge.
+  const [implStatus, setImplStatus] = useState<Record<string, boolean>>({})
+  // Whether a node has a persisted AI description (drives the menu label + card hint).
+  const [descStatus, setDescStatus] = useState<Record<string, boolean>>({})
+  // „Edytuj metody" dialog — one method name per line.
+  const [methodsNode, setMethodsNode] = useState<Node | null>(null)
+  const [methodsText, setMethodsText] = useState('')
+  // „Opis dla AI" dialog.
+  const [descNode, setDescNode] = useState<Node | null>(null)
+  const [descText, setDescText] = useState('')
+  // Set of node ids whose code is being (re)generated — disables the dialog/menu.
+  const [genBusy, setGenBusy] = useState<Set<string>>(new Set())
   // Przepinanie kreski: po kliknięciu krawędzi „contains" linia czepia się myszki,
   // a klik na folderze przenosi plik do tego folderu.
   const [relink, setRelink] = useState<{ fileNode: Node } | null>(null)
@@ -278,6 +350,9 @@ export default function GraphView({
   // Reset rozwinięć TYLKO przy zmianie sceny (inny projekt/app) — przy zwykłym
   // odświeżeniu tego samego widoku zachowujemy otwarte foldery.
   const expandedScene = useRef(-1)
+  // Katalog sceny, dla której odtworzono już rozwinięcia (bramkuje zapis, by nie
+  // nadpisać świeżo wczytanego stanu domyślnym przy montażu).
+  const expandReady = useRef('')
 
   useEffect(() => {
     const k = navKey ?? 0
@@ -287,6 +362,7 @@ export default function GraphView({
     }
 
     expandedScene.current = k
+    expandReady.current = ''
 
     const hasParent = new Set<string>()
 
@@ -296,13 +372,55 @@ export default function GraphView({
       }
     }
 
+    const validIds = new Set(graph.nodes().map((n) => n.id))
     const roots = graph
       .nodes()
       .filter((n) => !hasParent.has(n.id))
       .map((n) => n.id)
 
-    setExpanded(new Set(roots))
+    const dir = rootDir
+    let cancelled = false
+
+    const apply = (ids: string[]): void => {
+      if (cancelled) {
+        return
+      }
+
+      setExpanded(new Set(ids.filter((id) => validIds.has(id))))
+      expandReady.current = dir
+    }
+
+    // Odtwórz zapamiętane rozwinięcia drzewa dla tej sceny (SQLite per katalog projektu/app);
+    // brak zapisu → domyślnie otwarte tylko korzenie.
+    if (dir && typeof window.api.getState === 'function') {
+      window.api
+        .getState<string[]>('graph:expanded:' + dir)
+        .then((saved) => apply(saved && saved.length ? saved : roots))
+        .catch(() => apply(roots))
+    } else {
+      apply(roots)
+    }
+
+    return () => {
+      cancelled = true
+    }
   }, [graph, navKey])
+
+  // Zapisz rozwinięcia drzewa dla bieżącej sceny (odroczony zapis do SQLite). Bramkowane
+  // przez expandReady, by domyślne korzenie nie nadpisały świeżo wczytanego stanu.
+  useEffect(() => {
+    const dir = rootDir
+
+    if (!dir || expandReady.current !== dir || typeof window.api.setState !== 'function') {
+      return
+    }
+
+    const id = window.setTimeout(() => {
+      window.api.setState('graph:expanded:' + dir, [...expanded])
+    }, 500)
+
+    return () => window.clearTimeout(id)
+  }, [expanded, rootDir])
 
   const { rfNodes, rfEdges } = useMemo(() => {
     const all = graph.nodes()
@@ -801,6 +919,132 @@ export default function GraphView({
     loadConventions(node.absFile ? node.absFile.replace(/[\\/][^\\/]+$/, '') : anyProjectDir())
   }
 
+  // Resolve implementation + description status when a code node's menu opens, so the
+  // menu can enable/disable "Generate code" and label the describe action correctly.
+  const resolveNodeMeta = (node: Node) => {
+    if (node.kind === 'folder' || node.kind === 'app' || !node.absFile) {
+      return
+    }
+
+    detectImplemented(node)
+      .then((impl) => setImplStatus((prev) => ({ ...prev, [node.id]: impl })))
+      .catch(() => undefined)
+
+    loadDescription(node.id)
+      .then((text) => setDescStatus((prev) => ({ ...prev, [node.id]: text.trim().length > 0 })))
+      .catch(() => undefined)
+  }
+
+  // „Edytuj metody" — prefill with the node's current method names (one per line).
+  const openMethods = (node: Node) => {
+    setMenu(null)
+    setMethodsNode(node)
+    setMethodsText(node.functions.map((f) => f.name).join('\n'))
+  }
+
+  // „Opis dla AI" — load the persisted description so the user can edit it.
+  const openDescribe = (node: Node) => {
+    setMenu(null)
+    setDescNode(node)
+    setDescText('')
+    loadDescription(node.id)
+      .then((text) => setDescText(text))
+      .catch(() => undefined)
+  }
+
+  const confirmDescribe = () => {
+    const node = descNode
+
+    if (!node) {
+      return
+    }
+
+    const text = descText.trim()
+
+    saveDescription(node.id, text)
+      .then(() => setDescStatus((prev) => ({ ...prev, [node.id]: text.length > 0 })))
+      .catch(() => undefined)
+    setDescNode(null)
+  }
+
+  // markGen toggles the per-node "generating" flag.
+  const markGen = (id: string, on: boolean) => {
+    setGenBusy((prev) => {
+      const next = new Set(prev)
+
+      if (on) {
+        next.add(id)
+      } else {
+        next.delete(id)
+      }
+
+      return next
+    })
+  }
+
+  // generateCode wires the node's description (+ desired method list) through window.api
+  // AI calls: read the current file, ask the model to fill it in, save it back. The disk
+  // watcher (gateway → main → App) then re-scans the graph so the node shows as code.
+  const generateCode = async (node: Node, methods?: string[]) => {
+    if (!node.absFile || genBusy.has(node.id)) {
+      return
+    }
+
+    markGen(node.id, true)
+
+    try {
+      const [code, description] = await Promise.all([
+        window.api.readFile(node.absFile).catch(() => ''),
+        loadDescription(node.id)
+      ])
+
+      const wanted = (methods ?? node.functions.map((f) => f.name)).filter(Boolean)
+      const kindWord = node.kind === 'function' ? 'function' : 'class'
+      const parts = [`Implement the ${kindWord} "${node.name}".`]
+
+      if (wanted.length > 0) {
+        parts.push(`It must expose these methods: ${wanted.join(', ')}.`)
+      }
+
+      if (description.trim()) {
+        parts.push(`Purpose / behaviour: ${description.trim()}`)
+      }
+
+      parts.push('Return only the full file code, no explanations, no markdown fences.')
+      const prompt = parts.join(' ')
+      const generated = await window.api.aiEdit(code, prompt, node.absFile).catch(() => '')
+
+      if (generated && generated.trim()) {
+        await window.api.saveFile(node.absFile, generated)
+        setImplStatus((prev) => ({ ...prev, [node.id]: true }))
+        window.api.publishEvent({ type: 'save', title: t('events.save'), file: node.absFile })
+        // The on-disk write is picked up by App's project watcher, which re-scans the
+        // graph so the node flips from stub to implemented. Nudge any open editor too.
+        appBus.emit('editor:save', { path: node.absFile })
+      }
+    } finally {
+      markGen(node.id, false)
+    }
+  }
+
+  // confirmMethods saves the edited method list by asking the AI to add/keep exactly
+  // those methods on the entity (auto-created classes start with empty methods).
+  const confirmMethods = async () => {
+    const node = methodsNode
+
+    if (!node) {
+      return
+    }
+
+    const methods = methodsText
+      .split('\n')
+      .map((m) => m.trim().replace(/\(.*$/, ''))
+      .filter(Boolean)
+
+    setMethodsNode(null)
+    await generateCode(node, methods)
+  }
+
   const confirmAdd = () => {
     const name = addName.trim()
 
@@ -973,7 +1217,9 @@ export default function GraphView({
       }}
       onNodeContextMenu={(e, n) => {
         e.preventDefault()
-        setMenu({ x: e.clientX, y: e.clientY, node: n.data as Node })
+        const node = n.data as Node
+        resolveNodeMeta(node) // resolve implemented/description status for the menu
+        setMenu({ x: e.clientX, y: e.clientY, node })
       }}
     >
       <Background color="#21262d" gap={20} />
@@ -1028,11 +1274,19 @@ export default function GraphView({
         x={menu.x}
         y={menu.y}
         node={menu.node}
+        implemented={implStatus[menu.node.id]}
+        hasDescription={descStatus[menu.node.id]}
         addTargetDir={addTargetDir}
         onAdd={openAdd}
         onRename={openRename}
         onDelete={removeNode}
         onEdit={(n) => onNodeClick?.(n)}
+        onEditMethods={openMethods}
+        onDescribe={openDescribe}
+        onGenerate={(n) => {
+          setMenu(null)
+          void generateCode(n)
+        }}
         onClose={() => setMenu(null)}
       />
     )}
@@ -1172,6 +1426,55 @@ export default function GraphView({
         <Button onClick={() => setRenameNode(null)}>{t('common.cancel')}</Button>
         <Button variant="contained" onClick={confirmRename}>
           {t('graph.change')}
+        </Button>
+      </DialogActions>
+    </Dialog>
+
+    <Dialog open={!!methodsNode} onClose={() => setMethodsNode(null)} maxWidth="xs" fullWidth>
+      <DialogTitle>{t('graph.editMethods')}</DialogTitle>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+        <TextField
+          autoFocus
+          multiline
+          minRows={6}
+          label={t('graph.methodList')}
+          size="small"
+          value={methodsText}
+          onChange={(e) => setMethodsText(e.target.value)}
+          helperText={t('graph.methodListHint')}
+          InputProps={{ sx: { fontFamily: 'monospace', fontSize: 13 } }}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setMethodsNode(null)}>{t('common.cancel')}</Button>
+        <Button
+          variant="contained"
+          disabled={!!methodsNode && genBusy.has(methodsNode.id)}
+          onClick={confirmMethods}
+        >
+          {t('graph.generateCode')}
+        </Button>
+      </DialogActions>
+    </Dialog>
+
+    <Dialog open={!!descNode} onClose={() => setDescNode(null)} maxWidth="sm" fullWidth>
+      <DialogTitle>{t('graph.describe')}</DialogTitle>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+        <TextField
+          autoFocus
+          multiline
+          minRows={5}
+          label={t('graph.descriptionLabel')}
+          size="small"
+          value={descText}
+          onChange={(e) => setDescText(e.target.value)}
+          helperText={t('graph.descriptionHint')}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setDescNode(null)}>{t('common.cancel')}</Button>
+        <Button variant="contained" onClick={confirmDescribe}>
+          {t('graph.saveDescription')}
         </Button>
       </DialogActions>
     </Dialog>

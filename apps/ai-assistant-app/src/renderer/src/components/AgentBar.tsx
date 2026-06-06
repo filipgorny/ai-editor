@@ -1,81 +1,70 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import styled, { css, keyframes } from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 import { colors } from '../styles/tokens'
+import { appBus } from '../events'
+import { isVimCommand, runVimCommand } from './vimCommand'
 
-// Animacja „fali" na dole pola AI podczas czekania na odpowiedź. Kształt fali to maska SVG
-// (sinusoida wypełniona do dołu), a kolor bierzemy z --accent przez tło — dzięki masce fala
-// dziedziczy motyw. Dwie warstwy (wolniejsza z tyłu, szybsza z przodu) dają głębię.
-const WAVE_MASK =
-  "url(\"data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='80'%20height='24'%3E%3Cpath%20d='M0%2012%20C20%200%2020%200%2040%2012%20S60%2024%2080%2012%20V24%20H0%20Z'%20fill='black'/%3E%3C/svg%3E\")"
-
-const waveBack = keyframes`
-  to { -webkit-mask-position: 90px bottom; mask-position: 90px bottom; }
-`
-
-const waveFront = keyframes`
-  to { -webkit-mask-position: 70px bottom; mask-position: 70px bottom; }
-`
-
-// Field — wrapper pola, by nałożyć falę absolutnie na dole textarei.
+// Field — wrapper pola, by warstwy podpowiedzi (Hint) ułożyć względem textarei.
 const Field = styled.div`
   position: relative;
   flex: 1;
   display: flex;
 `
 
-const Wave = styled.div`
-  position: absolute;
-  left: 1px;
-  right: 1px;
-  bottom: 1px;
-  height: 30px;
-  pointer-events: none;
-  overflow: hidden;
-  border-bottom-left-radius: 9px;
-  border-bottom-right-radius: 9px;
-
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 100%;
-    -webkit-mask: ${WAVE_MASK} repeat-x bottom;
-    mask: ${WAVE_MASK} repeat-x bottom;
-  }
-
-  &::before {
-    background: color-mix(in srgb, var(--accent, #58a6ff) 22%, transparent);
-    -webkit-mask-size: 90px 26px;
-    mask-size: 90px 26px;
-    animation: ${waveBack} 2.1s linear infinite;
-  }
-
-  &::after {
-    background: color-mix(in srgb, var(--accent, #58a6ff) 42%, transparent);
-    -webkit-mask-size: 70px 20px;
-    mask-size: 70px 20px;
-    animation: ${waveFront} 1.3s linear infinite;
-  }
-`
-
 const Bar = styled.div`
   display: flex;
+  flex-direction: column;
   gap: 8px;
   padding: 10px 12px;
   border-top: 1px solid ${colors.border};
   background: ${colors.panel};
 `
 
-const Input = styled.textarea<{ $busy?: boolean; $reply?: boolean }>`
+// Spinner rotation used by the "responding" status row.
+const rotate = keyframes`
+  to { transform: rotate(360deg); }
+`
+
+// StatusRow — sits one line below the field while the agent is busy.
+const StatusRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 12px;
+  color: color-mix(in srgb, var(--accent, #58a6ff) 80%, #c9d1d9);
+`
+
+// Spinner — small CSS-only spinning circle in the accent color.
+const Spinner = styled.span`
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--accent, #58a6ff) 25%, transparent);
+  border-top-color: var(--accent, #58a6ff);
+  animation: ${rotate} 0.8s linear infinite;
+`
+
+// Hint — small status line under the field. Shows the vim command-line affordance while
+// the user is typing a ':' command, and the short result after one runs.
+const Hint = styled.div<{ $error?: boolean }>`
+  position: absolute;
+  left: 14px;
+  bottom: -2px;
+  transform: translateY(100%);
+  font-size: 12px;
+  font-family: 'Hack', monospace;
+  pointer-events: none;
+  color: ${(p) => (p.$error ? '#f85149' : 'color-mix(in srgb, var(--accent, #58a6ff) 80%, #c9d1d9)')};
+`
+
+const Input = styled.textarea<{ $busy?: boolean; $reply?: boolean; $vim?: boolean }>`
   flex: 1;
   padding: 14px 18px;
   border-radius: 10px;
-  border: 1px solid #30363d;
-  background: #1c2333;
+  border: 1px solid ${(p) => (p.$vim ? 'var(--accent, #58a6ff)' : '#30363d')};
+  background: ${(p) => (p.$busy ? 'color-mix(in srgb, var(--accent, #58a6ff) 8%, #1c2333)' : '#1c2333')};
   color: ${(p) => (p.$reply ? '#f2cc60' : '#ffffff')};
   font-size: 17px;
   font-weight: 500;
@@ -95,7 +84,18 @@ const Input = styled.textarea<{ $busy?: boolean; $reply?: boolean }>`
     background: #20283a;
   }
 
-  ${(p) => p.$busy && busyStripes}
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--accent, #58a6ff) 55%, transparent);
+    border-radius: 8px;
+  }
 `
 
 // Session prompt history (newest last) — recalled with Up/Down in the field, jak w shellu.
@@ -118,6 +118,10 @@ export default function AgentBar({
   const [prompt, setPrompt] = useState('')
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const showingReply = !!reply
+  // Brief status surfaced under the field after a vim ':' command runs (i18n key + vars).
+  const [status, setStatus] = useState<{ key: string; vars?: Record<string, string | number>; error: boolean } | null>(null)
+  // True while the current draft is a vim/ex command line (starts with ':').
+  const vimMode = !showingReply && isVimCommand(prompt)
   // -1 = bieżący szkic; inaczej indeks w promptHistory. draftRef trzyma szkic
   // sprzed wejścia w historię, by Strzałka w dół mogła go przywrócić.
   const [histIdx, setHistIdx] = useState(-1)
@@ -163,20 +167,65 @@ export default function AgentBar({
     }
   }, [reply])
 
+  // Escape anywhere routes here: focus the AI input. The bound key script (and other
+  // components) emit 'ai:focus' on the bus; we subscribe so focus always lands here.
+  useEffect(() => {
+    // The event is part of the shared contract; AppEventMap gains it in the integration
+    // phase, so subscribe via a cast to stay decoupled from that edit.
+    const off = (appBus.on as (name: string, cb: (p: unknown) => void) => () => void)('ai:focus', () => {
+      const el = inputRef.current
+
+      if (!el) {
+        return
+      }
+
+      el.focus()
+      el.setSelectionRange(el.value.length, el.value.length)
+    })
+
+    return off
+  }, [])
+
+  // runVim handles a ':' command line: execute it against the active editor, surface a
+  // short status, and never forward it to the LLM.
+  const runVim = async (text: string) => {
+    setStatus({ key: 'vim.running', error: false })
+
+    const res = await runVimCommand(text)
+
+    if (res.messageKey) {
+      setStatus({ key: res.messageKey, vars: res.messageVars, error: !res.ok })
+    } else {
+      setStatus(null)
+    }
+  }
+
   const send = () => {
     const text = prompt.trim()
 
-    if (text) {
-      if (promptHistory[promptHistory.length - 1] !== text) {
-        promptHistory.push(text) // zapisz do historii (bez powtórzeń z rzędu)
-      }
-
-      setHistIdx(-1)
-      draftRef.current = ''
-      onClearReply?.() // wyczyść poprzednią odpowiedź zanim przyjdzie nowa
-      onSubmit(text)
-      setPrompt('')
+    if (!text) {
+      return
     }
+
+    if (promptHistory[promptHistory.length - 1] !== text) {
+      promptHistory.push(text) // zapisz do historii (bez powtórzeń z rzędu)
+    }
+
+    setHistIdx(-1)
+    draftRef.current = ''
+
+    // Vim/ex command line: handled locally against the active editor, NOT sent to the LLM.
+    if (isVimCommand(text)) {
+      setPrompt('')
+      void runVim(text)
+
+      return
+    }
+
+    setStatus(null)
+    onClearReply?.() // wyczyść poprzednią odpowiedź zanim przyjdzie nowa
+    onSubmit(text)
+    setPrompt('')
   }
 
   // Klik / dowolny klawisz przy pokazanej odpowiedzi: wyczyść i wróć do pisania.
@@ -190,11 +239,13 @@ export default function AgentBar({
 
   return (
     <Bar>
+      <Field>
       <Input
         ref={inputRef}
         rows={rows}
         $busy={busy}
         $reply={showingReply}
+        $vim={vimMode}
         readOnly={showingReply}
         placeholder={busy ? '' : t('agent.placeholderMain')}
         title={showingReply ? t('agent.closeHint') : undefined}
@@ -204,6 +255,7 @@ export default function AgentBar({
           if (!showingReply) {
             setPrompt(e.target.value)
             setHistIdx(-1) // ręczna edycja → wyjdź z trybu historii
+            setStatus(null) // edycja czyści poprzedni status vim
           }
         }}
         onKeyDown={(e) => {
@@ -235,6 +287,18 @@ export default function AgentBar({
           }
         }}
       />
+      {!showingReply && status && (
+        <Hint $error={status.error}>{t(status.key, status.vars)}</Hint>
+      )}
+      {busy && !showingReply && (
+        <StatusRow>
+          <Spinner aria-hidden />
+          {t('agent.responding')}
+        </StatusRow>
+      )}
+      {!showingReply && !status && vimMode && <Hint>{t('aiArea.vimHint')}</Hint>}
+      </Field>
+
     </Bar>
   )
 }

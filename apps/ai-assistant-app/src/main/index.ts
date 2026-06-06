@@ -1,11 +1,24 @@
 import { join, dirname, relative, sep } from 'path'
 import { homedir } from 'os'
 import { existsSync } from 'fs'
-import { readdir, open as fsOpen } from 'fs/promises'
+import { readdir, open as fsOpen, readFile as fsReadFile, stat as fsStat } from 'fs/promises'
 import { execFile, spawn } from 'child_process'
 import { app, BrowserWindow, ipcMain, dialog, Menu, shell, screen } from 'electron'
 import Store from 'electron-store'
-import { kvGet, kvSet } from './db'
+import {
+  kvGet,
+  kvSet,
+  tasksList,
+  tasksSave,
+  tasksDelete,
+  tasksSetActive,
+  jiraGetConfig,
+  jiraSetConfig,
+  statsGet,
+  statsBump,
+  type Task,
+  type JiraConfig
+} from './db'
 import * as grpc from '@grpc/grpc-js'
 import * as protoLoader from '@grpc/proto-loader'
 
@@ -251,7 +264,10 @@ function createWindow(): BrowserWindow {
     icon: join(app.getAppPath(), 'build', 'icon.png'),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      // Enable <webview> for the in-app web browser view (view 7). The renderer still
+      // gates whether webviews are created via browserSetEnabled.
+      webviewTag: true
     }
   })
 
@@ -315,8 +331,403 @@ function createWindow(): BrowserWindow {
   return win
 }
 
+// ---- Terminal PTY (view 6) ---------------------------------------------------
+// One PTY per id. node-pty is a native module; require it lazily inside try/catch so
+// a missing/unbuilt binary degrades gracefully (handlers no-op + report unavailable)
+// instead of crashing the app or breaking the renderer build.
+type PtyProc = {
+  write: (d: string) => void
+  resize: (c: number, r: number) => void
+  kill: () => void
+  onData: (cb: (d: string) => void) => void
+  onExit: (cb: (e: { exitCode: number }) => void) => void
+}
+
+let ptyModule: { spawn: (...a: unknown[]) => PtyProc } | null | undefined
+
+function loadPty(): { spawn: (...a: unknown[]) => PtyProc } | null {
+  if (ptyModule !== undefined) {
+    return ptyModule
+  }
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    ptyModule = require('node-pty')
+  } catch (e) {
+    console.error('[pty] node-pty unavailable:', (e as Error).message)
+    ptyModule = null
+  }
+
+  return ptyModule ?? null
+}
+
+const ptys = new Map<string, PtyProc>()
+
+// defaultShell picks a sensible login shell for the host platform.
+function defaultShell(): string {
+  if (process.platform === 'win32') {
+    return process.env.COMSPEC || 'cmd.exe'
+  }
+
+  return process.env.SHELL || '/bin/bash'
+}
+
+// ---- Web browser history (view 7) -------------------------------------------
+// Lightweight per-id navigation history kept in app_state. The actual page lives in a
+// renderer <webview>; this only records where each browser window has been.
+type BrowserEntry = { url: string; title: string; ts: number }
+
+// normalizeUrl turns a bare host/search into a real URL (https:// default, or a
+// DuckDuckGo search when it doesn't look like a host).
+function normalizeUrl(raw: string): string {
+  const s = raw.trim()
+
+  if (!s) {
+    return ''
+  }
+
+  if (/^https?:\/\//i.test(s)) {
+    return s
+  }
+
+  if (/^[\w-]+(\.[\w-]+)+(\/|$|:)/.test(s) || s === 'localhost' || s.startsWith('localhost:')) {
+    return 'https://' + s
+  }
+
+  return 'https://duckduckgo.com/?q=' + encodeURIComponent(s)
+}
+
+function browserHistoryKey(id: string): string {
+  return 'browser:history:' + id
+}
+
+function pushBrowserHistory(id: string, url: string): void {
+  const list = kvGet<BrowserEntry[]>(browserHistoryKey(id)) ?? []
+  list.push({ url, title: '', ts: Date.now() })
+
+  // Cap history so the store doesn't grow unbounded.
+  kvSet(browserHistoryKey(id), list.slice(-200))
+}
+
+// ---- Telescope finder (Esc+Space) -------------------------------------------
+// Filename + content search under a root. Prefers ripgrep for content matches; falls
+// back to a bounded fs walk. Skips heavy/irrelevant directories.
+type TelescopeHit = {
+  path: string
+  absPath: string
+  line?: number
+  preview?: string
+  kind: 'name' | 'content'
+}
+
+const TELESCOPE_SKIP = new Set(['node_modules', '.git', 'dist', 'out', '.next', 'build', '.cache', 'vendor', 'target'])
+
+function hasRipgrep(): Promise<boolean> {
+  return new Promise((resolve) => {
+    execFile('rg', ['--version'], { timeout: 3000 }, (err) => resolve(!err))
+  })
+}
+
+// walkFiles collects files under root (skipping noise dirs) up to a cap.
+async function walkFiles(root: string, cap: number): Promise<string[]> {
+  const out: string[] = []
+
+  const walk = async (dir: string): Promise<void> => {
+    if (out.length >= cap) {
+      return
+    }
+
+    let entries: import('fs').Dirent[]
+
+    try {
+      entries = await readdir(dir, { withFileTypes: true })
+    } catch {
+      return
+    }
+
+    for (const e of entries) {
+      if (out.length >= cap) {
+        return
+      }
+
+      if (e.name.startsWith('.') && e.name !== '.env') {
+        // Skip dotfiles/dotdirs except a couple of useful ones; .git etc. already in skip set.
+      }
+
+      if (e.isDirectory()) {
+        if (!TELESCOPE_SKIP.has(e.name) && !e.name.startsWith('.')) {
+          await walk(join(dir, e.name))
+        }
+      } else if (e.isFile()) {
+        out.push(join(dir, e.name))
+      }
+    }
+  }
+
+  await walk(root)
+
+  return out
+}
+
+// telescopeRgContent runs ripgrep for content matches and parses its vimgrep output.
+function telescopeRgContent(query: string, root: string, limit: number): Promise<TelescopeHit[]> {
+  return new Promise((resolve) => {
+    const args = [
+      '--vimgrep',
+      '--no-heading',
+      '--smart-case',
+      '--max-count',
+      '5',
+      '-g',
+      '!node_modules',
+      '-g',
+      '!.git',
+      '-g',
+      '!dist',
+      '-g',
+      '!out',
+      query,
+      root
+    ]
+
+    execFile('rg', args, { timeout: 8000, maxBuffer: 8 * 1024 * 1024 }, (_err, stdout) => {
+      const hits: TelescopeHit[] = []
+      const lines = (stdout || '').split('\n')
+
+      for (const raw of lines) {
+        if (hits.length >= limit) {
+          break
+        }
+
+        // Format: path:line:col:preview
+        const m = raw.match(/^(.*?):(\d+):(\d+):(.*)$/)
+
+        if (!m) {
+          continue
+        }
+
+        const absPath = m[1]
+        hits.push({
+          path: relative(root, absPath),
+          absPath,
+          line: Number(m[2]),
+          preview: m[4].slice(0, 200),
+          kind: 'content'
+        })
+      }
+
+      resolve(hits)
+    })
+  })
+}
+
+// telescopeWalkContent is the ripgrep-less fallback: grep file contents during a walk.
+async function telescopeWalkContent(query: string, files: string[], limit: number): Promise<TelescopeHit[]> {
+  const hits: TelescopeHit[] = []
+  const needle = query.toLowerCase()
+
+  for (const abs of files) {
+    if (hits.length >= limit) {
+      break
+    }
+
+    try {
+      const st = await fsStat(abs)
+
+      if (st.size > 1024 * 1024) {
+        continue
+      }
+
+      const text = await fsReadFile(abs, 'utf8')
+
+      if (text.includes(' ')) {
+        continue
+      }
+
+      const fileLines = text.split('\n')
+
+      for (let i = 0; i < fileLines.length; i++) {
+        if (hits.length >= limit) {
+          break
+        }
+
+        if (fileLines[i].toLowerCase().includes(needle)) {
+          hits.push({
+            path: abs,
+            absPath: abs,
+            line: i + 1,
+            preview: fileLines[i].trim().slice(0, 200),
+            kind: 'content'
+          })
+        }
+      }
+    } catch {
+      // unreadable / binary — skip
+    }
+  }
+
+  return hits
+}
+
+// telescopeFind returns filename hits plus content hits (capped).
+async function telescopeFind(
+  query: string,
+  opts?: { root?: string; limit?: number; content?: boolean }
+): Promise<TelescopeHit[]> {
+  const root = opts?.root || ''
+  const limit = opts?.limit ?? 50
+
+  if (!root || !query.trim()) {
+    return []
+  }
+
+  const files = await walkFiles(root, 5000)
+  const needle = query.toLowerCase()
+  const nameHits: TelescopeHit[] = []
+
+  for (const abs of files) {
+    if (nameHits.length >= limit) {
+      break
+    }
+
+    const rel = relative(root, abs)
+
+    if (rel.toLowerCase().includes(needle)) {
+      nameHits.push({ path: rel, absPath: abs, kind: 'name' })
+    }
+  }
+
+  if (opts?.content === false) {
+    return nameHits.slice(0, limit)
+  }
+
+  let contentHits: TelescopeHit[] = []
+
+  if (await hasRipgrep()) {
+    contentHits = (await telescopeRgContent(query, root, limit)).map((h) => ({
+      ...h,
+      path: relative(root, h.absPath)
+    }))
+  } else {
+    const walked = await telescopeWalkContent(query, files, limit)
+    contentHits = walked.map((h) => ({ ...h, path: relative(root, h.absPath) }))
+  }
+
+  return [...nameHits, ...contentHits].slice(0, limit * 2)
+}
+
+// ---- Git auto-branch helpers (tasks view) -----------------------------------
+function runGit(repoPath: string, args: string[]): Promise<string> {
+  return new Promise((resolve, reject) => {
+    execFile('git', ['-C', repoPath, ...args], { timeout: 15000 }, (err, stdout, stderr) => {
+      if (err) {
+        reject(new Error(stderr || (err as Error).message))
+
+        return
+      }
+
+      resolve(stdout.trim())
+    })
+  })
+}
+
+async function gitCurrentBranch(repoPath: string): Promise<{ branch: string; dirty: boolean }> {
+  const branch = await runGit(repoPath, ['rev-parse', '--abbrev-ref', 'HEAD'])
+  const status = await runGit(repoPath, ['status', '--porcelain'])
+
+  return { branch, dirty: status.length > 0 }
+}
+
+async function gitCreateBranch(
+  repoPath: string,
+  name: string,
+  base?: string
+): Promise<{ branch: string; created: boolean }> {
+  // If the branch already exists, just report it; otherwise create from base/HEAD.
+  const existing = await runGit(repoPath, ['branch', '--list', name]).catch(() => '')
+
+  if (existing.trim()) {
+    await runGit(repoPath, ['checkout', name])
+
+    return { branch: name, created: false }
+  }
+
+  const args = base ? ['checkout', '-b', name, base] : ['checkout', '-b', name]
+  await runGit(repoPath, args)
+
+  return { branch: name, created: true }
+}
+
+async function gitCheckoutBranch(repoPath: string, name: string): Promise<{ branch: string }> {
+  await runGit(repoPath, ['checkout', name])
+
+  return { branch: name }
+}
+
+// ---- Jira import -------------------------------------------------------------
+// Pulls issues for the configured project via the Jira REST API and upserts them into
+// the local tasks store (keyed by jiraKey so re-imports update instead of duplicating).
+async function jiraImport(): Promise<Task[]> {
+  const cfg = jiraGetConfig()
+
+  if (!cfg || !cfg.baseUrl || !cfg.email || !cfg.token) {
+    return []
+  }
+
+  const base = cfg.baseUrl.replace(/\/$/, '')
+  const jql = encodeURIComponent(`project = ${cfg.project} ORDER BY updated DESC`)
+  const url = `${base}/rest/api/2/search?jql=${jql}&maxResults=50&fields=summary,description,status`
+  const auth = Buffer.from(`${cfg.email}:${cfg.token}`).toString('base64')
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Basic ${auth}`, Accept: 'application/json' }
+  })
+
+  if (!res.ok) {
+    throw new Error(`Jira HTTP ${res.status}`)
+  }
+
+  const body = (await res.json()) as { issues?: { key: string; fields?: Record<string, unknown> }[] }
+  const issues = body.issues ?? []
+  const existing = tasksList(cfg.project)
+  const byKey = new Map(existing.filter((t) => t.jiraKey).map((t) => [t.jiraKey as string, t]))
+
+  for (const issue of issues) {
+    const fields = (issue.fields ?? {}) as { summary?: string; description?: string; status?: { name?: string } }
+    const statusName = (fields.status?.name || '').toLowerCase()
+    const status = statusName.includes('done') || statusName.includes('closed')
+      ? 'done'
+      : statusName.includes('progress')
+        ? 'doing'
+        : 'todo'
+    const prev = byKey.get(issue.key)
+
+    tasksSave({
+      id: prev?.id,
+      title: fields.summary || issue.key,
+      description: typeof fields.description === 'string' ? fields.description : '',
+      status,
+      jiraKey: issue.key,
+      branch: prev?.branch,
+      project: cfg.project
+    })
+  }
+
+  return tasksList(cfg.project)
+}
+
 function registerIpc(win: BrowserWindow): void {
   ipcMain.handle('app:lastFolder', () => store.get('lastFolder', '') as string)
+
+  // Zapamiętaj ostatnio otwarty projekt PRZY KAŻDEJ zmianie folderu (nie tylko z dialogu),
+  // by po restarcie aplikacja sama wczytała ten projekt.
+  ipcMain.handle('app:setLastFolder', (_e, folder: string) => {
+    if (folder) {
+      store.set('lastFolder', folder)
+    }
+
+    return true
+  })
 
   ipcMain.handle('dialog:pickFolder', async () => {
     const res = await dialog.showOpenDialog(win, { properties: ['openDirectory'] })
@@ -463,6 +874,16 @@ function registerIpc(win: BrowserWindow): void {
   ipcMain.handle('editors:get', (_e, folder: string) => kvGet('editors:' + folder))
   ipcMain.handle('editors:set', (_e, p: { folder: string; data: unknown }) => {
     kvSet('editors:' + p.folder, p.data)
+
+    return true
+  })
+
+  // --- Generyczny stan sesji (lokalny SQLite) ---
+  // Pełny snapshot sesji per projekt (aktywny widok, oba workspace'y edytorów, review),
+  // by po ponownym otwarciu projektu sesja wyglądała identycznie.
+  ipcMain.handle('state:get', (_e, key: string) => kvGet(key))
+  ipcMain.handle('state:set', (_e, p: { key: string; value: unknown }) => {
+    kvSet(p.key, p.value)
 
     return true
   })
@@ -692,6 +1113,165 @@ function registerIpc(win: BrowserWindow): void {
   })
 
   ipcMain.on('ai:ask:cancel', () => cancelAsk())
+
+  // ---- Terminal PTY (view 6) ----
+  // term:start spawns a PTY; output streams as term:data, exit as term:exit. When
+  // node-pty is unavailable we emit a synthetic exit so the renderer can show a notice.
+  ipcMain.on('term:start', (e, opts: { id: string; cwd?: string; cols?: number; rows?: number; shell?: string }) => {
+    const mod = loadPty()
+
+    if (!mod) {
+      e.sender.send('term:exit', { id: opts.id, code: -1 })
+
+      return
+    }
+
+    // Reuse-by-id: kill an existing PTY before re-spawning under the same id.
+    const prev = ptys.get(opts.id)
+
+    if (prev) {
+      try {
+        prev.kill()
+      } catch {
+        // already gone
+      }
+
+      ptys.delete(opts.id)
+    }
+
+    try {
+      const proc = mod.spawn(opts.shell || defaultShell(), [], {
+        name: 'xterm-color',
+        cols: opts.cols || 80,
+        rows: opts.rows || 24,
+        cwd: opts.cwd || homedir(),
+        env: process.env
+      })
+      ptys.set(opts.id, proc)
+
+      proc.onData((data) => {
+        if (!e.sender.isDestroyed()) {
+          e.sender.send('term:data', { id: opts.id, data })
+        }
+      })
+
+      proc.onExit(({ exitCode }) => {
+        ptys.delete(opts.id)
+
+        if (!e.sender.isDestroyed()) {
+          e.sender.send('term:exit', { id: opts.id, code: exitCode })
+        }
+      })
+    } catch (err) {
+      console.error('[pty] spawn failed:', (err as Error).message)
+      e.sender.send('term:exit', { id: opts.id, code: -1 })
+    }
+  })
+
+  ipcMain.on('term:write', (_e, p: { id: string; data: string }) => {
+    const proc = ptys.get(p.id)
+
+    if (proc) {
+      try {
+        proc.write(p.data)
+      } catch {
+        // pty already closed
+      }
+    }
+  })
+
+  ipcMain.on('term:resize', (_e, p: { id: string; cols: number; rows: number }) => {
+    const proc = ptys.get(p.id)
+
+    if (proc) {
+      try {
+        proc.resize(p.cols, p.rows)
+      } catch {
+        // pty already closed
+      }
+    }
+  })
+
+  ipcMain.on('term:kill', (_e, id: string) => {
+    const proc = ptys.get(id)
+
+    if (proc) {
+      try {
+        proc.kill()
+      } catch {
+        // already gone
+      }
+
+      ptys.delete(id)
+    }
+  })
+
+  // ---- Web browser (view 7) ----
+  // webviewTag is enabled at window creation; this toggle just records intent + reports
+  // back so the renderer can gate webview creation. History is a main-side store.
+  ipcMain.handle('browser:setEnabled', (_e, enabled: boolean) => {
+    kvSet('browser:enabled', !!enabled)
+
+    return !!enabled
+  })
+
+  ipcMain.handle('browser:navigate', (_e, p: { id: string; url: string }) => {
+    const url = normalizeUrl(p.url)
+
+    if (url) {
+      pushBrowserHistory(p.id, url)
+    }
+
+    return { url }
+  })
+
+  ipcMain.handle('browser:history', (_e, id: string) => kvGet<BrowserEntry[]>(browserHistoryKey(id)) ?? [])
+
+  // ---- Tasks store (view 4) ----
+  ipcMain.handle('tasks:list', (_e, project: string) => tasksList(project ?? ''))
+  ipcMain.handle('tasks:save', (_e, t: Parameters<typeof tasksSave>[0]) => tasksSave(t))
+  ipcMain.handle('tasks:delete', (_e, id: number) => tasksDelete(id))
+  ipcMain.handle('tasks:setActive', (_e, id: number) => tasksSetActive(id))
+  ipcMain.handle('jira:getConfig', () => jiraGetConfig())
+  ipcMain.handle('jira:setConfig', (_e, cfg: JiraConfig) => {
+    jiraSetConfig(cfg)
+
+    return true
+  })
+  ipcMain.handle('jira:import', () => jiraImport())
+
+  // ---- Telescope finder (Esc+Space) ----
+  ipcMain.handle('telescope:find', (_e, p: { query: string; opts?: { root?: string; limit?: number; content?: boolean } }) =>
+    telescopeFind(p.query, p.opts)
+  )
+
+  // ---- Stats counters (topbar) ----
+  ipcMain.handle('stats:get', () => statsGet())
+  ipcMain.handle('stats:bump', (_e, p: { field: 'keystrokes' | 'lines' | 'tasks'; by?: number }) =>
+    statsBump(p.field, p.by)
+  )
+
+  // ---- Git auto-branch (tasks view) ----
+  ipcMain.handle('git:currentBranch', (_e, repoPath: string) => gitCurrentBranch(repoPath))
+  ipcMain.handle('git:createBranch', (_e, p: { repoPath: string; name: string; base?: string }) =>
+    gitCreateBranch(p.repoPath, p.name, p.base)
+  )
+  ipcMain.handle('git:checkoutBranch', (_e, p: { repoPath: string; name: string }) =>
+    gitCheckoutBranch(p.repoPath, p.name)
+  )
+
+  // Kill all PTYs when the window goes away so we don't leak shell processes.
+  win.on('closed', () => {
+    for (const proc of ptys.values()) {
+      try {
+        proc.kill()
+      } catch {
+        // already gone
+      }
+    }
+
+    ptys.clear()
+  })
 }
 
 app.whenReady().then(() => {

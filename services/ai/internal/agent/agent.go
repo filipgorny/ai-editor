@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -289,10 +290,50 @@ func finalSystem(edit bool) string {
 }
 
 func answerEvent(s string) *aiv1.AskEvent {
-	return &aiv1.AskEvent{Event: &aiv1.AskEvent_Answer{Answer: s}}
+	return &aiv1.AskEvent{Event: &aiv1.AskEvent_Answer{Answer: sanitizeAnswer(s)}}
+}
+
+// toolCallTagRe matches <tool_call>...</tool_call> blocks (some local models, e.g.
+// Ollama qwen2.5-coder, wrap their tool calls this way). Multi-line aware.
+var toolCallTagRe = regexp.MustCompile(`(?is)<tool_call>.*?</tool_call>`)
+
+// toolJSONRe matches a standalone JSON object describing a tool call, e.g.
+// {"tool":"finish","args":"..."} — including object-form args ({"args":{...}}).
+var toolJSONRe = regexp.MustCompile(`\{[^{}]*"tool"\s*:\s*"[^"]*"(?:[^{}]|\{[^{}]*\})*\}`)
+
+// sanitizeAnswer strips raw tool-call protocol fragments from user-facing answer
+// text so the model's internal tool/skill calls never leak into the chat. It is a
+// defensive net for cases where the model emits a tool call where plain prose was
+// expected (or wraps it in tags the agent loop did not route).
+func sanitizeAnswer(s string) string {
+	out := toolCallTagRe.ReplaceAllString(s, "")
+	out = toolJSONRe.ReplaceAllString(out, "")
+
+	return strings.TrimSpace(out)
+}
+
+// stripToolCallTag unwraps a single <tool_call>...</tool_call> block, returning its
+// inner content so the JSON tool call inside can be parsed and routed.
+func stripToolCallTag(s string) string {
+	open := strings.Index(s, "<tool_call>")
+
+	if open < 0 {
+		return s
+	}
+
+	rest := s[open+len("<tool_call>"):]
+	close := strings.Index(rest, "</tool_call>")
+
+	if close < 0 {
+		return rest
+	}
+
+	return rest[:close]
 }
 
 func parseDecision(s string) (string, string) {
+	s = stripToolCallTag(s)
+
 	i := strings.Index(s, "{")
 	j := strings.LastIndex(s, "}")
 
@@ -300,21 +341,36 @@ func parseDecision(s string) (string, string) {
 		return "", s
 	}
 
+	raw := s[i : j+1]
+
+	// First try args as a plain string: {"tool":"read_file","args":"/x/y.ts"}.
 	var d struct {
 		Tool   string `json:"tool"`
 		Args   string `json:"args"`
 		Answer string `json:"answer"`
 	}
 
-	if json.Unmarshal([]byte(s[i:j+1]), &d) != nil {
-		return "", s
+	if json.Unmarshal([]byte(raw), &d) == nil {
+		if d.Tool == "" && d.Answer != "" {
+			return "finish", d.Answer
+		}
+
+		return d.Tool, d.Args
 	}
 
-	if d.Tool == "" && d.Answer != "" {
-		return "finish", d.Answer
+	// Fallback: args as an object/array (e.g. {"tool":"ask_user","args":{...}}).
+	// Keep args as raw JSON so the relevant skill can interpret it.
+	var obj struct {
+		Tool string          `json:"tool"`
+		Args json.RawMessage `json:"args"`
 	}
 
-	return d.Tool, d.Args
+	if json.Unmarshal([]byte(raw), &obj) == nil && obj.Tool != "" {
+		return obj.Tool, strings.TrimSpace(string(obj.Args))
+	}
+
+	// Unparseable: treat as plain text, but sanitized so no raw protocol leaks.
+	return "", sanitizeAnswer(s)
 }
 
 func truncate(s string, n int) string {

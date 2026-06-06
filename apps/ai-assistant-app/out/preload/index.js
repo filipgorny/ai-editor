@@ -28,6 +28,10 @@ const api = {
   // --- Układ okien edytorów per projekt (lokalny SQLite) ---
   getEditorLayout: (folder) => electron.ipcRenderer.invoke("editors:get", folder),
   saveEditorLayout: (folder, data) => electron.ipcRenderer.invoke("editors:set", { folder, data }),
+  // --- Pełny stan sesji per projekt (lokalny SQLite) + ostatnio otwarty projekt ---
+  getState: (key) => electron.ipcRenderer.invoke("state:get", key),
+  setState: (key, value) => electron.ipcRenderer.invoke("state:set", { key, value }),
+  setLastFolder: (folder) => electron.ipcRenderer.invoke("app:setLastFolder", folder),
   saveViewport: (key, vp) => electron.ipcRenderer.invoke("viewport:set", { key, vp }),
   getViewport: (key) => electron.ipcRenderer.invoke("viewport:get", key),
   getSettings: () => electron.ipcRenderer.invoke("settings:get"),
@@ -96,6 +100,44 @@ const api = {
     const handler = (_e, ev) => cb(ev);
     electron.ipcRenderer.on("fs:change", handler);
     return () => electron.ipcRenderer.removeListener("fs:change", handler);
-  }
+  },
+  // ---- Terminal PTY (view 6) ----
+  // One PTY per id (string). Backed by node-pty in main (lazy-required); if the native
+  // module is missing the main process emits an onTermExit with code -1.
+  termStart: (opts) => electron.ipcRenderer.send("term:start", opts),
+  termWrite: (id, data) => electron.ipcRenderer.send("term:write", { id, data }),
+  termResize: (id, cols, rows) => electron.ipcRenderer.send("term:resize", { id, cols, rows }),
+  termKill: (id) => electron.ipcRenderer.send("term:kill", id),
+  onTermData: (cb) => {
+    const handler = (_e, ev) => cb(ev);
+    electron.ipcRenderer.on("term:data", handler);
+    return () => electron.ipcRenderer.removeListener("term:data", handler);
+  },
+  onTermExit: (cb) => {
+    const handler = (_e, ev) => cb(ev);
+    electron.ipcRenderer.on("term:exit", handler);
+    return () => electron.ipcRenderer.removeListener("term:exit", handler);
+  },
+  // ---- Web browser (view 7) ----
+  browserSetEnabled: (enabled) => electron.ipcRenderer.invoke("browser:setEnabled", enabled),
+  browserNavigate: (id, url) => electron.ipcRenderer.invoke("browser:navigate", { id, url }),
+  browserHistory: (id) => electron.ipcRenderer.invoke("browser:history", id),
+  // ---- Tasks store (view 4) ----
+  tasksList: (project) => electron.ipcRenderer.invoke("tasks:list", project),
+  tasksSave: (t) => electron.ipcRenderer.invoke("tasks:save", t),
+  tasksDelete: (id) => electron.ipcRenderer.invoke("tasks:delete", id),
+  tasksSetActive: (id) => electron.ipcRenderer.invoke("tasks:setActive", id),
+  jiraGetConfig: () => electron.ipcRenderer.invoke("jira:getConfig"),
+  jiraSetConfig: (cfg) => electron.ipcRenderer.invoke("jira:setConfig", cfg),
+  jiraImport: () => electron.ipcRenderer.invoke("jira:import"),
+  // ---- Telescope finder (Esc+Space) ----
+  telescopeFind: (query, opts) => electron.ipcRenderer.invoke("telescope:find", { query, opts }),
+  // ---- Stats counters (topbar) ----
+  statsGet: () => electron.ipcRenderer.invoke("stats:get"),
+  statsBump: (field, by) => electron.ipcRenderer.invoke("stats:bump", { field, by }),
+  // ---- Git auto-branch (tasks view) ----
+  gitCurrentBranch: (repoPath) => electron.ipcRenderer.invoke("git:currentBranch", repoPath),
+  gitCreateBranch: (repoPath, name, base) => electron.ipcRenderer.invoke("git:createBranch", { repoPath, name, base }),
+  gitCheckoutBranch: (repoPath, name) => electron.ipcRenderer.invoke("git:checkoutBranch", { repoPath, name })
 };
 electron.contextBridge.exposeInMainWorld("api", api);

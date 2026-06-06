@@ -1,0 +1,5 @@
+<svg width={30} height={28} viewBox="0 0 30 28">
+<path d="M2 6 L2 22 A13 4 0 0 0 28 22 L28 6" {...common} />
+<ellipse cx={15} cy={6} rx={13} ry={4} {...common} />
+</svg>
+

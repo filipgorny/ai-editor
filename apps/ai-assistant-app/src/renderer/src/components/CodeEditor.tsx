@@ -1,4 +1,4 @@
-import { type MouseEvent as ReactMouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appBus } from '../events'
 import { commander, type EditorHandle } from '../commander/Commander'
@@ -11,6 +11,7 @@ import MinimizeIcon from '@mui/icons-material/Minimize'
 import styled from 'styled-components'
 import { EditorView, type ReactCodeMirrorRef } from '@uiw/react-codemirror'
 import CodeMirrorEditor from './CodeMirrorEditor'
+import Window, { type WindowGeom } from './Window'
 import { javascript } from '@codemirror/lang-javascript'
 import { themeExt, isRandomTheme, randomThemeName } from './themes'
 import { vim, getCM } from '@replit/codemirror-vim'
@@ -20,6 +21,7 @@ import { copilotField, copilotKeymap, setCopilot } from './copilot'
 import { columnRuler } from './ruler'
 import { gotoDefExtension, type GotoCtx } from './gotodef'
 import { rainbowBrackets } from './rainbowBrackets'
+import { perSymbolColor } from './perSymbolColor'
 import { reviewField, reviewTheme, setReviewLines } from './reviewDecoration'
 import { relativeToRoot } from '../utils/path'
 import { colors } from '../styles/tokens'
@@ -66,22 +68,6 @@ const editorTheme = Prec.highest(
     }
   })
 )
-
-// Pływające, przeciągalne okno edytora (zamiast modalnego dialogu) — wiele naraz.
-// Rozmiar zmienia się Alt + środkowy przycisk myszy (sterowany stanem).
-const Win = styled.div`
-  position: fixed;
-  display: flex;
-  flex-direction: column;
-  min-width: 360px;
-  min-height: 240px;
-  background: #000;
-  border: 1px solid ${colors.border};
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.65);
-  transition: opacity ${EDITOR_FADE_MS}ms ease;
-`
 
 const Header = styled.div`
   display: flex;
@@ -174,6 +160,7 @@ export default function CodeEditor({
   vim: vimMode = true,
   onVimChange,
   rainbow = true,
+  eachFnColor = false,
   theme = 'Czarny (domyślny)',
   root = '',
   closing = false,
@@ -181,7 +168,8 @@ export default function CodeEditor({
   initialSnap = false,
   onSnapChange,
   initialGeom,
-  onGeometry
+  onGeometry,
+  onCursor
 }: {
   target: EditorTarget | null
   onClose: () => void
@@ -196,6 +184,8 @@ export default function CodeEditor({
   vim?: boolean
   onVimChange?: (on: boolean) => void
   rainbow?: boolean
+  // each function/class name gets its own stable color (perSymbolColor extension)
+  eachFnColor?: boolean
   theme?: string
   root?: string
   closing?: boolean
@@ -207,12 +197,23 @@ export default function CodeEditor({
   // onSnapChange — zgłasza, czy to okno jest zesnapowane do góry (obszar grafu), by host
   // mógł otwierać kolejne pliki również zesnapowane.
   onSnapChange?: (snapped: boolean) => void
-  // initialGeom — zapamiętana geometria okna (pozycja/rozmiar/snap/fullscreen) do
-  // odtworzenia po ponownym otwarciu projektu. Pierwszeństwo nad initialSnap/indexem.
-  initialGeom?: { x: number; y: number; w: number; h: number; snapped?: boolean; fullscreen?: boolean }
+  // initialGeom — zapamiętana geometria okna (pozycja/rozmiar/snap/fullscreen) ORAZ
+  // pozycja kursora/scrolla, do odtworzenia po ponownym otwarciu projektu.
+  initialGeom?: {
+    x?: number
+    y?: number
+    w?: number
+    h?: number
+    snapped?: boolean
+    fullscreen?: boolean
+    cursor?: number
+    scroll?: number
+  }
   // onGeometry — zgłasza ustaloną geometrię okna (po przeciągnięciu/zmianie rozmiaru/
   // snapie/fullscreenie), by host mógł ją zapisać per projekt.
   onGeometry?: (path: string, geom: { x: number; y: number; w: number; h: number; snapped: boolean; fullscreen: boolean }) => void
+  // onCursor — zgłasza pozycję kursora (offset) i scroll edytora (zapis per plik).
+  onCursor?: (path: string, cursor: number, scroll: number) => void
 }) {
   const { t, i18n } = useTranslation()
   // Fade in on mount (opacity 0→1); `closing` fades back out (1→0) before removal.
@@ -234,7 +235,7 @@ export default function CodeEditor({
   // Initial window layout: restored geometry (reopened project) if present, else centered
   // (~half width) / filling the graph area when opened snapped (see initialSnap).
   const [layout] = useState(() =>
-    initialGeom
+    initialGeom && initialGeom.x != null && initialGeom.y != null && initialGeom.w != null && initialGeom.h != null
       ? { pos: { x: initialGeom.x, y: initialGeom.y }, size: { w: initialGeom.w, h: initialGeom.h } }
       : initialEditorLayout(!!initialSnap, index)
   )
@@ -245,177 +246,25 @@ export default function CodeEditor({
   const snapRef = useRef(!!initialSnap || !!initialGeom?.snapped)
   // Reaktywny odpowiednik snapRef (do renderu: zesnapowane okno nie ma cienia).
   const [snapped, setSnapped] = useState(!!initialSnap || !!initialGeom?.snapped)
-  // Rozmiar sprzed snapu do góry — po wyjęciu okna ze snapu wraca do niego (nie zostaje
-  // w rozmiarze sceny). null → użyj domyślnego układu pływającego.
-  const preSnapRef = useRef<{ w: number; h: number } | null>(null)
 
-  // clearSnap drops the top-snap state (e.g. on a manual resize) and notifies the host.
-  const clearSnap = (): void => {
-    if (snapRef.current) {
-      snapRef.current = false
-      setSnapped(false)
-      onSnapChange?.(false)
-    }
+  // The shared <Window> owns the drag/resize/snap engine; these mirror its controlled
+  // geometry into local state and reflect the snap flag up to the host (so a file opened
+  // while another window is snapped opens snapped too).
+  const onWinChange = (g: WindowGeom): void => {
+    setPos({ x: g.x, y: g.y })
+    setSize({ w: g.w, h: g.h })
   }
 
-  const startDrag = (e: ReactMouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    onActivate?.()
-    const start = { mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y, w: size.w, h: size.h }
-    // Snap target: the graph area (right of the file tree, below the toolbar/tabs, above the
-    // agent bar). Captured at drag start; used for the "drag up to fill the graph" snap.
-    const stage = document.getElementById('graph-stage')?.getBoundingClientRect()
-    // Czy przeciąganie kończy się snapem do góry (wypełnia obszar grafu) — zgłaszane
-    // w górę przy puszczeniu, by nowo otwierane pliki mogły się dopasować.
-    let snapped = snapRef.current
-    // Czy okno było zesnapowane już na starcie przeciągania — wtedy wyjęcie go ze snapu
-    // przywraca rozmiar sprzed snapu (a nie zostaje w rozmiarze sceny).
-    const wasSnapped = snapRef.current
-
-    const move = (ev: MouseEvent) => {
-      // Snap NA ŻYWO tylko przy samej KRAWĘDZI EKRANU (wąska strefa, by nie skakać).
-      const TREE = 380
-      const SNAP = 14
-      const usable = window.innerWidth - TREE
-      const halfW = Math.round(usable / 2)
-      const fullH = window.innerHeight
-
-      // Drag UP over the toolbar → fill the whole graph area (not the tree/toolbar/agent bar).
-      if (stage && ev.clientY <= stage.top + 6) {
-        // wchodząc w snap z rozmiaru pływającego — zapamiętaj go, by móc wrócić
-        if (!wasSnapped) {
-          preSnapRef.current = { w: start.w, h: start.h }
-        }
-
-        snapped = true
-        setPos({ x: Math.round(stage.left), y: Math.round(stage.top) })
-        setSize({ w: Math.round(stage.width), h: Math.round(stage.height) })
-
-        return
-      }
-
-      snapped = false
-
-      if (ev.clientX <= SNAP) {
-        setPos({ x: TREE, y: 0 }) // lewa połowa zaczyna się przy drzewie plików
-        setSize({ w: halfW, h: fullH })
-
-        return
-      }
-
-      if (ev.clientX >= window.innerWidth - SNAP) {
-        setPos({ x: TREE + halfW, y: 0 })
-        setSize({ w: halfW, h: fullH })
-
-        return
-      }
-
-      // Wyjęcie zesnapowanego okna ze snapu → wróć do rozmiaru sprzed snapu, pod kursorem.
-      if (wasSnapped) {
-        const rs = preSnapRef.current ?? initialEditorLayout(false, index).size
-
-        setSize(rs)
-        setPos({ x: Math.round(ev.clientX - rs.w / 2), y: Math.round(ev.clientY - 12) })
-
-        return
-      }
-
-      // poza strefą snap — zwykłe przesuwanie, zachowaj rozmiar
-      setSize({ w: start.w, h: start.h })
-      setPos({ x: start.px + ev.clientX - start.mx, y: start.py + ev.clientY - start.my })
+  const onWinSnapped = (s: boolean): void => {
+    if (s === snapRef.current) {
+      return
     }
 
-    const up = () => {
-      window.removeEventListener('mousemove', move)
-      window.removeEventListener('mouseup', up)
-
-      if (snapped !== snapRef.current) {
-        snapRef.current = snapped
-        setSnapped(snapped)
-        onSnapChange?.(snapped)
-      }
-    }
-
-    window.addEventListener('mousemove', move)
-    window.addEventListener('mouseup', up)
+    snapRef.current = s
+    setSnapped(s)
+    onSnapChange?.(s)
   }
 
-  // Zmiana rozmiaru za uchwyty na krawędziach/narożnikach okna.
-  const startEdge =
-    (edges: { left?: boolean; right?: boolean; top?: boolean; bottom?: boolean }) => (e: ReactMouseEvent) => {
-      if (fullscreen) {
-        return
-      }
-
-      e.preventDefault()
-      e.stopPropagation()
-      onActivate?.()
-      clearSnap() // ręczna zmiana rozmiaru wyprowadza okno ze snapu do góry
-      const s = { mx: e.clientX, my: e.clientY, w: size.w, h: size.h, x: pos.x, y: pos.y }
-
-      const move = (ev: MouseEvent) => {
-        const dx = ev.clientX - s.mx
-        const dy = ev.clientY - s.my
-        let w = s.w
-        let h = s.h
-        let x = s.x
-        let y = s.y
-
-        if (edges.right) {
-          w = Math.max(360, s.w + dx)
-        }
-
-        if (edges.bottom) {
-          h = Math.max(240, s.h + dy)
-        }
-
-        if (edges.left) {
-          w = Math.max(360, s.w - dx)
-          x = s.x + (s.w - w)
-        }
-
-        if (edges.top) {
-          h = Math.max(240, s.h - dy)
-          y = s.y + (s.h - h)
-        }
-
-        setSize({ w, h })
-        setPos({ x, y })
-      }
-
-      const up = () => {
-        window.removeEventListener('mousemove', move)
-        window.removeEventListener('mouseup', up)
-      }
-
-      window.addEventListener('mousemove', move)
-      window.addEventListener('mouseup', up)
-    }
-
-  // Alt + środkowy przycisk gdziekolwiek w oknie → zmiana rozmiaru.
-  const startResize = (e: ReactMouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    onActivate?.()
-    clearSnap() // ręczna zmiana rozmiaru wyprowadza okno ze snapu do góry
-    const start = { mx: e.clientX, my: e.clientY, w: size.w, h: size.h }
-
-    const move = (ev: MouseEvent) => {
-      setSize({
-        w: Math.max(360, start.w + ev.clientX - start.mx),
-        h: Math.max(240, start.h + ev.clientY - start.my)
-      })
-    }
-
-    const up = () => {
-      window.removeEventListener('mousemove', move)
-      window.removeEventListener('mouseup', up)
-    }
-
-    window.addEventListener('mousemove', move)
-    window.addEventListener('mouseup', up)
-  }
   const [content, setContent] = useState('')
   const [original, setOriginal] = useState('')
   const [loading, setLoading] = useState(false)
@@ -423,8 +272,8 @@ export default function CodeEditor({
   const [busy, setBusy] = useState(false)
   const [fullscreen, setFullscreen] = useState(!!initialGeom?.fullscreen)
 
-  // Gdy okno jest zesnapowane do góry (wypełnia obszar grafu), podążaj za zmianą rozmiaru /
-  // maksymalizacją okna głównego — przelicz pozycję i rozmiar do aktualnego #graph-stage.
+  // Gdy okno jest zesnapowane do góry (wypełnia obszar sceny), podążaj za zmianą rozmiaru /
+  // maksymalizacją okna głównego — przelicz pozycję i rozmiar do aktualnej sceny.
   useEffect(() => {
     const onResize = (): void => {
       if (!snapRef.current || fullscreen || minimized) {
@@ -432,7 +281,7 @@ export default function CodeEditor({
       }
 
       window.requestAnimationFrame(() => {
-        const stage = document.getElementById('graph-stage')?.getBoundingClientRect()
+        const stage = sceneRect()
 
         if (!stage) {
           return
@@ -464,6 +313,28 @@ export default function CodeEditor({
 
     return () => window.clearTimeout(id)
   }, [pos.x, pos.y, size.w, size.h, snapped, fullscreen, target?.path])
+
+  // Zgłoś pozycję kursora + scroll do hosta (zapis per plik). reportCursor jest stabilny
+  // (czyta refy), więc updateListener w extensions nie wymusza rekonfiguracji edytora.
+  const onCursorRef = useRef(onCursor)
+  onCursorRef.current = onCursor
+  const cursorTimer = useRef<number | undefined>(undefined)
+  const reportCursor = useRef<(view: EditorView) => void>(() => undefined)
+
+  reportCursor.current = (view: EditorView): void => {
+    const path = target?.path
+
+    if (!path || !onCursorRef.current) {
+      return
+    }
+
+    window.clearTimeout(cursorTimer.current)
+    cursorTimer.current = window.setTimeout(() => {
+      onCursorRef.current?.(path, view.state.selection.main.head, view.scrollDOM?.scrollTop ?? 0)
+    }, 400)
+  }
+
+  useEffect(() => () => window.clearTimeout(cursorTimer.current), [])
   const [model, setModel] = useState('')
   const [saved, setSaved] = useState(false)
   // uwagi ghost: ESLint (żółte/czerwone) + recenzja AI (szare).
@@ -572,7 +443,13 @@ export default function CodeEditor({
         }
       }),
       gotoDefExtension(gotoCtxRef),
+      EditorView.updateListener.of((u) => {
+        if (u.selectionSet || u.docChanged || u.geometryChanged) {
+          reportCursor.current(u.view)
+        }
+      }),
       ...(rainbow ? [rainbowBrackets()] : []),
+      ...(eachFnColor ? [perSymbolColor()] : []),
       ghostField,
       reviewField,
       reviewTheme,
@@ -580,7 +457,7 @@ export default function CodeEditor({
       themeExt(resolvedTheme),
       editorTheme
     ],
-    [vimMode, rainbow, resolvedTheme, target?.path]
+    [vimMode, rainbow, eachFnColor, resolvedTheme, target?.path]
   )
 
   // Wstrzyknięcie uwag do edytora efektem (bez rekonfiguracji → dymki nie znikają).
@@ -807,6 +684,44 @@ export default function CodeEditor({
       window.clearTimeout(timer)
     }
   }, [content, target?.path, target?.gotoLine])
+
+  // Odtwórz zapamiętaną pozycję kursora + scroll po wczytaniu pliku — TYLKO gdy nie ma
+  // jawnej nawigacji do funkcji/linii (te mają pierwszeństwo). Raz na otwarcie pliku.
+  const cursorRestored = useRef(false)
+
+  useEffect(() => {
+    if (loading || cursorRestored.current) {
+      return
+    }
+
+    if (target?.gotoLine != null || target?.gotoFn || initialGeom?.cursor == null) {
+      cursorRestored.current = true
+
+      return
+    }
+
+    const view = ref.current?.view
+
+    if (!view) {
+      return
+    }
+
+    const anchor = Math.min(Math.max(initialGeom.cursor, 0), view.state.doc.length)
+    view.dispatch({ selection: { anchor }, effects: EditorView.scrollIntoView(anchor, { y: 'center' }) })
+
+    if (initialGeom.scroll != null) {
+      const top = initialGeom.scroll
+      window.requestAnimationFrame(() => {
+        const sc = ref.current?.view?.scrollDOM
+
+        if (sc) {
+          sc.scrollTop = top
+        }
+      })
+    }
+
+    cursorRestored.current = true
+  }, [loading, content, target?.path])
 
   // ESLint: od razu po otwarciu i po każdej edycji (lekki debounce).
   useEffect(() => {
@@ -1131,85 +1046,81 @@ export default function CodeEditor({
 
   return (
     <>
-    <Win
-      onMouseDown={() => onActivate?.()}
-      onMouseDownCapture={(e) => {
-        if (fullscreen || !e.altKey) {
-          return
-        }
-
-        if (e.button === 0) {
-          startDrag(e) // Alt + lewy = przesuwanie
-        } else if (e.button === 1) {
-          startResize(e) // Alt + środkowy = zmiana rozmiaru
-        }
+    <Window
+      x={pos.x}
+      y={pos.y}
+      w={size.w}
+      h={size.h}
+      snapped={snapped}
+      coordinate="fixed"
+      active={active}
+      disabled={fullscreen}
+      minWidth={360}
+      minHeight={240}
+      zIndex={active ? 1300 : 1200}
+      getScene={sceneRect}
+      onActivate={() => onActivate?.()}
+      onChange={onWinChange}
+      onSnappedChange={onWinSnapped}
+      style={{
+        background: '#000',
+        transition: `opacity ${EDITOR_FADE_MS}ms ease`,
+        opacity: closing || !shown ? 0 : 1,
+        ...(fullscreen ? { left: 0, top: 0, width: '100vw', height: '100vh', borderRadius: 0, boxShadow: 'none' } : null)
       }}
-      style={
-        fullscreen
-          ? { left: 0, top: 0, width: '100vw', height: '100vh', borderRadius: 0, boxShadow: 'none', zIndex: active ? 1300 : 1200, opacity: closing || !shown ? 0 : 1 }
-          : {
-              left: pos.x,
-              top: pos.y,
-              width: size.w,
-              height: size.h,
-              // zesnapowane do obszaru grafu → bez cienia i bez zaokrągleń (wtapia się w tło)
-              ...(snapped ? { boxShadow: 'none', borderRadius: 0 } : null),
-              zIndex: active ? 1300 : 1200,
-              opacity: closing || !shown ? 0 : 1
-            }
+      header={
+        <Header style={{ cursor: fullscreen ? 'default' : 'move' }}>
+          <Title style={{ cursor: fullscreen ? 'default' : 'move' }}>
+            {relativeToRoot(target?.path ?? '', root)}
+            {dirty ? ' •' : ''}
+          </Title>
+          {/* Controls stop mousedown here so clicking them never starts a window drag. */}
+          <div onMouseDown={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center' }}>
+            <FormControlLabel
+              control={<Switch size="small" checked={vimMode} onChange={(e) => onVimChange?.(e.target.checked)} />}
+              label="Vim keys"
+              sx={{ mr: 1, '.MuiFormControlLabel-label': { fontSize: 12, color: '#8b949e' } }}
+            />
+            <FormControlLabel
+              control={<Switch size="small" checked={copilot} onChange={(e) => onCopilotChange?.(e.target.checked)} />}
+              label="Copilot"
+              sx={{ mr: 1, '.MuiFormControlLabel-label': { fontSize: 12, color: '#8b949e' } }}
+            />
+            <Button
+              size="small"
+              startIcon={<SaveIcon />}
+              onClick={save}
+              variant={dirty ? 'contained' : 'text'}
+              sx={{
+                // stała szerokość i padding — zmiana wariantu (tło przy dirty) nie zmienia rozmiaru
+                minWidth: 96,
+                px: 2,
+                ...(dirty
+                  ? { bgcolor: '#da3633', color: '#fff', '&:hover': { bgcolor: '#b62324' } }
+                  : { color: '#8b949e' })
+              }}
+            >
+              {t('editor.save')}
+            </Button>
+            <IconButton size="small" onClick={() => onMinimize?.()} title={t('editor.minimize')}>
+              <MinimizeIcon fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={() => {
+                appBus.emit('editor:fullscreen', { path: target.path, on: !fullscreen })
+                setFullscreen(!fullscreen)
+              }}
+            >
+              {fullscreen ? <FullscreenExitIcon fontSize="small" /> : <FullscreenIcon fontSize="small" />}
+            </IconButton>
+            <IconButton size="small" onClick={handleClose}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </div>
+        </Header>
       }
     >
-      <Header
-        onMouseDown={(e) => !fullscreen && e.target === e.currentTarget && startDrag(e)}
-        style={{ cursor: fullscreen ? 'default' : 'move' }}
-      >
-        <Title onMouseDown={(e) => !fullscreen && startDrag(e)} style={{ cursor: fullscreen ? 'default' : 'move' }}>
-          {relativeToRoot(target?.path ?? '', root)}
-          {dirty ? ' •' : ''}
-        </Title>
-        <FormControlLabel
-          control={<Switch size="small" checked={vimMode} onChange={(e) => onVimChange?.(e.target.checked)} />}
-          label="Vim keys"
-          sx={{ mr: 1, '.MuiFormControlLabel-label': { fontSize: 12, color: '#8b949e' } }}
-        />
-        <FormControlLabel
-          control={<Switch size="small" checked={copilot} onChange={(e) => onCopilotChange?.(e.target.checked)} />}
-          label="Copilot"
-          sx={{ mr: 1, '.MuiFormControlLabel-label': { fontSize: 12, color: '#8b949e' } }}
-        />
-        <Button
-          size="small"
-          startIcon={<SaveIcon />}
-          onClick={save}
-          variant={dirty ? 'contained' : 'text'}
-          sx={{
-            // stała szerokość i padding — zmiana wariantu (tło przy dirty) nie zmienia rozmiaru
-            minWidth: 96,
-            px: 2,
-            ...(dirty
-              ? { bgcolor: '#da3633', color: '#fff', '&:hover': { bgcolor: '#b62324' } }
-              : { color: '#8b949e' })
-          }}
-        >
-          {t('editor.save')}
-        </Button>
-        <IconButton size="small" onClick={() => onMinimize?.()} title={t('editor.minimize')}>
-          <MinimizeIcon fontSize="small" />
-        </IconButton>
-        <IconButton
-          size="small"
-          onClick={() => {
-            appBus.emit('editor:fullscreen', { path: target.path, on: !fullscreen })
-            setFullscreen(!fullscreen)
-          }}
-        >
-          {fullscreen ? <FullscreenExitIcon fontSize="small" /> : <FullscreenIcon fontSize="small" />}
-        </IconButton>
-        <IconButton size="small" onClick={handleClose}>
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </Header>
-
       <EditorWrap>
         {findOpen && (
           <FindBox
@@ -1242,20 +1153,7 @@ export default function CodeEditor({
           <CodeMirrorEditor ref={ref} value={content} extensions={extensions} onChange={setContent} />
         )}
       </EditorWrap>
-
-      {!fullscreen && (
-        <>
-          <div onMouseDown={startEdge({ top: true })} style={{ position: 'absolute', top: 0, left: 12, right: 12, height: 6, cursor: 'ns-resize', zIndex: 10 }} />
-          <div onMouseDown={startEdge({ bottom: true })} style={{ position: 'absolute', bottom: 0, left: 12, right: 12, height: 6, cursor: 'ns-resize', zIndex: 10 }} />
-          <div onMouseDown={startEdge({ left: true })} style={{ position: 'absolute', left: 0, top: 12, bottom: 12, width: 6, cursor: 'ew-resize', zIndex: 10 }} />
-          <div onMouseDown={startEdge({ right: true })} style={{ position: 'absolute', right: 0, top: 12, bottom: 12, width: 6, cursor: 'ew-resize', zIndex: 10 }} />
-          <div onMouseDown={startEdge({ top: true, left: true })} style={{ position: 'absolute', top: 0, left: 0, width: 12, height: 12, cursor: 'nwse-resize', zIndex: 11 }} />
-          <div onMouseDown={startEdge({ top: true, right: true })} style={{ position: 'absolute', top: 0, right: 0, width: 12, height: 12, cursor: 'nesw-resize', zIndex: 11 }} />
-          <div onMouseDown={startEdge({ bottom: true, left: true })} style={{ position: 'absolute', bottom: 0, left: 0, width: 12, height: 12, cursor: 'nesw-resize', zIndex: 11 }} />
-          <div onMouseDown={startEdge({ bottom: true, right: true })} style={{ position: 'absolute', bottom: 0, right: 0, width: 14, height: 14, cursor: 'nwse-resize', zIndex: 11 }} />
-        </>
-      )}
-    </Win>
+    </Window>
 
     <Snackbar
       open={saved}
@@ -1327,16 +1225,32 @@ function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+// sceneRect resolves the bounding box of the view scene — the area right of the file
+// tree, below the top bar/tabs and above the agent bar — that editor windows snap into.
+//
+// In the multi-view shell the scene is the ViewHost slot (id 'editor-scene'); the old
+// graph layout exposed it as id 'graph-stage'. We try both ids (newest first) so the
+// snap keeps working across the architecture change, then fall back to the editor view's
+// backdrop. Returns null when none is mounted (e.g. another view is active).
+function sceneRect(): DOMRect | null {
+  const el =
+    document.getElementById('editor-scene') ??
+    document.getElementById('graph-stage') ??
+    document.querySelector<HTMLElement>('[data-editor-scene]')
+
+  return el ? el.getBoundingClientRect() : null
+}
+
 // initialEditorLayout computes a new editor window's starting position/size. With
-// `snap`, it opens filling the graph-stage area (matching the top-snap), so a file
-// opened while another editor is snapped to the top lands snapped too; otherwise it
-// opens centered at ~half width, fanned out by index.
+// `snap`, it opens filling the scene area (matching the top-snap), so a file opened
+// while another editor is snapped to the top lands snapped too; otherwise it opens
+// centered at ~half width, fanned out by index.
 function initialEditorLayout(
   snap: boolean,
   index: number
 ): { pos: { x: number; y: number }; size: { w: number; h: number } } {
   if (snap) {
-    const stage = document.getElementById('graph-stage')?.getBoundingClientRect()
+    const stage = sceneRect()
 
     if (stage) {
       return {

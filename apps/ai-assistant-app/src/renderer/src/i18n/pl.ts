@@ -1,5 +1,45 @@
 // Polski słownik — oryginalne napisy z aplikacji.
 export default {
+  views: {
+    editor: 'Edytor',
+    diagram: 'Diagram kodu',
+    deployment: 'Diagram wdrożenia',
+    messages: 'Wiadomości',
+    tasks: 'Zadania',
+    review: 'Recenzja',
+    terminal: 'Terminal',
+    browser: 'Przeglądarka',
+    empty: 'Brak otwartego pliku — wybierz go z drzewa lub poproś AI o utworzenie'
+  },
+  deployment: {
+    shapes: 'Kształty',
+    arrows: 'Strzałki',
+    empty: 'Przeciągnij lub kliknij kształt, aby zacząć',
+    addText: 'Dodaj tekst',
+    save: 'Zapisz',
+    open: 'Otwórz',
+    export: 'Eksport',
+    exportTitle: 'Eksportuj diagram',
+    format: 'Format',
+    resolution: 'Rozdzielczość',
+    cancel: 'Anuluj',
+    shape: {
+      rectangle: 'Prostokąt',
+      database: 'Baza danych',
+      cloud: 'Chmura'
+    },
+    arrow: {
+      solid: 'Pełna',
+      empty: 'Pusta',
+      none: 'Bez grotu',
+      both: 'Dwustronna'
+    }
+  },
+  terminal: {
+    newSession: 'Nowa sesja',
+    closed: 'Sesja zakończona',
+    unavailable: 'Backend terminala jest niedostępny na tym komputerze.'
+  },
   topbar: {
     pickProject: 'Wybierz projekt',
     changeProject: 'Zmień projekt',
@@ -12,6 +52,18 @@ export default {
     end: 'Zakończ review',
     changedFiles: 'Zmienione pliki ({{count}})',
     noChanges: 'Brak zmian względem gałęzi bazowej',
+    notActive: 'Tryb review jest wyłączony — uruchom review, aby zobaczyć zmienione pliki i komentarze AI.',
+    noProject: 'Otwórz projekt, aby przejrzeć zmiany.',
+    commentCount: '{{count}} komentarzy',
+    askAi: 'Review AI',
+    reviewing: 'Przeglądanie…',
+    noComments: 'Brak komentarzy AI na zmienionych liniach.',
+    reviewFailed: 'Nie udało się uzyskać recenzji AI dla tego pliku.',
+    lineLabel: 'L{{line}}',
+    legend: {
+      added: 'dodane',
+      modified: 'zmienione'
+    },
     status: {
       new: 'nowy',
       modified: 'zmieniony',
@@ -30,7 +82,22 @@ export default {
     closeHint: 'Kliknij, aby zamknąć',
     noOps: 'AI nie zwróciło żadnych operacji.',
     opsDone: 'Wykonano operacji: {{count}}',
-    error: 'Błąd AI: {{message}}'
+    error: 'Błąd AI: {{message}}',
+    responding: 'Odpowiadam…'
+  },
+  aiArea: {
+    vimHint: 'komenda vim — Enter, aby uruchomić, np. :%s/raz/dwa/g'
+  },
+  vim: {
+    running: 'wykonuję…',
+    substituted: 'zamieniono {{count}} wystąpień',
+    noMatch: 'brak dopasowania dla /{{pattern}}/',
+    badPattern: 'nieprawidłowy wzorzec',
+    saved: 'zapisano',
+    closed: 'zamknięto',
+    savedClosed: 'zapisano i zamknięto',
+    noEditor: 'brak aktywnego edytora',
+    unknown: 'to nie jest komenda vim: :{{cmd}}'
   },
   settings: {
     title: 'Ustawienia',
@@ -48,7 +115,16 @@ export default {
     gitBlameLabel: 'Autorstwo na grafie',
     gitBlameOff: 'Wyłączone',
     gitBlameLast: 'Ostatnio zmieniający',
-    rainbowBrackets: 'Kolorowe pary nawiasów'
+    rainbowBrackets: 'Kolorowe pary nawiasów',
+    rainbow: 'Tęczowe nawiasy',
+    tab: {
+      general: 'Ogólne',
+      editor: 'Vim i Copilot'
+    },
+    vim: 'Skróty klawiszowe Vim',
+    copilot: 'Podpowiedzi Copilot',
+    eachFnColor: 'Każda funkcja / klasa ma swój kolor',
+    additionalOptions: 'Opcje dodatkowe (eksperymentalne)'
   },
   scan: {
     title: 'Skanowanie projektu…',
@@ -60,12 +136,24 @@ export default {
     fallback: 'pliki',
     rename: 'Zmień nazwę',
     delete: 'Usuń',
+    addFile: 'Dodaj plik',
+    addFolder: 'Dodaj folder',
+    newFilePrompt: 'Nazwa pliku:',
+    newFolderPrompt: 'Nazwa folderu:',
+    create: 'Utwórz',
+    created: 'Utworzono',
     renamePrompt: 'Nowa nazwa:',
     deleteConfirm: 'Usunąć „{{name}}”?',
     renamed: 'Zmieniono nazwę',
     deleted: 'Usunięto',
     moved: 'Przeniesiono',
     opFailed: 'Operacja nie powiodła się'
+  },
+  fileTree: {
+    addFile: 'Dodaj plik',
+    addFolder: 'Dodaj folder',
+    rename: 'Zmień nazwę',
+    delete: 'Usuń'
   },
   editor: {
     save: 'Zapisz',
@@ -96,7 +184,19 @@ export default {
     fileName: 'Nazwa pliku',
     add: 'Dodaj',
     change: 'Zmień',
-    deleteConfirm: 'Usunąć „{{name}}”?'
+    deleteConfirm: 'Usunąć „{{name}}”?',
+    editMethods: 'Edytuj listę metod',
+    methodList: 'Metody (jedna na linię)',
+    methodListHint: 'Jedna nazwa metody na linię. Generowanie nadpisuje plik tymi metodami.',
+    describe: 'Opisz dla AI',
+    editDescription: 'Edytuj opis dla AI',
+    descriptionLabel: 'Opis',
+    descriptionHint: 'Tekst pomagający AI zaimplementować tę klasę/funkcję.',
+    saveDescription: 'Zapisz opis',
+    generateCode: 'Wygeneruj kod',
+    alreadyImplemented: 'Kod już zaimplementowany',
+    implemented: 'kod',
+    stub: 'pusta'
   },
   events: {
     open: 'Otwarto plik',
@@ -155,5 +255,67 @@ export default {
   common: {
     cancel: 'Anuluj',
     close: 'Zamknij'
+  },
+  stats: {
+    keystrokes: 'klawiszy',
+    lines: 'linii',
+    tasks: 'zadań',
+    today: 'dziś'
+  },
+  messages: {
+    empty: 'Brak wiadomości — zapytaj asystenta, aby rozpocząć log.',
+    you: 'Ty',
+    assistant: 'Asystent',
+    writingCode: 'kod'
+  },
+  telescope: {
+    placeholder: 'Szukaj plików i treści…',
+    noResults: 'Brak wyników',
+    searching: 'Szukam…',
+    matchesIn: 'dopasowania w'
+  },
+  tasks: {
+    title: 'Zadania',
+    add: 'Dodaj zadanie',
+    addBtn: 'Dodaj',
+    active: 'Aktywne',
+    empty: 'Brak zadań. Dodaj zadanie powyżej lub zaimportuj z Jiry.',
+    saveFailed: 'Nie udało się zapisać zadania',
+    markDone: 'Oznacz jako zrobione',
+    autoBranch: 'Automatycznie twórz gałąź git dla aktywnego zadania',
+    branchCreated: 'Gałąź „{{branch}}” gotowa',
+    branchFailed: 'Nie udało się utworzyć gałęzi git',
+    status: {
+      todo: 'Do zrobienia',
+      doing: 'W trakcie',
+      done: 'Zrobione'
+    },
+    jira: {
+      connect: 'Połącz z Jirą',
+      import: 'Importuj z Jiry',
+      imported: 'Zaimportowano zadania z Jiry',
+      importFailed: 'Import z Jiry nie powiódł się',
+      baseUrl: 'Adres bazowy',
+      email: 'E-mail',
+      token: 'Token API',
+      project: 'Klucz projektu',
+      saved: 'Zapisano ustawienia Jiry'
+    }
+  },
+  browser: {
+    address: 'Wyszukaj lub wpisz adres URL',
+    go: 'Idź',
+    back: 'Wstecz',
+    forward: 'Dalej',
+    reload: 'Odśwież',
+    macros: 'Makra',
+    runMacro: 'Uruchom makro',
+    recordMacro: 'Zapisz makro',
+    newWindow: 'Nowe okno',
+    newMacro: 'Nowe makro',
+    macroName: 'Nazwa makra',
+    macroBodyHint: "Lua: type('#email','a@b.com'); click('#submit')",
+    macroDone: 'Makro zakończone.',
+    noPage: 'Nie wczytano jeszcze strony.'
   }
 }

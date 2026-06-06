@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const defaultOllamaHost = "http://localhost:11434"
+const defaultOllamaHost = "http://ollama:11434"
 
 // Ollama implementuje Provider przez lokalne API Ollamy (/api/generate).
 type Ollama struct {

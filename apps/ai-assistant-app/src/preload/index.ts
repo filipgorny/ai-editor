@@ -31,6 +31,23 @@ type AskEvent =
 type SkillRequest = { id: string; name: string; args: string }
 type SkillResult = { id: string; content?: string; error?: string }
 
+// --- Tasks / Jira / stats (views 4 + topbar) ---
+type Task = {
+  id: number
+  title: string
+  description: string
+  status: 'todo' | 'doing' | 'done'
+  jiraKey?: string
+  branch?: string
+  active: boolean
+  project: string
+  createdAt: number
+  updatedAt: number
+}
+type JiraConfig = { baseUrl: string; email: string; token: string; project: string }
+type Stats = { keystrokes: number; lines: number; tasks: number; day: string }
+type TelescopeHit = { path: string; absPath: string; line?: number; preview?: string; kind: 'name' | 'content' }
+
 const api = {
   lastFolder: (): Promise<string> => ipcRenderer.invoke('app:lastFolder'),
   pickFolder: (): Promise<string> => ipcRenderer.invoke('dialog:pickFolder'),
@@ -99,6 +116,11 @@ const api = {
   saveEditorLayout: (folder: string, data: EditorLayout): Promise<boolean> =>
     ipcRenderer.invoke('editors:set', { folder, data }),
 
+  // --- Pełny stan sesji per projekt (lokalny SQLite) + ostatnio otwarty projekt ---
+  getState: <T = unknown>(key: string): Promise<T | null> => ipcRenderer.invoke('state:get', key),
+  setState: (key: string, value: unknown): Promise<boolean> => ipcRenderer.invoke('state:set', { key, value }),
+  setLastFolder: (folder: string): Promise<boolean> => ipcRenderer.invoke('app:setLastFolder', folder),
+
   saveViewport: (key: string, vp: { x: number; y: number; zoom: number }): Promise<boolean> =>
     ipcRenderer.invoke('viewport:set', { key, vp }),
   getViewport: (key: string): Promise<{ x: number; y: number; zoom: number } | null> =>
@@ -110,6 +132,9 @@ const api = {
     wallpaper?: string
     gitBlame?: 'off' | 'last'
     rainbowBrackets?: boolean
+    vim?: boolean
+    copilot?: boolean
+    eachFnColor?: boolean
   }> => ipcRenderer.invoke('settings:get'),
   setSettings: (s: {
     provider?: string
@@ -118,6 +143,9 @@ const api = {
     wallpaper?: string
     gitBlame?: 'off' | 'last'
     rainbowBrackets?: boolean
+    vim?: boolean
+    copilot?: boolean
+    eachFnColor?: boolean
   }): Promise<boolean> => ipcRenderer.invoke('settings:set', s),
   aiSetProvider: (provider: string): Promise<string> => ipcRenderer.invoke('ai:provider', provider),
   claudeStatus: (): Promise<{ loggedIn: boolean; email: string; method: string; installed: boolean }> =>
@@ -233,7 +261,74 @@ const api = {
     ipcRenderer.on('fs:change', handler)
 
     return () => ipcRenderer.removeListener('fs:change', handler)
-  }
+  },
+
+  // ---- Terminal PTY (view 6) ----
+  // One PTY per id (string). Backed by node-pty in main (lazy-required); if the native
+  // module is missing the main process emits an onTermExit with code -1.
+  termStart: (opts: { id: string; cwd?: string; cols?: number; rows?: number; shell?: string }): void =>
+    ipcRenderer.send('term:start', opts),
+  termWrite: (id: string, data: string): void => ipcRenderer.send('term:write', { id, data }),
+  termResize: (id: string, cols: number, rows: number): void =>
+    ipcRenderer.send('term:resize', { id, cols, rows }),
+  termKill: (id: string): void => ipcRenderer.send('term:kill', id),
+  onTermData: (cb: (ev: { id: string; data: string }) => void): (() => void) => {
+    const handler = (_e: unknown, ev: { id: string; data: string }) => cb(ev)
+
+    ipcRenderer.on('term:data', handler)
+
+    return () => ipcRenderer.removeListener('term:data', handler)
+  },
+  onTermExit: (cb: (ev: { id: string; code: number }) => void): (() => void) => {
+    const handler = (_e: unknown, ev: { id: string; code: number }) => cb(ev)
+
+    ipcRenderer.on('term:exit', handler)
+
+    return () => ipcRenderer.removeListener('term:exit', handler)
+  },
+
+  // ---- Web browser (view 7) ----
+  browserSetEnabled: (enabled: boolean): Promise<boolean> => ipcRenderer.invoke('browser:setEnabled', enabled),
+  browserNavigate: (id: string, url: string): Promise<{ url: string }> =>
+    ipcRenderer.invoke('browser:navigate', { id, url }),
+  browserHistory: (id: string): Promise<{ url: string; title: string; ts: number }[]> =>
+    ipcRenderer.invoke('browser:history', id),
+
+  // ---- Tasks store (view 4) ----
+  tasksList: (project: string): Promise<Task[]> => ipcRenderer.invoke('tasks:list', project),
+  tasksSave: (t: {
+    id?: number
+    title: string
+    description?: string
+    status?: string
+    jiraKey?: string
+    branch?: string
+    project: string
+  }): Promise<Task> => ipcRenderer.invoke('tasks:save', t),
+  tasksDelete: (id: number): Promise<boolean> => ipcRenderer.invoke('tasks:delete', id),
+  tasksSetActive: (id: number): Promise<Task> => ipcRenderer.invoke('tasks:setActive', id),
+  jiraGetConfig: (): Promise<JiraConfig | null> => ipcRenderer.invoke('jira:getConfig'),
+  jiraSetConfig: (cfg: JiraConfig): Promise<boolean> => ipcRenderer.invoke('jira:setConfig', cfg),
+  jiraImport: (): Promise<Task[]> => ipcRenderer.invoke('jira:import'),
+
+  // ---- Telescope finder (Esc+Space) ----
+  telescopeFind: (
+    query: string,
+    opts?: { root?: string; limit?: number; content?: boolean }
+  ): Promise<TelescopeHit[]> => ipcRenderer.invoke('telescope:find', { query, opts }),
+
+  // ---- Stats counters (topbar) ----
+  statsGet: (): Promise<Stats> => ipcRenderer.invoke('stats:get'),
+  statsBump: (field: 'keystrokes' | 'lines' | 'tasks', by?: number): Promise<Stats> =>
+    ipcRenderer.invoke('stats:bump', { field, by }),
+
+  // ---- Git auto-branch (tasks view) ----
+  gitCurrentBranch: (repoPath: string): Promise<{ branch: string; dirty: boolean }> =>
+    ipcRenderer.invoke('git:currentBranch', repoPath),
+  gitCreateBranch: (repoPath: string, name: string, base?: string): Promise<{ branch: string; created: boolean }> =>
+    ipcRenderer.invoke('git:createBranch', { repoPath, name, base }),
+  gitCheckoutBranch: (repoPath: string, name: string): Promise<{ branch: string }> =>
+    ipcRenderer.invoke('git:checkoutBranch', { repoPath, name })
 }
 
 contextBridge.exposeInMainWorld('api', api)

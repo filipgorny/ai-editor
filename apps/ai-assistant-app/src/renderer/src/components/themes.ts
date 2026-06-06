@@ -22,7 +22,29 @@ import {
   abcdef,
   abyss,
   xcodeDark,
-  xcodeLight
+  xcodeLight,
+  andromeda,
+  basicDark,
+  basicLight,
+  bbedit,
+  bespin,
+  consoleDark,
+  consoleLight,
+  copilot,
+  duotoneDark,
+  duotoneLight,
+  eclipse,
+  kimbie,
+  materialDark,
+  materialLight,
+  monokaiDimmed,
+  noctisLilac,
+  quietlight,
+  red,
+  tokyoNightDay,
+  tomorrowNightBlue,
+  whiteDark,
+  whiteLight
 } from '@uiw/codemirror-themes-all'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { EditorView } from '@codemirror/view'
@@ -67,13 +89,52 @@ export const editorThemes: Record<string, Extension> = {
   'abcdef': abcdef,
   Abyss: abyss,
   'Xcode Dark': xcodeDark,
-  'Xcode Light': xcodeLight
+  'Xcode Light': xcodeLight,
+  // More themes (v0.3) — pulled from @uiw/codemirror-themes-all so users have a wider pool.
+  Andromeda: andromeda,
+  'Basic Dark': basicDark,
+  'Basic Light': basicLight,
+  BBEdit: bbedit,
+  Bespin: bespin,
+  'Console Dark': consoleDark,
+  'Console Light': consoleLight,
+  Copilot: copilot,
+  'Duotone Dark': duotoneDark,
+  'Duotone Light': duotoneLight,
+  Eclipse: eclipse,
+  Kimbie: kimbie,
+  'Material Dark': materialDark,
+  'Material Light': materialLight,
+  'Monokai Dimmed': monokaiDimmed,
+  'Noctis Lilac': noctisLilac,
+  Quietlight: quietlight,
+  Red: red,
+  'Tokyo Night Day': tokyoNightDay,
+  'Tomorrow Night Blue': tomorrowNightBlue,
+  'White Dark': whiteDark,
+  'White Light': whiteLight
 }
 
 export const themeNames = Object.keys(editorThemes)
 
 // Motywy jasne (reszta puli to ciemne). Używane do losowania w trybach „różne".
-const LIGHT_THEMES = ['GitHub Light', 'Solarized Light', 'VS Code Light', 'Gruvbox Light', 'Xcode Light']
+const LIGHT_THEMES = [
+  'GitHub Light',
+  'Solarized Light',
+  'VS Code Light',
+  'Gruvbox Light',
+  'Xcode Light',
+  'Basic Light',
+  'Console Light',
+  'Duotone Light',
+  'Eclipse',
+  'Material Light',
+  'Noctis Lilac',
+  'Quietlight',
+  'Tokyo Night Day',
+  'White Light',
+  'BBEdit'
+]
 const lightNames = themeNames.filter((n) => LIGHT_THEMES.includes(n))
 const darkNames = themeNames.filter((n) => !LIGHT_THEMES.includes(n))
 
