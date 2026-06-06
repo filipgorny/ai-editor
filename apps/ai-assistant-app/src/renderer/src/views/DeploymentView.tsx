@@ -25,8 +25,12 @@ import HubIcon from '@mui/icons-material/Hub'
 import { Gallery } from './deployment/Gallery'
 import { diagramToXml, xmlToDiagram, diagramToSvg, svgToPngBlob } from './deployment/draw'
 import {
-  DEFAULT_SHAPE_SIZE,
+  CONNECTOR_SPECS,
+  defaultSize,
+  isKnownKind,
+  parseKind,
   type ArrowStyle,
+  type EndCap,
   type PersistedDiagram,
   type PersistedEdge,
   type PersistedNode,
@@ -57,23 +61,24 @@ function storeKey(folder: string): string {
 }
 
 function makeNode(kind: ShapeKind, x: number, y: number): PersistedNode {
-  const size = DEFAULT_SHAPE_SIZE[kind]
+  const size = defaultSize(kind)
 
   return { id: nextId('shape'), kind, label: '', x, y, width: size.width, height: size.height }
 }
 
-// renderOutline draws the kind-specific black-and-white silhouette into a 0..100 box that
-// stretches with the shape (preserveAspectRatio:none).
-function renderOutline(kind: ShapeKind): React.JSX.Element {
+// renderOutline draws the basic black-and-white silhouette for `name` into a 0..100 box that
+// stretches with the shape (preserveAspectRatio:none). Only basic primitives are drawn this
+// way; icon-based shapes (AWS) render their svg as an <img> instead (see the node markup).
+function renderOutline(name: string): React.JSX.Element {
   const stroke = '#000'
   const fill = '#fff'
   const sw = 2
 
-  if (kind === 'rectangle') {
+  if (name === 'rectangle') {
     return <rect x={1} y={1} width={98} height={98} fill={fill} stroke={stroke} strokeWidth={sw} />
   }
 
-  if (kind === 'database') {
+  if (name === 'database') {
     return (
       <g fill={fill} stroke={stroke} strokeWidth={sw}>
         <path d="M2 14 L2 86 A48 12 0 0 0 98 86 L98 14" />
@@ -93,13 +98,22 @@ function renderOutline(kind: ShapeKind): React.JSX.Element {
   )
 }
 
-// SHAPE_INSET gives per-kind half-extent factors so the clip rectangle matches the drawn
+// shapeInset gives per-kind half-extent factors so the clip rectangle matches the drawn
 // silhouette (see renderOutline) instead of the full bounding box: the cloud blob occupies
-// only ~66% width / ~52% height of its box, so its arrows must stop earlier to touch the outline.
-const SHAPE_INSET: Record<ShapeKind, { x: number; y: number }> = {
-  rectangle: { x: 1.0, y: 1.0 },
-  database: { x: 0.97, y: 0.95 },
-  cloud: { x: 0.66, y: 0.52 }
+// only ~66% width / ~52% height of its box, so its arrows must stop earlier to touch the
+// outline. Icon-based shapes (AWS) fill their box, so they use the full extent.
+function shapeInset(kind: ShapeKind): { x: number; y: number } {
+  const { category, name } = parseKind(kind)
+
+  if (category === 'basic' && name === 'cloud') {
+    return { x: 0.66, y: 0.52 }
+  }
+
+  if (category === 'basic' && name === 'database') {
+    return { x: 0.97, y: 0.95 }
+  }
+
+  return { x: 1.0, y: 1.0 }
 }
 
 // borderPoint clips the center→toward ray to the node's drawn silhouette, so an arrow
@@ -114,7 +128,7 @@ function borderPoint(n: PersistedNode, towardX: number, towardY: number): { x: n
     return { x: cx, y: cy }
   }
 
-  const inset = SHAPE_INSET[n.kind]
+  const inset = shapeInset(n.kind)
   const hx = (n.width / 2) * inset.x
   const hy = (n.height / 2) * inset.y
   const scale = 1 / Math.max(Math.abs(dx) / hx, Math.abs(dy) / hy)
@@ -124,6 +138,37 @@ function borderPoint(n: PersistedNode, towardX: number, towardY: number): { x: n
 
 function center(n: PersistedNode): { x: number; y: number } {
   return { x: n.x + n.width / 2, y: n.y + n.height / 2 }
+}
+
+// Map an end cap to the SVG marker drawn at the target (end) and source (start) of an edge.
+// Start has fewer entries: only the symmetric bar and the mirrored solid arrowhead make sense
+// pointing back out of the source.
+const END_MARKER: Record<EndCap, string | undefined> = {
+  none: undefined,
+  arrow: 'url(#dep-solid)',
+  arrowEmpty: 'url(#dep-empty)',
+  crow: 'url(#dep-crow)',
+  bar: 'url(#dep-bar)'
+}
+
+const START_MARKER: Record<EndCap, string | undefined> = {
+  none: undefined,
+  arrow: 'url(#dep-solid-start)',
+  arrowEmpty: undefined,
+  crow: undefined,
+  bar: 'url(#dep-bar)'
+}
+
+// connectorRender resolves a connector style to the line dash + the two end markers used on
+// the canvas edge.
+function connectorRender(arrow: ArrowStyle): { dash?: string; startMarker?: string; endMarker?: string } {
+  const spec = CONNECTOR_SPECS[arrow] ?? CONNECTOR_SPECS.solid
+
+  return {
+    dash: spec.dashed ? '7 5' : undefined,
+    startMarker: START_MARKER[spec.start],
+    endMarker: END_MARKER[spec.end]
+  }
 }
 
 // — styled scaffolding (all custom; no MUI) —
@@ -150,7 +195,7 @@ const TBtn = styled.button`
   background: ${colors.bg};
   border: 1px solid ${colors.border};
   border-radius: 6px;
-  color: ${colors.muted};
+  color: #e6edf3;
   font-size: 12px;
   cursor: pointer;
 
@@ -226,6 +271,39 @@ const Label = styled.div`
   color: #000;
   font-size: 13px;
   line-height: 1.25;
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: none;
+  pointer-events: none;
+`
+
+// Layout for an icon-based shape (AWS): the svg icon on top, its label beneath.
+const IconWrap = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 2px;
+`
+
+const IconImg = styled.img`
+  flex: 1 1 auto;
+  min-height: 0;
+  max-width: 100%;
+  object-fit: contain;
+  pointer-events: none;
+`
+
+const IconLabel = styled.div`
+  flex: 0 0 auto;
+  max-width: 100%;
+  text-align: center;
+  color: #000;
+  font-size: 12px;
+  line-height: 1.2;
   white-space: pre-wrap;
   word-break: break-word;
   user-select: none;
@@ -416,7 +494,7 @@ export function DeploymentViewComponent({ ctx }: { ctx: ViewContext }): React.JS
       const c = r
         ? canvasPoint(r.left + r.width / 2, r.top + r.height / 2)
         : { x: 240, y: 200 }
-      const size = DEFAULT_SHAPE_SIZE[kind]
+      const size = defaultSize(kind)
 
       setNodes((ns) => ns.concat(makeNode(kind, c.x - size.width / 2, c.y - size.height / 2)))
     },
@@ -430,12 +508,12 @@ export function DeploymentViewComponent({ ctx }: { ctx: ViewContext }): React.JS
 
       const kind = e.dataTransfer.getData('application/deployment-shape') as ShapeKind
 
-      if (kind !== 'rectangle' && kind !== 'database' && kind !== 'cloud') {
+      if (!isKnownKind(kind)) {
         return
       }
 
       const p = canvasPoint(e.clientX, e.clientY)
-      const size = DEFAULT_SHAPE_SIZE[kind]
+      const size = defaultSize(kind)
 
       setNodes((ns) => ns.concat(makeNode(kind, p.x - size.width / 2, p.y - size.height / 2)))
     },
@@ -490,13 +568,29 @@ export function DeploymentViewComponent({ ctx }: { ctx: ViewContext }): React.JS
       const ow = n.width
       const oh = n.height
 
+      // Icon shapes (AWS) hold their aspect ratio so the square graphic resizes uniformly
+      // and can't be squashed; basic primitives stay freely resizable on each axis.
+      const locked = parseKind(n.kind).category !== 'basic'
+      const aspect = ow / oh
+
       const move = (ev: MouseEvent): void => {
         // Convert the screen-space drag delta into world units.
         const scale = viewRef.current.scale
+        const dw = (ev.clientX - sx) / scale
+        const dh = (ev.clientY - sy) / scale
+
+        if (locked) {
+          // Drive a uniform resize from whichever axis the cursor pushed further.
+          const width = Math.max(70, Math.round(ow + Math.max(dw, dh * aspect)))
+
+          patchNode(n.id, { width, height: Math.round(width / aspect) })
+
+          return
+        }
 
         patchNode(n.id, {
-          width: Math.max(70, Math.round(ow + (ev.clientX - sx) / scale)),
-          height: Math.max(50, Math.round(oh + (ev.clientY - sy) / scale))
+          width: Math.max(70, Math.round(ow + dw)),
+          height: Math.max(50, Math.round(oh + dh))
         })
       }
 
@@ -759,6 +853,14 @@ export function DeploymentViewComponent({ ctx }: { ctx: ViewContext }): React.JS
               <marker id="dep-solid-start" markerWidth={12} markerHeight={12} refX={1} refY={5} orient="auto" markerUnits="userSpaceOnUse">
                 <path d="M10,0 L0,5 L10,10 Z" fill="#000" />
               </marker>
+              {/* Crow's foot ("kurza stopka") — the ER "many" end: a fork opening at the entity. */}
+              <marker id="dep-crow" markerWidth={18} markerHeight={16} refX={16} refY={8} orient="auto" markerUnits="userSpaceOnUse">
+                <path d="M0,8 L16,1 M0,8 L16,8 M0,8 L16,15" fill="none" stroke="#000" strokeWidth={1.6} />
+              </marker>
+              {/* ER "one" bar — a single tick across the line (used at either end). */}
+              <marker id="dep-bar" markerWidth={12} markerHeight={16} refX={6} refY={8} orient="auto" markerUnits="userSpaceOnUse">
+                <path d="M6,1 L6,15" stroke="#000" strokeWidth={1.8} />
+              </marker>
             </defs>
 
             {edges.map((e) => {
@@ -773,8 +875,7 @@ export function DeploymentViewComponent({ ctx }: { ctx: ViewContext }): React.JS
               const tc = center(tg)
               const p1 = borderPoint(s, tc.x, tc.y)
               const p2 = borderPoint(tg, sc.x, sc.y)
-              const endMarker = e.arrow === 'none' ? undefined : e.arrow === 'empty' ? 'url(#dep-empty)' : 'url(#dep-solid)'
-              const startMarker = e.arrow === 'both' ? 'url(#dep-solid-start)' : undefined
+              const { dash, startMarker, endMarker } = connectorRender(e.arrow)
 
               return (
                 <g key={e.id}>
@@ -800,6 +901,7 @@ export function DeploymentViewComponent({ ctx }: { ctx: ViewContext }): React.JS
                     y2={p2.y}
                     stroke="#000"
                     strokeWidth={selEdge === e.id ? 2.5 : 1.6}
+                    strokeDasharray={dash}
                     markerEnd={endMarker}
                     markerStart={startMarker}
                   />
@@ -820,7 +922,31 @@ export function DeploymentViewComponent({ ctx }: { ctx: ViewContext }): React.JS
             )}
           </EdgeLayer>
 
-          {nodes.map((n) => (
+          {nodes.map((n) => {
+            const { category, name } = parseKind(n.kind)
+            const isBasic = category === 'basic'
+
+            const editArea = (
+              <EditArea
+                autoFocus
+                defaultValue={n.label}
+                onMouseDown={(e) => e.stopPropagation()}
+                onBlur={(e) => commitLabel(n.id, e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    commitLabel(n.id, (e.target as HTMLTextAreaElement).value)
+                  }
+
+                  if (e.key === 'Escape') {
+                    e.preventDefault()
+                    setEditing(null)
+                  }
+                }}
+              />
+            )
+
+            return (
             <ShapeBox
               key={n.id}
               $selected={selNode === n.id}
@@ -831,30 +957,19 @@ export function DeploymentViewComponent({ ctx }: { ctx: ViewContext }): React.JS
                 setEditing(n.id)
               }}
             >
-              <Outline viewBox="0 0 100 100" preserveAspectRatio="none">
-                {renderOutline(n.kind)}
-              </Outline>
+              {isBasic ? (
+                <>
+                  <Outline viewBox="0 0 100 100" preserveAspectRatio="none">
+                    {renderOutline(name)}
+                  </Outline>
 
-              {editing === n.id ? (
-                <EditArea
-                  autoFocus
-                  defaultValue={n.label}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onBlur={(e) => commitLabel(n.id, e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault()
-                      commitLabel(n.id, (e.target as HTMLTextAreaElement).value)
-                    }
-
-                    if (e.key === 'Escape') {
-                      e.preventDefault()
-                      setEditing(null)
-                    }
-                  }}
-                />
+                  {editing === n.id ? editArea : <Label>{n.label}</Label>}
+                </>
               ) : (
-                <Label>{n.label}</Label>
+                <IconWrap>
+                  <IconImg src={`/shapes/${category}/${name}.svg`} alt={name} draggable={false} />
+                  {editing === n.id ? editArea : <IconLabel>{n.label}</IconLabel>}
+                </IconWrap>
               )}
 
               {/* Four connector dots — drag one onto another shape to link them. */}
@@ -865,7 +980,8 @@ export function DeploymentViewComponent({ ctx }: { ctx: ViewContext }): React.JS
 
               <ResizeHandle onMouseDown={(e) => startResize(e, n)} />
             </ShapeBox>
-            ))}
+            )
+          })}
           </World>
 
           {nodes.length === 0 && <EmptyHint>{t('deployment.empty')}</EmptyHint>}

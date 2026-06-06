@@ -13,7 +13,9 @@ export default {
   },
   deployment: {
     shapes: 'Shapes',
-    arrows: 'Arrows',
+    connectors: 'Connectors',
+    search: 'Find graphic…',
+    noResults: 'No matching graphics',
     empty: 'Drag or click a shape to start',
     addText: 'Add text',
     save: 'Save',
@@ -23,16 +25,30 @@ export default {
     format: 'Format',
     resolution: 'Resolution',
     cancel: 'Cancel',
+    category: {
+      basic: 'Basic',
+      deployment: 'Deployment'
+    },
     shape: {
       rectangle: 'Rectangle',
       database: 'Database',
-      cloud: 'Cloud'
+      cloud: 'Cloud',
+      ec2: 'EC2',
+      ecs: 'ECS',
+      s3: 'S3',
+      rds: 'RDS',
+      redshift: 'Redshift',
+      documentdb: 'DocumentDB'
     },
-    arrow: {
-      solid: 'Solid',
-      empty: 'Hollow',
-      none: 'No head',
-      both: 'Both ends'
+    connector: {
+      solid: 'Arrow',
+      empty: 'Hollow arrow',
+      both: 'Double arrow',
+      none: 'Line',
+      dashed: 'Dashed line',
+      erOne: 'One to one',
+      erMany: "Many (crow's foot)",
+      erOneMany: 'One to many'
     }
   },
   terminal: {
@@ -171,6 +187,7 @@ export default {
     function: 'Function',
     folder: 'Folder',
     addElement: 'Add element',
+    elementOptions: 'Element options',
     rename: 'Rename',
     deleteElement: 'Delete element',
     edit: 'Edit',
@@ -196,7 +213,15 @@ export default {
     generateCode: 'Generate code',
     alreadyImplemented: 'Code already implemented',
     implemented: 'code',
-    stub: 'empty'
+    stub: 'empty',
+    run: 'Run',
+    runApp: 'Run app',
+    runFailed: 'Could not start the app',
+    cancel: 'Cancel',
+    runAnyway: 'Run anyway',
+    apiWarnTitle: 'API not reachable',
+    apiWarnBody:
+      'This app connects to the API at {{url}}, which it may need to work. The API does not seem to be running. Are you sure you want to run the app?'
   },
   events: {
     open: 'File opened',
@@ -299,7 +324,8 @@ export default {
       email: 'Email',
       token: 'API token',
       project: 'Project key',
-      saved: 'Jira settings saved'
+      saved: 'Jira settings saved',
+      close: 'Close'
     }
   },
   browser: {

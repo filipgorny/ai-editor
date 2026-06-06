@@ -182,9 +182,96 @@ const Dot = styled.span<{ $color: string }>`
   background: ${(p) => p.$color};
 `
 
-const Dir2 = styled.span`
-  color: ${colors.muted};
-`
+// CNode — one node of the changed-files tree built from the flat review list.
+type CNode = {
+  name: string
+  path: string
+  dir: boolean
+  status?: string
+  absPath?: string
+  children: CNode[]
+}
+
+// sortTree orders each level folders-first, then alphabetically.
+function sortTree(node: CNode): void {
+  node.children.sort((a, b) => (a.dir !== b.dir ? (a.dir ? -1 : 1) : a.name.localeCompare(b.name)))
+  node.children.forEach(sortTree)
+}
+
+// buildChangedTree turns the flat changed-files list into a nested folder tree, so the
+// review panel can render it like the file tree (every folder shown, fully expanded).
+function buildChangedTree(changed: Changed[]): CNode[] {
+  const root: CNode = { name: '', path: '', dir: true, children: [] }
+
+  for (const c of changed) {
+    const parts = c.path.split('/').filter(Boolean)
+    let node = root
+
+    parts.forEach((part, i) => {
+      const isLeaf = i === parts.length - 1
+      const path = parts.slice(0, i + 1).join('/')
+      let child = node.children.find((ch) => ch.name === part && ch.dir === !isLeaf)
+
+      if (!child) {
+        child = {
+          name: part,
+          path,
+          dir: !isLeaf,
+          status: isLeaf ? c.status : undefined,
+          absPath: isLeaf ? c.absPath : undefined,
+          children: []
+        }
+
+        node.children.push(child)
+      }
+
+      node = child
+    })
+  }
+
+  sortTree(root)
+
+  return root.children
+}
+
+// ChangedNode renders one changed-tree node (and its children) — folders always expanded,
+// files clickable with a status dot. Mirrors the file-tree look (Row + depth indentation).
+function ChangedNode({
+  node,
+  depth,
+  onOpenFile
+}: {
+  node: CNode
+  depth: number
+  onOpenFile: (p: string) => void
+}): React.JSX.Element {
+  const { t } = useTranslation()
+
+  if (node.dir) {
+    return (
+      <>
+        <Row $depth={depth} style={{ cursor: 'default' }}>
+          ▾ 📁 {node.name}
+        </Row>
+
+        {node.children.map((ch) => (
+          <ChangedNode key={ch.path} node={ch} depth={depth + 1} onOpenFile={onOpenFile} />
+        ))}
+      </>
+    )
+  }
+
+  return (
+    <Row
+      $depth={depth}
+      title={node.path + ' · ' + t('review.status.' + node.status)}
+      onClick={() => node.absPath && onOpenFile(node.absPath)}
+    >
+      <Dot $color={reviewColor[node.status as ReviewStatus] ?? colors.muted} />
+      📄 {node.name}
+    </Row>
+  )
+}
 
 // FileBrowser — stały lewy panel z drzewem plików (filer przez gateway). W trybie
 // review pokazuje PŁASKĄ listę tylko zmienionych plików (źródło prawdy: GitContext,
@@ -385,25 +472,9 @@ export default function FileBrowser({
           {changed.length === 0 ? (
             <ChangedRow style={{ color: colors.muted, cursor: 'default' }}>{t('review.noChanges')}</ChangedRow>
           ) : (
-            changed.map((c) => {
-              const slash = c.path.lastIndexOf('/')
-              const dir = slash >= 0 ? c.path.slice(0, slash + 1) : ''
-              const name = slash >= 0 ? c.path.slice(slash + 1) : c.path
-
-              return (
-                <ChangedRow
-                  key={c.absPath}
-                  title={c.path + ' · ' + t('review.status.' + c.status)}
-                  onClick={() => onOpenFile(c.absPath)}
-                >
-                  <Dot $color={reviewColor[c.status as ReviewStatus] ?? colors.muted} />
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    <Dir2>{dir}</Dir2>
-                    {name}
-                  </span>
-                </ChangedRow>
-              )
-            })
+            buildChangedTree(changed).map((n) => (
+              <ChangedNode key={n.path} node={n} depth={0} onOpenFile={onOpenFile} />
+            ))
           )}
         </Tree>
       </Panel>

@@ -5,38 +5,116 @@
 // persisted shape mirrors the reactflow node/edge shape closely so we can hydrate
 // straight back into useNodesState/useEdgesState with no translation layer.
 
-// BasicShapeKind — the three monochrome shape primitives offered in the left gallery.
+// ShapeKind — identifies a shape as "<category>/<name>", where <category> is the folder
+// under /shapes and <name> is the svg basename (e.g. 'basic/rectangle', 'amazon/ec2').
+// Legacy diagrams stored bare names ('rectangle'); parseKind() treats those as 'basic'.
+export type ShapeKind = string
 
-// AwsShapeKind — popular AWS service icons. These intentionally break the black & white
-// convention: each renders in its official AWS category color (see DeploymentView).
-export type AwsShapeKind =
-  | 'aws-ec2'
-  | 'aws-lambda'
-  | 'aws-ecs'
-  | 'aws-s3'
-  | 'aws-rds'
-  | 'aws-dynamodb'
-  | 'aws-apigateway'
-  | 'aws-sqs'
-  | 'aws-sns'
-  | 'aws-cloudfront'
-  | 'aws-vpc'
-  | 'aws-elb'
-  | 'aws-iam'
-  | 'aws-cloudwatch'
+// DiagramCategory — one group in the left gallery: a folder of svg icons plus the i18n key
+// for the group's displayed name. Both the gallery and the canvas read this single list.
+export interface DiagramCategory {
+  // id — the folder name under public/shapes that holds this category's svg icons.
+  id: string
+  // titleKey — i18n key for the category name shown as the gallery section title.
+  titleKey: string
+  // shapes — svg basenames (without extension) offered under this category.
+  shapes: string[]
+}
 
-// ShapeKind — every shape offered in the gallery (basic primitives + AWS services).
-export type ShapeKind = string;
+// DIAGRAM_CATEGORIES — the gallery's content. First the hand-drawn black & white basics,
+// then the AWS service icons (the "Deployment" group). Add a category by dropping its svgs
+// in public/shapes/<id>/ and appending an entry here.
+export const DIAGRAM_CATEGORIES: DiagramCategory[] = [
+  {
+    id: 'basic',
+    titleKey: 'deployment.category.basic',
+    shapes: ['rectangle', 'database', 'cloud']
+  },
+  {
+    id: 'amazon',
+    titleKey: 'deployment.category.deployment',
+    shapes: ['ec2', 'ecs', 's3', 'rds', 'redshift', 'documentdb']
+  }
+]
 
-// ShapeCategory — gallery grouping for a kind.
-export type ShapeCategory = 'basic' | 'aws'
+// parseKind splits a ShapeKind into its category id and shape name. A bare name (no slash)
+// is a legacy basic shape, so it defaults to the 'basic' category.
+export function parseKind(kind: ShapeKind): { category: string; name: string } {
+  const i = kind.indexOf('/')
 
-// ArrowStyle — how an edge terminates. Mirrors the arrow-style panel under the gallery.
-//   solid  — filled arrowhead at the target end
-//   empty  — hollow (outline) arrowhead at the target end
-//   none   — a plain line, no head
-//   both   — filled arrowheads at BOTH ends (bidirectional)
-export type ArrowStyle = 'solid' | 'empty' | 'none' | 'both'
+  if (i < 0) {
+    return { category: 'basic', name: kind }
+  }
+
+  return { category: kind.slice(0, i), name: kind.slice(i + 1) }
+}
+
+// isKnownKind reports whether a ShapeKind corresponds to a shape declared in
+// DIAGRAM_CATEGORIES (used to reject stray drag payloads on the canvas).
+export function isKnownKind(kind: ShapeKind): boolean {
+  const { category, name } = parseKind(kind)
+
+  return DIAGRAM_CATEGORIES.some((c) => c.id === category && c.shapes.includes(name))
+}
+
+// ArrowStyle — the connector style chosen in the gallery's "Connectors" panel. Named
+// ArrowStyle for backwards compatibility with persisted diagrams (the edge's `arrow` field).
+//   solid     — filled arrowhead at the target end
+//   empty     — hollow (outline) arrowhead at the target end
+//   both      — filled arrowheads at BOTH ends (bidirectional)
+//   none      — a plain solid line, no decoration
+//   dashed    — a plain dashed line, no decoration
+//   erOne     — ER "one to one": a single bar at both ends
+//   erMany    — ER "many": a crow's foot ("kurza stopka") at the target end
+//   erOneMany — ER "one to many": a bar at the source, a crow's foot at the target
+export type ArrowStyle =
+  | 'solid'
+  | 'empty'
+  | 'both'
+  | 'none'
+  | 'dashed'
+  | 'erOne'
+  | 'erMany'
+  | 'erOneMany'
+
+// EndCap — a medium-independent decoration for one end of a connector. The canvas, the
+// gallery preview and the export renderer each map these to their own primitives.
+export type EndCap = 'none' | 'arrow' | 'arrowEmpty' | 'crow' | 'bar'
+
+// ConnectorSpec — how a connector style is drawn: line dash + the two end caps.
+export interface ConnectorSpec {
+  dashed: boolean
+  start: EndCap
+  end: EndCap
+}
+
+export const CONNECTOR_SPECS: Record<ArrowStyle, ConnectorSpec> = {
+  solid: { dashed: false, start: 'none', end: 'arrow' },
+  empty: { dashed: false, start: 'none', end: 'arrowEmpty' },
+  both: { dashed: false, start: 'arrow', end: 'arrow' },
+  none: { dashed: false, start: 'none', end: 'none' },
+  dashed: { dashed: true, start: 'none', end: 'none' },
+  erOne: { dashed: false, start: 'bar', end: 'bar' },
+  erMany: { dashed: false, start: 'none', end: 'crow' },
+  erOneMany: { dashed: false, start: 'bar', end: 'crow' }
+}
+
+// CONNECTOR_STYLES — the order connectors appear in the gallery palette.
+export const CONNECTOR_STYLES: ArrowStyle[] = [
+  'solid',
+  'empty',
+  'both',
+  'none',
+  'dashed',
+  'erOne',
+  'erMany',
+  'erOneMany'
+]
+
+// isArrowStyle — narrow an arbitrary string (e.g. from a loaded .draw file) to a known style.
+export function isArrowStyle(v: string | null | undefined): v is ArrowStyle {
+  return v != null && Object.prototype.hasOwnProperty.call(CONNECTOR_SPECS, v)
+}
 
 // ShapeNodeData — the per-node `data` payload reactflow carries for our custom nodes.
 export interface ShapeNodeData {
@@ -74,9 +152,23 @@ export interface PersistedDiagram {
   edges: PersistedEdge[]
 }
 
-// Default pixel size a freshly-dropped shape gets.
-export const DEFAULT_SHAPE_SIZE: Record<ShapeKind, { width: number; height: number }> = {
-  rectangle: { width: 160, height: 90 },
-  database: { width: 140, height: 120 },
-  cloud: { width: 180, height: 110 }
+// defaultSize returns the pixel size a freshly-dropped shape gets. Basic primitives keep
+// their hand-tuned proportions; icon-based shapes (AWS) drop as a square with a little extra
+// height for the label rendered beneath the icon.
+export function defaultSize(kind: ShapeKind): { width: number; height: number } {
+  const { category, name } = parseKind(kind)
+
+  if (category === 'basic') {
+    if (name === 'database') {
+      return { width: 140, height: 120 }
+    }
+
+    if (name === 'cloud') {
+      return { width: 180, height: 110 }
+    }
+
+    return { width: 160, height: 90 }
+  }
+
+  return { width: 96, height: 112 }
 }

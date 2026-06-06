@@ -1,8 +1,16 @@
-import { Paper, MenuList, MenuItem } from '@mui/material'
+import { Paper, MenuList, MenuItem, ListSubheader } from '@mui/material'
 
 export type MenuItemDef = { label: string; onClick: () => void }
+// A category label row (non-clickable) used to group the items beneath it.
+export type MenuHeaderDef = { header: string }
+export type MenuEntry = MenuItemDef | MenuHeaderDef
 
-// ContextMenu — proste menu kontekstowe pozycjonowane przy kursorze.
+function isHeader(e: MenuEntry): e is MenuHeaderDef {
+  return 'header' in e
+}
+
+// ContextMenu — proste menu kontekstowe pozycjonowane przy kursorze. Pozycje typu
+// MenuHeaderDef renderują się jako nieklikalne etykiety kategorii (grupowanie).
 export default function ContextMenu({
   x,
   y,
@@ -11,7 +19,7 @@ export default function ContextMenu({
 }: {
   x: number
   y: number
-  items: MenuItemDef[]
+  items: MenuEntry[]
   onClose: () => void
 }) {
   return (
@@ -28,17 +36,34 @@ export default function ContextMenu({
       }}
     >
       <MenuList dense>
-        {items.map((it) => (
-          <MenuItem
-            key={it.label}
-            onClick={() => {
-              it.onClick()
-              onClose()
-            }}
-          >
-            {it.label}
-          </MenuItem>
-        ))}
+        {items.map((it, i) =>
+          isHeader(it) ? (
+            <ListSubheader
+              key={`h-${i}`}
+              disableSticky
+              sx={{
+                bgcolor: 'transparent',
+                color: '#8b949e',
+                lineHeight: '24px',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: 0.5
+              }}
+            >
+              {it.header}
+            </ListSubheader>
+          ) : (
+            <MenuItem
+              key={`i-${i}`}
+              onClick={() => {
+                it.onClick()
+                onClose()
+              }}
+            >
+              {it.label}
+            </MenuItem>
+          )
+        )}
       </MenuList>
     </Paper>
   )

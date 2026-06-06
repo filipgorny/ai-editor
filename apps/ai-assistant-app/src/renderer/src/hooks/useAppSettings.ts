@@ -108,6 +108,9 @@ export function useAppSettings(onNeedClaudeLogin: () => void) {
   // Persist each visual setting when it changes (merged server-side).
   useEffect(() => {
     document.documentElement.style.setProperty('--accent', accentBy(accent).color)
+    // Readable text colour for elements filled with the accent: white on the mid-tone
+    // accents (blue/red/…), dark only on the light 'white' accent (its `contrast`).
+    document.documentElement.style.setProperty('--accent-contrast', accentBy(accent).contrast ?? '#ffffff')
 
     if (settingsLoaded.current) {
       window.api.setSettings({ appTheme: accent })

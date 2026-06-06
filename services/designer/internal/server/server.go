@@ -205,13 +205,9 @@ func (s *Server) GetGraph(ctx context.Context, req *gatewayv1.GraphRequest) (*ga
 		return s.graph.BuildApps(ctx, pr.ID, pr.Folder)
 	}
 
-	appID, err := s.store.FirstAppID(ctx, pr.ID)
-
-	if err != nil {
-		return &gatewayv1.Graph{ProjectId: pr.ID, Folder: pr.Folder}, nil
-	}
-
-	return s.graph.BuildAppGraph(ctx, appID)
+	// Nie-monorepo: pierwszym elementem diagramu jest węzeł aplikacji (app),
+	// a nie drzewo folderów — drill-down pokazuje jego wnętrze.
+	return s.graph.BuildSingleApp(ctx, pr.ID, pr.Folder)
 }
 
 func (s *Server) GetAppGraph(ctx context.Context, req *gatewayv1.AppGraphRequest) (*gatewayv1.Graph, error) {

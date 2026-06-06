@@ -122,6 +122,11 @@ const api = {
   browserSetEnabled: (enabled) => electron.ipcRenderer.invoke("browser:setEnabled", enabled),
   browserNavigate: (id, url) => electron.ipcRenderer.invoke("browser:navigate", { id, url }),
   browserHistory: (id) => electron.ipcRenderer.invoke("browser:history", id),
+  // ---- React app runner (Run button on the code diagram) ----
+  reactDetectApi: (cwd) => electron.ipcRenderer.invoke("react:detectApi", cwd),
+  reactProbe: (url) => electron.ipcRenderer.invoke("react:probe", url),
+  reactRun: (cwd) => electron.ipcRenderer.invoke("react:run", cwd),
+  reactStop: () => electron.ipcRenderer.invoke("react:stop"),
   // ---- Tasks store (view 4) ----
   tasksList: (project) => electron.ipcRenderer.invoke("tasks:list", project),
   tasksSave: (t) => electron.ipcRenderer.invoke("tasks:save", t),

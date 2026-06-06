@@ -103,6 +103,14 @@ export default function App() {
     appBus.emit('view:change' as never, { from, to } as never)
   }, [])
 
+  // Per-project tab memory: remember which view (tab) was open for each project folder and
+  // return to it when the project is reopened. restoredTabFolder gates the persist effect so
+  // we never write the PREVIOUS project's tab onto a freshly-opened folder before its saved
+  // tab has been restored. onInitialScanRef lets useProjectScan register its scan-end handler
+  // once while still calling the latest closure (with the current folder).
+  const restoredTabFolder = useRef('')
+  const onInitialScanRef = useRef<() => void>(() => {})
+
   // Visual / editor settings + persistence. Prompts for Claude login when the saved
   // provider is Claude but no token is present.
   const settings = useAppSettings(() => setClaudeLoginOpen(true))
@@ -127,8 +135,9 @@ export default function App() {
 
   const muiTheme = useMemo(() => makeTheme(accent), [accent])
 
-  // Graph / scan / navigation. Reveals the code-diagram view once the initial scan ends.
-  const scan = useProjectScan(() => switchView('diagram'))
+  // Graph / scan / navigation. Once the initial scan ends, restore the project's last-open
+  // tab (default: code-diagram) instead of always jumping to the diagram.
+  const scan = useProjectScan(() => onInitialScanRef.current())
   const {
     folder,
     graph,
@@ -144,6 +153,50 @@ export default function App() {
     refreshCurrentView,
     expandApp
   } = scan
+
+  // restoreProjectTab — read the saved view for a folder and switch to it (falling back to
+  // the code-diagram when nothing is stored). Marks the folder as restored so the persist
+  // effect below can take over without clobbering the value we just read.
+  const restoreProjectTab = useCallback(
+    async (f: string): Promise<void> => {
+      let target: ViewKey = 'diagram'
+
+      if (f) {
+        try {
+          const saved = await window.api.getState<ViewKey>('view:last:' + f)
+
+          if (saved && VIEWS.some((v) => v.key === saved)) {
+            target = saved
+          }
+        } catch {
+          // brak zapisanego widoku lub błąd odczytu — zostaje domyślny diagram
+        }
+      }
+
+      restoredTabFolder.current = f
+      switchView(target)
+    },
+    [switchView]
+  )
+
+  // Keep the scan-end callback pointing at the latest folder. useProjectScan invokes this
+  // once per completed project scan; we restore that project's remembered tab there.
+  useEffect(() => {
+    onInitialScanRef.current = () => {
+      void restoreProjectTab(folder)
+    }
+  }, [folder, restoreProjectTab])
+
+  // Persist the active view per project so reopening it returns to the same tab. Gated on
+  // restoredTabFolder so the previous project's view isn't written onto a newly-opened
+  // folder before restoration has run for it.
+  useEffect(() => {
+    if (!folder || restoredTabFolder.current !== folder) {
+      return
+    }
+
+    window.api.setState('view:last:' + folder, activeView)
+  }, [activeView, folder])
 
   // Per-view editor workspaces (editor / diagram each independent).
   const editors = useEditors(activeView, folder)

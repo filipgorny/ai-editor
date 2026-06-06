@@ -76,7 +76,6 @@ const diagramView: ViewDefinition = {
   titleKey: 'views.diagram',
   Icon: AccountTreeIcon,
   Component: DiagramComponent,
-  showsFileTree: true,
   hostsEditors: true
 }
 

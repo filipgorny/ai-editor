@@ -277,16 +277,30 @@ export function useProjectScan(onInitialScan: () => void) {
     }
   }, [])
 
-  // Przyciski myszy: wstecz / dalej w historii otwartych nodów.
+  // Przyciski myszy: wstecz / dalej (button 3/4). Gdy klik trafia w okno edytora — przełączamy
+  // aktywne okno edytora (prev/next, jak ALT+strzałki); w przeciwnym razie nawigujemy historię
+  // otwartych nodów grafu.
   useEffect(() => {
     const onMouse = (e: MouseEvent) => {
-      if (e.button === 3) {
-        e.preventDefault()
-        back()
+      if (e.button !== 3 && e.button !== 4) {
+        return
       }
 
-      if (e.button === 4) {
-        e.preventDefault()
+      e.preventDefault()
+      const dir = e.button === 3 ? 'prev' : 'next'
+
+      // Tylko gdy edytor jest „w fokusie" — klik wylądował na oknie edytora — cyklujemy okna.
+      const overEditor = e.target instanceof Element && e.target.closest('.editor-window') != null
+
+      if (overEditor) {
+        appBus.emit('editor:nav', { dir })
+
+        return
+      }
+
+      if (dir === 'prev') {
+        back()
+      } else {
         forward()
       }
     }

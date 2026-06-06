@@ -3,6 +3,7 @@ package workspace
 
 import (
 	"encoding/json"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -15,13 +16,42 @@ type App struct {
 	Path string // względem roota monorepo
 }
 
-// Apps zwraca listę aplikacji monorepo na podstawie globów workspaces
-// (package.json "workspaces" oraz pnpm-workspace.yaml). Każdy katalog musi
-// zawierać package.json. Gdy nic nie znaleziono, zwraca pustą listę.
+// Apps zwraca listę aplikacji monorepo. Łączy trzy źródła: globy workspaces JS/TS
+// (package.json "workspaces" + pnpm-workspace.yaml), serwisy Go (katalogi z
+// `cmd/<x>/main.go`) oraz pakiety Protobuf (katalogi najwyższego poziomu z .proto).
+// Ścieżki są deduplikowane — pierwsze źródło wygrywa. Gdy nic nie znaleziono,
+// zwraca pustą listę.
 func Apps(root string) []App {
+	seen := map[string]bool{}
+	var apps []App
+
+	add := func(found []App) {
+		for _, a := range found {
+			if a.Path == "" || seen[a.Path] {
+				continue
+			}
+
+			seen[a.Path] = true
+			apps = append(apps, a)
+		}
+	}
+
+	add(jsApps(root))
+	add(GoApps(root))
+	add(ProtoApps(root))
+
+	sort.Slice(apps, func(i, j int) bool {
+		return apps[i].Path < apps[j].Path
+	})
+
+	return apps
+}
+
+// jsApps wylicza aplikacje JS/TS z globów workspaces. Każdy katalog musi zawierać
+// package.json.
+func jsApps(root string) []App {
 	globs := append(packageJSONWorkspaces(root), pnpmWorkspaces(root)...)
 
-	seen := map[string]bool{}
 	var apps []App
 
 	for _, g := range globs {
@@ -44,21 +74,129 @@ func Apps(root string) []App {
 
 			rel, err := filepath.Rel(root, dir)
 
-			if err != nil || seen[rel] {
+			if err != nil {
 				continue
 			}
-
-			seen[rel] = true
 
 			apps = append(apps, App{Name: filepath.Base(dir), Path: rel})
 		}
 	}
 
-	sort.Slice(apps, func(i, j int) bool {
-		return apps[i].Path < apps[j].Path
+	return apps
+}
+
+// GoApps wykrywa serwisy Go po konwencji `cmd/<nazwa>/main.go` — korzeniem
+// aplikacji jest katalog zawierający `cmd` (np. services/git/cmd/git/main.go →
+// services/git). Pozwala to rozpoznać każdy uruchamialny serwis monorepo Go.
+func GoApps(root string) []App {
+	seen := map[string]bool{}
+	var apps []App
+
+	_ = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+
+		if d.IsDir() {
+			if path != root && skipDir(d.Name()) {
+				return filepath.SkipDir
+			}
+
+			return nil
+		}
+
+		if d.Name() != "main.go" {
+			return nil
+		}
+
+		appRoot := serviceRootFromCmd(path)
+
+		if appRoot == "" {
+			return nil
+		}
+
+		rel, err := filepath.Rel(root, appRoot)
+
+		if err != nil || rel == "." || seen[rel] {
+			return nil
+		}
+
+		seen[rel] = true
+		apps = append(apps, App{Name: filepath.Base(appRoot), Path: rel})
+
+		return nil
 	})
 
 	return apps
+}
+
+// serviceRootFromCmd zwraca korzeń serwisu dla pliku main.go leżącego pod `cmd/`
+// (katalog tuż przed komponentem ścieżki "cmd"); pusty string, gdy main.go nie
+// znajduje się w układzie cmd/.
+func serviceRootFromCmd(mainPath string) string {
+	parts := strings.Split(filepath.ToSlash(filepath.Dir(mainPath)), "/")
+
+	for i := len(parts) - 1; i >= 0; i-- {
+		if parts[i] == "cmd" {
+			return filepath.FromSlash(strings.Join(parts[:i], "/"))
+		}
+	}
+
+	return ""
+}
+
+// ProtoApps grupuje pliki .proto po katalogu najwyższego poziomu (względem roota)
+// i tworzy z każdego takiego katalogu jedną aplikację Protobuf (np. proto). Dzięki
+// temu modele można przeglądać jako osobną aplikację na grafie.
+func ProtoApps(root string) []App {
+	seen := map[string]bool{}
+	var apps []App
+
+	_ = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+
+		if d.IsDir() {
+			if path != root && skipDir(d.Name()) {
+				return filepath.SkipDir
+			}
+
+			return nil
+		}
+
+		if !strings.HasSuffix(d.Name(), ".proto") {
+			return nil
+		}
+
+		rel, err := filepath.Rel(root, path)
+
+		if err != nil {
+			return nil
+		}
+
+		top := strings.SplitN(filepath.ToSlash(rel), "/", 2)[0]
+
+		if top == "" || top == filepath.ToSlash(rel) || seen[top] {
+			return nil
+		}
+
+		seen[top] = true
+		apps = append(apps, App{Name: top, Path: top})
+
+		return nil
+	})
+
+	return apps
+}
+
+func skipDir(name string) bool {
+	switch name {
+	case "node_modules", "dist", "build", "out", "vendor", ".git", ".idea", ".vscode":
+		return true
+	}
+
+	return false
 }
 
 func packageJSONWorkspaces(root string) []string {

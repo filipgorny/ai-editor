@@ -232,20 +232,34 @@ export default function CodeEditor({
       onSnapChange?.(true)
     }
   }, [])
-  // Initial window layout: restored geometry (reopened project) if present, else centered
-  // (~half width) / filling the graph area when opened snapped (see initialSnap).
+  // Snap-on-open is a GLOBAL mode: a window opens snapped ONLY when the workspace already
+  // has a top-snap active (initialSnap — another window is snapped to the top, or review
+  // mode). A file's OWN remembered snap no longer forces it: reopening a once-snapped file
+  // while nothing is snapped lands it as a flowing, centered window.
+  const openSnapped = !!initialSnap
+
+  // Initial window layout: when opening snapped, fill the scene. Otherwise restore the saved
+  // FLOATING geometry if present — but never a remembered snap-fill rect (initialGeom.snapped),
+  // which would reopen the window covering the scene instead of floating in the center; there
+  // we fall back to the centered default.
   const [layout] = useState(() =>
-    initialGeom && initialGeom.x != null && initialGeom.y != null && initialGeom.w != null && initialGeom.h != null
+    !openSnapped &&
+    !initialGeom?.snapped &&
+    initialGeom &&
+    initialGeom.x != null &&
+    initialGeom.y != null &&
+    initialGeom.w != null &&
+    initialGeom.h != null
       ? { pos: { x: initialGeom.x, y: initialGeom.y }, size: { w: initialGeom.w, h: initialGeom.h } }
-      : initialEditorLayout(!!initialSnap, index)
+      : initialEditorLayout(openSnapped, index)
   )
   const [size, setSize] = useState(layout.size)
   const [pos, setPos] = useState(layout.pos)
   // Whether this window currently fills the graph area ("top" snap). Reported up so the
   // host can open the next file snapped too.
-  const snapRef = useRef(!!initialSnap || !!initialGeom?.snapped)
+  const snapRef = useRef(openSnapped)
   // Reaktywny odpowiednik snapRef (do renderu: zesnapowane okno nie ma cienia).
-  const [snapped, setSnapped] = useState(!!initialSnap || !!initialGeom?.snapped)
+  const [snapped, setSnapped] = useState(openSnapped)
 
   // The shared <Window> owns the drag/resize/snap engine; these mirror its controlled
   // geometry into local state and reflect the snap flag up to the host (so a file opened
@@ -723,6 +737,20 @@ export default function CodeEditor({
     cursorRestored.current = true
   }, [loading, content, target?.path])
 
+  // Gdy to okno staje się aktywne (przełączenie oknem — ALT+strzałki lub przyciski myszy
+  // wstecz/dalej), ustaw fokus na edytorze. Okna pozostają zamontowane, więc CodeMirror
+  // zachowuje swój kursor — fokus przywraca go dokładnie tam, gdzie był przy ostatnim
+  // opuszczeniu tego okna. Pomijamy, gdy otwarte jest pole wyszukiwania (fokus należy do niego).
+  useEffect(() => {
+    if (!active || loading || minimized || findOpen) {
+      return
+    }
+
+    const id = window.setTimeout(() => ref.current?.view?.focus(), 0)
+
+    return () => window.clearTimeout(id)
+  }, [active, loading, minimized, findOpen])
+
   // ESLint: od razu po otwarciu i po każdej edycji (lekki debounce).
   useEffect(() => {
     if (!target) {
@@ -1047,6 +1075,7 @@ export default function CodeEditor({
   return (
     <>
     <Window
+      className="editor-window"
       x={pos.x}
       y={pos.y}
       w={size.w}

@@ -74,6 +74,16 @@ const NewBtn = styled.button`
 
 const HOME_URL = 'https://duckduckgo.com'
 
+// sameOrigin reduces a URL to its origin so repeated "open" requests for the same dev server
+// re-use one window instead of stacking new ones. Falls back to the raw string when unparsable.
+function sameOrigin(url: string): string {
+  try {
+    return new URL(url).origin
+  } catch {
+    return url
+  }
+}
+
 let pageSeq = 0
 
 function makePage(url: string, offset: number): PageState {
@@ -144,6 +154,42 @@ export default function BrowserView({ ctx }: { ctx: ViewContext }): React.JSX.El
     },
     [ctx.bus]
   )
+
+  // openUrl opens (or re-focuses) a page at url — driven by the 'browser:open' bus event
+  // (e.g. the code diagram's Run button after a React dev server boots). A page already on the
+  // same origin is reused so repeated runs don't stack windows.
+  const openUrl = useCallback(
+    (url: string): void => {
+      if (!url) {
+        return
+      }
+
+      enabledRef.current = true
+      ctx.api.browserSetEnabled(true).catch(() => undefined)
+
+      setPages((prev) => {
+        const existing = prev.find((p) => sameOrigin(p.url) === sameOrigin(url))
+
+        if (existing) {
+          setActiveId(existing.id)
+
+          return prev.map((p) => (p.id === existing.id ? { ...p, url } : p))
+        }
+
+        const p = makePage(url, prev.length)
+        setActiveId(p.id)
+
+        return [...prev, p]
+      })
+    },
+    [ctx.api]
+  )
+
+  // Subscribe for the whole view lifetime (keepMounted) so a page opens even while the browser
+  // view is in the background — the diagram switches to it right after emitting.
+  useEffect(() => {
+    return ctx.bus.on('browser:open', (p: { url: string }) => openUrl(p.url))
+  }, [ctx.bus, openUrl])
 
   const hasPages = pages.length > 0
 

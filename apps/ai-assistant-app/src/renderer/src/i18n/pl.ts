@@ -13,7 +13,9 @@ export default {
   },
   deployment: {
     shapes: 'Kształty',
-    arrows: 'Strzałki',
+    connectors: 'Łączniki',
+    search: 'Znajdź grafikę…',
+    noResults: 'Brak pasujących grafik',
     empty: 'Przeciągnij lub kliknij kształt, aby zacząć',
     addText: 'Dodaj tekst',
     save: 'Zapisz',
@@ -23,16 +25,30 @@ export default {
     format: 'Format',
     resolution: 'Rozdzielczość',
     cancel: 'Anuluj',
+    category: {
+      basic: 'Podstawowe',
+      deployment: 'Wdrożenie'
+    },
     shape: {
       rectangle: 'Prostokąt',
       database: 'Baza danych',
-      cloud: 'Chmura'
+      cloud: 'Chmura',
+      ec2: 'EC2',
+      ecs: 'ECS',
+      s3: 'S3',
+      rds: 'RDS',
+      redshift: 'Redshift',
+      documentdb: 'DocumentDB'
     },
-    arrow: {
-      solid: 'Pełna',
-      empty: 'Pusta',
-      none: 'Bez grotu',
-      both: 'Dwustronna'
+    connector: {
+      solid: 'Strzałka',
+      empty: 'Pusta strzałka',
+      both: 'Dwustronna',
+      none: 'Linia',
+      dashed: 'Linia przerywana',
+      erOne: 'Jeden do jednego',
+      erMany: 'Wiele (kurza stopka)',
+      erOneMany: 'Jeden do wielu'
     }
   },
   terminal: {
@@ -171,6 +187,7 @@ export default {
     function: 'Funkcja',
     folder: 'Folder',
     addElement: 'Dodaj element',
+    elementOptions: 'Opcje elementu',
     rename: 'Zmień nazwę',
     deleteElement: 'Usuń element',
     edit: 'Edytuj',
@@ -196,7 +213,15 @@ export default {
     generateCode: 'Wygeneruj kod',
     alreadyImplemented: 'Kod już zaimplementowany',
     implemented: 'kod',
-    stub: 'pusta'
+    stub: 'pusta',
+    run: 'Uruchom',
+    runApp: 'Uruchom aplikację',
+    runFailed: 'Nie udało się uruchomić aplikacji',
+    cancel: 'Anuluj',
+    runAnyway: 'Uruchom mimo to',
+    apiWarnTitle: 'API jest nieosiągalne',
+    apiWarnBody:
+      'Ta aplikacja łączy się z API pod adresem {{url}}, które może być wymagane do jej działania. API wygląda na niedziałające. Czy na pewno chcesz uruchomić aplikację?'
   },
   events: {
     open: 'Otwarto plik',
@@ -299,7 +324,8 @@ export default {
       email: 'E-mail',
       token: 'Token API',
       project: 'Klucz projektu',
-      saved: 'Zapisano ustawienia Jiry'
+      saved: 'Zapisano ustawienia Jiry',
+      close: 'Zamknij'
     }
   },
   browser: {

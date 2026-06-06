@@ -11,8 +11,19 @@ import ReactFlow, {
 import 'reactflow/dist/style.css'
 import { useTranslation } from 'react-i18next'
 import { appBus } from '../events'
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, MenuItem } from '@mui/material'
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  TextField,
+  Button,
+  MenuItem
+} from '@mui/material'
 import { AppNode, Graph, Node } from '../model'
+import { toast } from '../toast'
+import { RunAppContext } from './RunAppContext'
 import { kindColor } from '../styles/tokens'
 import NodeCard from './NodeCard'
 import TempCard from './TempCard'
@@ -335,6 +346,13 @@ export default function GraphView({
 
   const rootDir = rootNode?.file ?? ''
   const rootFolderId = rootNode?.id ?? ''
+
+  // — Run a React app node. The Run button lives on the app's NodeCard (see RunAppContext);
+  // here we own the orchestration because resolving the app's directory needs the project
+  // root. runningId = the app node currently starting (drives its spinner); apiWarn holds the
+  // app + unreachable backend URL when we ask the user to confirm before launching. —
+  const [runningId, setRunningId] = useState('')
+  const [apiWarn, setApiWarn] = useState<{ node: Node; url: string } | null>(null)
 
   // Usuń węzły optymistyczne, które re-skan już przyniósł jako prawdziwe (po nazwie).
   useEffect(() => {
@@ -1097,7 +1115,67 @@ export default function GraphView({
     setRenameNode(null)
   }
 
+  // appDir resolves an app node's absolute directory (its file is stored relative to the
+  // project root, which is the scene's root folder).
+  const appDir = (node: Node): string => {
+    const file = node.file
+
+    if (file.startsWith('/') || /^[a-zA-Z]:[\\/]/.test(file)) {
+      return file
+    }
+
+    return graph.folder.replace(/[\\/]$/, '') + '/' + file.replace(/^[\\/]/, '')
+  }
+
+  // startReactApp spawns the dev server (main process) and, once it is serving, opens the app
+  // in the browser view and switches to it. Failures surface as a toast.
+  const startReactApp = async (node: Node): Promise<void> => {
+    setApiWarn(null)
+    setRunningId(node.id)
+
+    try {
+      const { url } = await window.api.reactRun(appDir(node))
+
+      appBus.emit('browser:open', { url })
+      appBus.emit('view:request', { to: 'browser' })
+    } catch {
+      toast.error(t('graph.runFailed'))
+    } finally {
+      setRunningId('')
+    }
+  }
+
+  // runReactApp is the Run-button handler: if the app talks to a backend API that is not
+  // answering right now, it asks for confirmation first; otherwise it launches straight away.
+  const runReactApp = async (node: Node): Promise<void> => {
+    if (runningId) {
+      return
+    }
+
+    setRunningId(node.id)
+
+    try {
+      const { url: apiUrl } = await window.api.reactDetectApi(appDir(node)).catch(() => ({ url: '' }))
+
+      if (apiUrl) {
+        const { ok } = await window.api.reactProbe(apiUrl).catch(() => ({ ok: false }))
+
+        if (!ok) {
+          setRunningId('')
+          setApiWarn({ node, url: apiUrl })
+
+          return
+        }
+      }
+    } catch {
+      // detection failed — fall through and just run
+    }
+
+    await startReactApp(node)
+  }
+
   return (
+    <RunAppContext.Provider value={{ runningId, run: runReactApp }}>
     <div
       ref={wrapRef}
       style={{
@@ -1478,6 +1556,24 @@ export default function GraphView({
         </Button>
       </DialogActions>
     </Dialog>
+
+    {/* Backend-unreachable confirmation: shown only when the app's detected API didn't answer. */}
+    <Dialog open={!!apiWarn} onClose={() => setApiWarn(null)}>
+      <DialogTitle>{t('graph.apiWarnTitle')}</DialogTitle>
+
+      <DialogContent>
+        <DialogContentText>{t('graph.apiWarnBody', { url: apiWarn?.url ?? '' })}</DialogContentText>
+      </DialogContent>
+
+      <DialogActions>
+        <Button onClick={() => setApiWarn(null)}>{t('graph.cancel')}</Button>
+
+        <Button color="error" variant="contained" onClick={() => apiWarn && startReactApp(apiWarn.node)}>
+          {t('graph.runAnyway')}
+        </Button>
+      </DialogActions>
+    </Dialog>
     </div>
+    </RunAppContext.Provider>
   )
 }

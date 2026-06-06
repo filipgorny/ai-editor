@@ -489,6 +489,86 @@ function defaultShell() {
   }
   return process.env.SHELL || "/bin/bash";
 }
+let reactProc = null;
+function stripAnsi(s) {
+  return s.replace(/\x1b\[[0-9;]*m/g, "");
+}
+function detectPm(dir) {
+  if (fs.existsSync(path.join(dir, "pnpm-lock.yaml"))) {
+    return "pnpm";
+  }
+  if (fs.existsSync(path.join(dir, "yarn.lock"))) {
+    return "yarn";
+  }
+  if (fs.existsSync(path.join(dir, "bun.lockb"))) {
+    return "bun";
+  }
+  return "npm";
+}
+async function readPkg(dir) {
+  try {
+    return JSON.parse(await promises.readFile(path.join(dir, "package.json"), "utf8"));
+  } catch {
+    return null;
+  }
+}
+async function detectApiUrl(dir) {
+  for (const f of [".env", ".env.local", ".env.development", ".env.development.local"]) {
+    let text = "";
+    try {
+      text = await promises.readFile(path.join(dir, f), "utf8");
+    } catch {
+      continue;
+    }
+    for (const line of text.split(/\r?\n/)) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*['"]?(https?:\/\/[^\s'"]+)/i);
+      if (m && /API|BACKEND|SERVER|GATEWAY/i.test(m[1])) {
+        return m[2];
+      }
+    }
+  }
+  const pkg = await readPkg(dir);
+  if (pkg && typeof pkg.proxy === "string" && /^https?:\/\//.test(pkg.proxy)) {
+    return pkg.proxy;
+  }
+  for (const cfg of ["vite.config.ts", "vite.config.js"]) {
+    try {
+      const m = (await promises.readFile(path.join(dir, cfg), "utf8")).match(/target:\s*['"](https?:\/\/[^'"]+)['"]/);
+      if (m) {
+        return m[1];
+      }
+    } catch {
+    }
+  }
+  return "";
+}
+async function probeUrl(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 2500);
+  try {
+    await fetch(url, { method: "GET", signal: controller.signal });
+    return true;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+function killReactProc() {
+  const proc = reactProc;
+  if (!proc) {
+    return;
+  }
+  reactProc = null;
+  try {
+    if (proc.pid) {
+      process.kill(-proc.pid, "SIGTERM");
+    } else {
+      proc.kill("SIGTERM");
+    }
+  } catch {
+  }
+}
 function normalizeUrl(raw) {
   const s = raw.trim();
   if (!s) {
@@ -1100,6 +1180,71 @@ function registerIpc(win) {
     return { url };
   });
   electron.ipcMain.handle("browser:history", (_e, id) => kvGet(browserHistoryKey(id)) ?? []);
+  electron.ipcMain.handle("react:detectApi", async (_e, cwd) => ({ url: await detectApiUrl(cwd) }));
+  electron.ipcMain.handle("react:probe", async (_e, url) => ({ ok: await probeUrl(url) }));
+  electron.ipcMain.handle("react:run", async (_e, cwd) => {
+    const pkg = await readPkg(cwd);
+    if (!pkg) {
+      throw new Error("no-package-json");
+    }
+    const scripts = pkg.scripts ?? {};
+    const script = scripts.dev ? "dev" : scripts.start ? "start" : "";
+    if (!script) {
+      throw new Error("no-dev-script");
+    }
+    killReactProc();
+    const proc = child_process.spawn(detectPm(cwd), ["run", script], {
+      cwd,
+      detached: true,
+      env: { ...process.env, BROWSER: "none", FORCE_COLOR: "0" }
+    });
+    reactProc = proc;
+    return await new Promise((resolve, reject) => {
+      let settled = false;
+      let buf = "";
+      let timer;
+      const finish = (url) => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        clearTimeout(timer);
+        resolve({ url });
+      };
+      const scan = (chunk) => {
+        buf += stripAnsi(chunk.toString());
+        const m = buf.match(/https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0)(?::\d+)?\/?/i);
+        if (m) {
+          finish(m[0].replace("0.0.0.0", "localhost"));
+        }
+      };
+      proc.stdout?.on("data", scan);
+      proc.stderr?.on("data", scan);
+      proc.on("error", (err) => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          reject(err);
+        }
+      });
+      proc.on("exit", (code) => {
+        if (reactProc === proc) {
+          reactProc = null;
+        }
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          reject(new Error("dev-server-exited:" + code));
+        }
+      });
+      const fallback2 = JSON.stringify(pkg.devDependencies ?? {}).includes("vite") ? "http://localhost:5173" : "http://localhost:3000";
+      timer = setTimeout(() => finish(fallback2), 25e3);
+    });
+  });
+  electron.ipcMain.handle("react:stop", () => {
+    killReactProc();
+    return true;
+  });
   electron.ipcMain.handle("tasks:list", (_e, project) => tasksList(project ?? ""));
   electron.ipcMain.handle("tasks:save", (_e, t) => tasksSave(t));
   electron.ipcMain.handle("tasks:delete", (_e, id) => tasksDelete(id));
@@ -1136,6 +1281,7 @@ function registerIpc(win) {
       }
     }
     ptys.clear();
+    killReactProc();
   });
 }
 electron.app.whenReady().then(() => {

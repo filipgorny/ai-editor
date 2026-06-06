@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Handle, Position } from 'reactflow'
 import { useTranslation } from 'react-i18next'
+import { Button, Tooltip, CircularProgress } from '@mui/material'
+import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import styled, { css, keyframes } from 'styled-components'
 import { Controller, Node } from '../model'
 import { colors, kindColor } from '../styles/tokens'
 import { useEditor } from './EditorContext'
+import { useRunApp } from './RunAppContext'
 import { useGit, useGitAuthor, reviewColor, type ReviewStatus } from './GitContext'
 import { detectImplemented } from './GraphView'
 
@@ -129,14 +132,20 @@ const Footer = styled.div`
 
 const frameworkIcon: Record<string, string> = {
   nestjs: '🪺',
-  react: '⚛️'
+  react: '⚛️',
+  go: '🐹',
+  protobuf: '🧬'
 }
 
 // NodeCard renderuje domenowy Node jako klocek grafu.
 export default function NodeCard({ data, selected }: { data: Node; selected?: boolean }) {
   const { t } = useTranslation()
   const openFile = useEditor()
+  const { runningId, run } = useRunApp()
   const { review, statusByAbs } = useGit()
+  // The Run button shows on the graph element that IS the React app (the app node).
+  const isReactApp = data.kind === 'app' && data.framework === 'react'
+  const isRunning = runningId === data.id
   const author = useGitAuthor(data.absFile)
   const kColor = kindColor[data.kind] ?? colors.muted
   const route = data instanceof Controller ? data.route.toString() : ''
@@ -214,6 +223,43 @@ export default function NodeCard({ data, selected }: { data: Node; selected?: bo
         <Footer>
           <span>{frameworkIcon[data.framework] ?? '🔧'}</span>
           <span>{data.framework}</span>
+
+          {isReactApp ? (
+            <Tooltip title={t('graph.runApp')}>
+              <Button
+                size="small"
+                variant="outlined"
+                disabled={isRunning}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  run(data)
+                }}
+                startIcon={
+                  isRunning ? (
+                    <CircularProgress size={11} sx={{ color: '#f85149' }} />
+                  ) : (
+                    <PlayArrowIcon sx={{ fontSize: 13 }} />
+                  )
+                }
+                sx={{
+                  ml: 'auto',
+                  minWidth: 0,
+                  py: 0,
+                  px: 0.75,
+                  fontSize: 11,
+                  lineHeight: 1.6,
+                  color: '#f85149',
+                  borderColor: '#f85149',
+                  fontWeight: 700,
+                  textTransform: 'none',
+                  '& .MuiButton-startIcon': { mr: 0.5 },
+                  '&:hover': { borderColor: '#f85149', background: 'rgba(248,81,73,0.12)' }
+                }}
+              >
+                {t('graph.run')}
+              </Button>
+            </Tooltip>
+          ) : null}
         </Footer>
       ) : null}
 

@@ -6,20 +6,66 @@
 // kind) or clicked to drop one at a default position. The arrow-style buttons set which
 // head style NEW connections get (and re-style the currently selected edge).
 
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 import { colors } from '../../styles/tokens'
-import type { ArrowStyle, ShapeKind } from './types'
+import {
+  CONNECTOR_SPECS,
+  CONNECTOR_STYLES,
+  DIAGRAM_CATEGORIES,
+  type ArrowStyle,
+  type DiagramCategory,
+  type EndCap,
+  type ShapeKind
+} from './types'
 
 const Panel = styled.aside`
   display: flex;
   flex-direction: column;
-  width: 132px;
-  flex: 0 0 132px;
+  width: 200px;
+  flex: 0 0 200px;
   background: ${colors.panel};
   border-right: 1px solid ${colors.border};
   overflow-y: auto;
   user-select: none;
+`
+
+// Sticky search bar pinned to the very top of the gallery — find a graphic by name.
+const SearchSection = styled.div`
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 8px;
+  background: ${colors.panel};
+  border-bottom: 1px solid ${colors.border};
+`
+
+const SearchInput = styled.input`
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  background: ${colors.bg};
+  border: 1px solid ${colors.border};
+  border-radius: 6px;
+  color: #e6edf3;
+  font-size: 12px;
+
+  &::placeholder {
+    color: ${colors.muted};
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent, ${colors.controller});
+  }
+`
+
+const NoResults = styled.div`
+  padding: 12px 8px;
+  color: ${colors.muted};
+  font-size: 12px;
+  text-align: center;
 `
 
 const Section = styled.div`
@@ -35,6 +81,44 @@ const SectionTitle = styled.div`
   margin-bottom: 8px;
 `
 
+// Clickable accordion header for a category. Clicking it opens this category and rolls the
+// others closed (see Gallery's openId state).
+const CategoryTitle = styled.button<{ $open: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  margin-bottom: ${(p) => (p.$open ? '8px' : '0')};
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: ${(p) => (p.$open ? '#fff' : '#e6edf3')};
+  transition: color 0.15s, margin-bottom 0.28s ease;
+
+  &:hover {
+    color: #fff;
+  }
+`
+
+// The caret rotates from ▸ (closed) to ▾ (open).
+const Caret = styled.span<{ $open: boolean }>`
+  display: inline-block;
+  transition: transform 0.28s ease;
+  transform: rotate(${(p) => (p.$open ? '90deg' : '0deg')});
+`
+
+// Wraps a category's shapes; rolls up (max-height → 0) when the category is closed.
+const ShapeList = styled.div<{ $open: boolean }>`
+  overflow: hidden;
+  max-height: ${(p) => (p.$open ? '1200px' : '0')};
+  opacity: ${(p) => (p.$open ? 1 : 0)};
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+`
+
 const ShapeButton = styled.button`
   display: flex;
   flex-direction: column;
@@ -46,7 +130,7 @@ const ShapeButton = styled.button`
   background: ${colors.bg};
   border: 1px solid ${colors.border};
   border-radius: 6px;
-  color: ${colors.muted};
+  color: #e6edf3;
   cursor: grab;
   font-size: 11px;
 
@@ -70,12 +154,12 @@ const ArrowButton = styled.button<{ $active: boolean }>`
   background: ${(p) => (p.$active ? 'var(--accent, #58a6ff)' : colors.bg)};
   border: 1px solid ${(p) => (p.$active ? 'var(--accent, #58a6ff)' : colors.border)};
   border-radius: 6px;
-  color: ${(p) => (p.$active ? '#000' : colors.muted)};
+  color: ${(p) => (p.$active ? 'var(--accent-contrast, #fff)' : '#e6edf3')};
   cursor: pointer;
   font-size: 11px;
 
   &:hover {
-    color: ${(p) => (p.$active ? '#000' : '#fff')};
+    color: ${(p) => (p.$active ? 'var(--accent-contrast, #fff)' : '#fff')};
   }
 
   svg {
@@ -83,51 +167,84 @@ const ArrowButton = styled.button<{ $active: boolean }>`
   }
 `
 
-function ShapePreview({ category, name }: { category: string, name: string }): React.JSX.Element {
-  return <>
-    <img src={`/shapes/${category}/${name}.svg`}/>
-  </>
+// The svg icon for a shape, scaled to fit the button. Loaded from public/shapes/<cat>/<name>.svg.
+const PreviewImg = styled.img`
+  width: 40px;
+  height: 30px;
+  object-fit: contain;
+  pointer-events: none;
+`
+
+// Shape name shown under its icon in the gallery button.
+const ShapeName = styled.span`
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-word;
+`
+
+function ShapePreview({ category, name }: { category: string; name: string }): React.JSX.Element {
+  return <PreviewImg src={`/shapes/${category}/${name}.svg`} alt={name} />
 }
 
-// Tiny arrow-style previews drawn with the same marker idea used on the canvas.
-function ArrowPreview({ style }: { style: ArrowStyle }): React.JSX.Element {
-  const head = (id: string, hollow: boolean, flip: boolean): React.JSX.Element => (
-    <marker
-      id={id}
-      markerWidth={10}
-      markerHeight={10}
-      refX={flip ? 1 : 8}
-      refY={4}
-      orient="auto"
-      markerUnits="userSpaceOnUse"
-    >
-      <path
-        d={flip ? 'M8,0 L0,4 L8,8 Z' : 'M0,0 L8,4 L0,8 Z'}
-        fill={hollow ? '#fff' : '#fff'}
-        stroke="#fff"
-        strokeWidth={1}
-      />
-    </marker>
-  )
+// Connector previews are drawn with fixed geometry (no markers) so each end cap — arrow,
+// crow's foot ("kurza stopka"), or ER bar — reads clearly at this small size. The end cap
+// sits on the right (target), the start cap on the left (source).
+function endCapGlyph(cap: EndCap): React.JSX.Element | null {
+  if (cap === 'arrow') {
+    return <polygon points="33,7 25,3 25,11" fill="#fff" stroke="#fff" />
+  }
 
-  const sid = `gp-${style}`
+  if (cap === 'arrowEmpty') {
+    return <polygon points="33,7 25,3 25,11" fill="none" stroke="#fff" strokeWidth={1.2} />
+  }
+
+  if (cap === 'crow') {
+    return <path d="M24,7 L33,2 M24,7 L33,7 M24,7 L33,12" fill="none" stroke="#fff" strokeWidth={1.2} />
+  }
+
+  if (cap === 'bar') {
+    return <line x1={26} y1={2} x2={26} y2={12} stroke="#fff" strokeWidth={1.6} />
+  }
+
+  return null
+}
+
+function startCapGlyph(cap: EndCap): React.JSX.Element | null {
+  if (cap === 'arrow') {
+    return <polygon points="1,7 9,3 9,11" fill="#fff" stroke="#fff" />
+  }
+
+  if (cap === 'arrowEmpty') {
+    return <polygon points="1,7 9,3 9,11" fill="none" stroke="#fff" strokeWidth={1.2} />
+  }
+
+  if (cap === 'crow') {
+    return <path d="M10,7 L1,2 M10,7 L1,7 M10,7 L1,12" fill="none" stroke="#fff" strokeWidth={1.2} />
+  }
+
+  if (cap === 'bar') {
+    return <line x1={8} y1={2} x2={8} y2={12} stroke="#fff" strokeWidth={1.6} />
+  }
+
+  return null
+}
+
+function ConnectorPreview({ style }: { style: ArrowStyle }): React.JSX.Element {
+  const spec = CONNECTOR_SPECS[style] ?? CONNECTOR_SPECS.solid
 
   return (
-    <svg width={30} height={10} viewBox="0 0 30 10">
-      <defs>
-        {style !== 'none' && head(`${sid}-e`, style === 'empty', false)}
-        {style === 'both' && head(`${sid}-s`, false, true)}
-      </defs>
+    <svg width={34} height={14} viewBox="0 0 34 14">
       <line
-        x1={2}
-        y1={5}
+        x1={6}
+        y1={7}
         x2={28}
-        y2={5}
+        y2={7}
         stroke="#fff"
         strokeWidth={1.4}
-        markerEnd={style !== 'none' ? `url(#${sid}-e)` : undefined}
-        markerStart={style === 'both' ? `url(#${sid}-s)` : undefined}
+        strokeDasharray={spec.dashed ? '4 3' : undefined}
       />
+      {startCapGlyph(spec.start)}
+      {endCapGlyph(spec.end)}
     </svg>
   )
 }
@@ -138,50 +255,119 @@ export interface GalleryProps {
   onAddShape: (kind: ShapeKind) => void
 }
 
-const SHAPES = {
-  "amazon": ["documentdb", "ec2", "ecs", "rds", "redshift", "s3"],
-  "basic": ["rectangle", "cloud", "database"]
-}
+// DiagramElementsCategory — one gallery group: a clickable name as the accordion header,
+// then its shapes (draggable/clickable buttons) that roll up when the group is closed.
+// Generic over the category, so the same component renders the basic primitives and the AWS
+// "Deployment" icons alike.
+function DiagramElementsCategory({
+  category,
+  shapes,
+  open,
+  onToggle,
+  onAddShape
+}: {
+  category: DiagramCategory
+  shapes: string[]
+  open: boolean
+  onToggle: () => void
+  onAddShape: (kind: ShapeKind) => void
+}): React.JSX.Element {
+  const { t } = useTranslation()
 
-const ARROWS: ArrowStyle[] = ['solid', 'empty', 'none', 'both']
+  return (
+    <Section>
+      <CategoryTitle $open={open} onClick={onToggle} aria-expanded={open}>
+        <span>{t(category.titleKey)}</span>
+        <Caret $open={open}>▸</Caret>
+      </CategoryTitle>
+
+      <ShapeList $open={open} aria-hidden={!open}>
+        {shapes.map((name) => {
+          const kind = `${category.id}/${name}`
+
+          return (
+            <ShapeButton
+              key={kind}
+              draggable
+              tabIndex={open ? 0 : -1}
+              onDragStart={(e) => {
+                e.dataTransfer.setData('application/deployment-shape', kind)
+                e.dataTransfer.effectAllowed = 'copy'
+              }}
+              onClick={() => onAddShape(kind)}
+              title={t(`deployment.shape.${name}`)}
+            >
+              <ShapePreview category={category.id} name={name} />
+              <ShapeName>{t(`deployment.shape.${name}`)}</ShapeName>
+            </ShapeButton>
+          )
+        })}
+      </ShapeList>
+    </Section>
+  )
+}
 
 export function Gallery({ arrow, onArrowChange, onAddShape }: GalleryProps): React.JSX.Element {
   const { t } = useTranslation()
 
+  // Accordion: exactly one category open at a time, the first ('Basic') by default — so the
+  // 'Deployment' group starts rolled up. Clicking a header opens it and closes the rest.
+  const [openId, setOpenId] = useState<string>(DIAGRAM_CATEGORIES[0]?.id ?? '')
+  const [query, setQuery] = useState('')
+
+  const q = query.trim().toLowerCase()
+  const searching = q.length > 0
+
+  // For each category, the shape names visible under the current search. While searching,
+  // a graphic matches on its raw id or its translated name; categories with no match are
+  // dropped entirely and every surviving category is forced open.
+  const groups = DIAGRAM_CATEGORIES.map((category) => ({
+    category,
+    shapes: category.shapes.filter(
+      (name) =>
+        !searching ||
+        name.toLowerCase().includes(q) ||
+        t(`deployment.shape.${name}`).toLowerCase().includes(q)
+    )
+  })).filter((g) => !searching || g.shapes.length > 0)
+
   return (
     <Panel>
+      <SearchSection>
+        <SearchInput
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t('deployment.search')}
+          aria-label={t('deployment.search')}
+        />
+      </SearchSection>
+
+      {groups.map(({ category, shapes }) => (
+        <DiagramElementsCategory
+          key={category.id}
+          category={category}
+          shapes={shapes}
+          open={searching || openId === category.id}
+          onToggle={() => setOpenId(category.id)}
+          onAddShape={onAddShape}
+        />
+      ))}
+
+      {searching && groups.length === 0 ? <NoResults>{t('deployment.noResults')}</NoResults> : null}
+
       <Section>
-        <SectionTitle>{t('deployment.shapes')}</SectionTitle>
+        <SectionTitle>{t('deployment.connectors')}</SectionTitle>
 
-        {Object.keys(SHAPES).map((shapeCategory, index) => SHAPES[shapeCategory].map((shapeName: string) => (
-          <ShapeButton
-            key={index}
-            draggable
-            onDragStart={(e) => {
-              e.dataTransfer.setData('application/deployment-shape', shapeName)
-              e.dataTransfer.effectAllowed = 'copy'
-            }}
-            onClick={() => onAddShape(shapeName)}
-            title={t(`deployment.shape.${shapeName}`)}
-          >
-            <ShapePreview category={shapeCategory} name={shapeName} />
-            {t(`deployment.shape.${shapeName}`)}
-          </ShapeButton>
-        )))}
-      </Section>
-
-      <Section>
-        <SectionTitle>{t('deployment.arrows')}</SectionTitle>
-
-        {ARROWS.map((style) => (
+        {CONNECTOR_STYLES.map((style) => (
           <ArrowButton
             key={style}
             $active={arrow === style}
             onClick={() => onArrowChange(style)}
-            title={t(`deployment.arrow.${style}`)}
+            title={t(`deployment.connector.${style}`)}
           >
-            <ArrowPreview style={style} />
-            {t(`deployment.arrow.${style}`)}
+            <ConnectorPreview style={style} />
+            {t(`deployment.connector.${style}`)}
           </ArrowButton>
         ))}
       </Section>

@@ -372,6 +372,124 @@ function defaultShell(): string {
   return process.env.SHELL || '/bin/bash'
 }
 
+// ---- React app runner (Run button on the code diagram) ----------------------
+// One dev server at a time. The script is spawned in its own process group (detached) so
+// stopping it kills the whole tree (the package manager + node + bundler workers).
+let reactProc: ReturnType<typeof spawn> | null = null
+
+// stripAnsi removes terminal colour codes so the URL regex matches the dev-server banner.
+function stripAnsi(s: string): string {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/\x1b\[[0-9;]*m/g, '')
+}
+
+// detectPm picks the package manager from the lockfile in dir (npm is the fallback).
+function detectPm(dir: string): string {
+  if (existsSync(join(dir, 'pnpm-lock.yaml'))) {
+    return 'pnpm'
+  }
+
+  if (existsSync(join(dir, 'yarn.lock'))) {
+    return 'yarn'
+  }
+
+  if (existsSync(join(dir, 'bun.lockb'))) {
+    return 'bun'
+  }
+
+  return 'npm'
+}
+
+// readPkg reads and parses <dir>/package.json (null when missing/invalid).
+async function readPkg(dir: string): Promise<Record<string, any> | null> {
+  try {
+    return JSON.parse(await fsReadFile(join(dir, 'package.json'), 'utf8'))
+  } catch {
+    return null
+  }
+}
+
+// detectApiUrl best-effort finds the backend API base URL the React app talks to, so the
+// renderer can probe it before launching. Looks at .env files (API-ish vars), the CRA
+// "proxy" field, and a vite server.proxy target. Returns '' when nothing is found.
+async function detectApiUrl(dir: string): Promise<string> {
+  for (const f of ['.env', '.env.local', '.env.development', '.env.development.local']) {
+    let text = ''
+
+    try {
+      text = await fsReadFile(join(dir, f), 'utf8')
+    } catch {
+      continue
+    }
+
+    for (const line of text.split(/\r?\n/)) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*['"]?(https?:\/\/[^\s'"]+)/i)
+
+      if (m && /API|BACKEND|SERVER|GATEWAY/i.test(m[1])) {
+        return m[2]
+      }
+    }
+  }
+
+  const pkg = await readPkg(dir)
+
+  if (pkg && typeof pkg.proxy === 'string' && /^https?:\/\//.test(pkg.proxy)) {
+    return pkg.proxy
+  }
+
+  for (const cfg of ['vite.config.ts', 'vite.config.js']) {
+    try {
+      const m = (await fsReadFile(join(dir, cfg), 'utf8')).match(/target:\s*['"](https?:\/\/[^'"]+)['"]/)
+
+      if (m) {
+        return m[1]
+      }
+    } catch {
+      // no vite config / unreadable — skip
+    }
+  }
+
+  return ''
+}
+
+// probeUrl returns true when something answers at url (any HTTP status counts — a 404 still
+// means a server is listening). A refused connection / timeout returns false.
+async function probeUrl(url: string): Promise<boolean> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 2500)
+
+  try {
+    await fetch(url, { method: 'GET', signal: controller.signal })
+
+    return true
+  } catch {
+    return false
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+// killReactProc stops the running dev server (whole process group) if any.
+function killReactProc(): void {
+  const proc = reactProc
+
+  if (!proc) {
+    return
+  }
+
+  reactProc = null
+
+  try {
+    if (proc.pid) {
+      process.kill(-proc.pid, 'SIGTERM')
+    } else {
+      proc.kill('SIGTERM')
+    }
+  } catch {
+    // already gone
+  }
+}
+
 // ---- Web browser history (view 7) -------------------------------------------
 // Lightweight per-id navigation history kept in app_state. The actual page lives in a
 // renderer <webview>; this only records where each browser window has been.
@@ -1227,6 +1345,98 @@ function registerIpc(win: BrowserWindow): void {
 
   ipcMain.handle('browser:history', (_e, id: string) => kvGet<BrowserEntry[]>(browserHistoryKey(id)) ?? [])
 
+  // ---- React app runner (Run button on the code diagram) ----
+  // detectApi: best-effort backend URL the app talks to. probe: is that URL answering now.
+  ipcMain.handle('react:detectApi', async (_e, cwd: string) => ({ url: await detectApiUrl(cwd) }))
+  ipcMain.handle('react:probe', async (_e, url: string) => ({ ok: await probeUrl(url) }))
+
+  // react:run spawns the project's dev server in cwd and resolves with the local URL once the
+  // dev server prints it (Vite/CRA banner). Re-running kills the previous server first.
+  ipcMain.handle('react:run', async (_e, cwd: string) => {
+    const pkg = await readPkg(cwd)
+
+    if (!pkg) {
+      throw new Error('no-package-json')
+    }
+
+    const scripts = (pkg.scripts ?? {}) as Record<string, string>
+    const script = scripts.dev ? 'dev' : scripts.start ? 'start' : ''
+
+    if (!script) {
+      throw new Error('no-dev-script')
+    }
+
+    killReactProc()
+
+    const proc = spawn(detectPm(cwd), ['run', script], {
+      cwd,
+      detached: true,
+      env: { ...process.env, BROWSER: 'none', FORCE_COLOR: '0' }
+    })
+    reactProc = proc
+
+    return await new Promise<{ url: string }>((resolve, reject) => {
+      let settled = false
+      let buf = ''
+      let timer: ReturnType<typeof setTimeout>
+
+      const finish = (url: string): void => {
+        if (settled) {
+          return
+        }
+
+        settled = true
+        clearTimeout(timer)
+        resolve({ url })
+      }
+
+      const scan = (chunk: Buffer): void => {
+        buf += stripAnsi(chunk.toString())
+        const m = buf.match(/https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0)(?::\d+)?\/?/i)
+
+        if (m) {
+          finish(m[0].replace('0.0.0.0', 'localhost'))
+        }
+      }
+
+      proc.stdout?.on('data', scan)
+      proc.stderr?.on('data', scan)
+
+      proc.on('error', (err) => {
+        if (!settled) {
+          settled = true
+          clearTimeout(timer)
+          reject(err)
+        }
+      })
+
+      proc.on('exit', (code) => {
+        if (reactProc === proc) {
+          reactProc = null
+        }
+
+        if (!settled) {
+          settled = true
+          clearTimeout(timer)
+          reject(new Error('dev-server-exited:' + code))
+        }
+      })
+
+      // The server may be up but never print a parseable URL — after a grace period hand
+      // back the framework's conventional dev URL so the browser can still try to load it.
+      const fallback = JSON.stringify(pkg.devDependencies ?? {}).includes('vite')
+        ? 'http://localhost:5173'
+        : 'http://localhost:3000'
+      timer = setTimeout(() => finish(fallback), 25000)
+    })
+  })
+
+  ipcMain.handle('react:stop', () => {
+    killReactProc()
+
+    return true
+  })
+
   // ---- Tasks store (view 4) ----
   ipcMain.handle('tasks:list', (_e, project: string) => tasksList(project ?? ''))
   ipcMain.handle('tasks:save', (_e, t: Parameters<typeof tasksSave>[0]) => tasksSave(t))
@@ -1271,6 +1481,7 @@ function registerIpc(win: BrowserWindow): void {
     }
 
     ptys.clear()
+    killReactProc()
   })
 }
 

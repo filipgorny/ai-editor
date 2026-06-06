@@ -7,9 +7,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/filipgorny/ai-architect/services/scanner/internal/workspace"
 )
 
-// Detect zwraca "monorepo", "typescript-app" albo "" gdy nie rozpoznano.
+// Detect zwraca "monorepo", "typescript-app", "go-app" albo "" gdy nie rozpoznano.
 func Detect(root string) string {
 	if isMonorepo(root) {
 		return "monorepo"
@@ -19,17 +21,32 @@ func Detect(root string) string {
 		return "typescript-app"
 	}
 
+	if isGo(root) {
+		return "go-app"
+	}
+
 	return ""
 }
 
+// isMonorepo rozpoznaje monorepo po markerach JS/TS (pnpm/turbo/nx/lerna lub pole
+// "workspaces"), po Go workspace (go.work) oraz po wielu serwisach Go naraz
+// (≥2 katalogi z `cmd/<x>/main.go`) — dzięki temu monorepo Go też jest wykrywane.
 func isMonorepo(root string) bool {
-	for _, name := range []string{"pnpm-workspace.yaml", "turbo.json", "nx.json", "lerna.json"} {
+	for _, name := range []string{"pnpm-workspace.yaml", "turbo.json", "nx.json", "lerna.json", "go.work"} {
 		if exists(filepath.Join(root, name)) {
 			return true
 		}
 	}
 
-	return packageJSONHasWorkspaces(filepath.Join(root, "package.json"))
+	if packageJSONHasWorkspaces(filepath.Join(root, "package.json")) {
+		return true
+	}
+
+	return len(workspace.GoApps(root)) >= 2
+}
+
+func isGo(root string) bool {
+	return exists(filepath.Join(root, "go.mod"))
 }
 
 func isTypeScript(root string) bool {

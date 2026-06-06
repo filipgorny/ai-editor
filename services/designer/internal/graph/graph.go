@@ -4,6 +4,7 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -94,6 +95,37 @@ func (b *Builder) BuildApps(ctx context.Context, projectID int64, folder string)
 	// Also surface the project's real top-level directories — even those without an
 	// app — so a folder added to the root (by the user or AI) appears on the graph.
 	addTopDirs(tree, folder)
+
+	return g, nil
+}
+
+// BuildSingleApp zwraca graf projektu nie-monorepo: jego pierwszym (i jedynym)
+// elementem jest węzeł aplikacji (app). Drill-down na ten węzeł pokazuje wnętrze
+// (BuildAppGraph). Gdy projekt nie ma jeszcze aplikacji, zwraca pusty graf.
+func (b *Builder) BuildSingleApp(ctx context.Context, projectID int64, folder string) (*gatewayv1.Graph, error) {
+	g := &gatewayv1.Graph{ProjectId: projectID, Folder: folder}
+
+	var app store.App
+
+	err := b.db.WithContext(ctx).Where("project_id = ?", projectID).Order("id").First(&app).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return g, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	g.Nodes = append(g.Nodes, &gatewayv1.Node{
+		Id:        fmt.Sprintf("app:%d", app.ID),
+		Kind:      "app",
+		Name:      app.Name,
+		File:      app.Path,
+		App:       app.Name,
+		AppId:     app.ID,
+		Framework: app.Framework,
+	})
 
 	return g, nil
 }

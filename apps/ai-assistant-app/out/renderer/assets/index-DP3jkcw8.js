@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./runtime-B4wcA90p.js","./__vite-browser-external-Dgcnt-AB.js","./glue-QrOtmhPl.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./runtime-9N2SB7Uw.js","./__vite-browser-external-Cvo1cMax.js","./glue-QrOtmhPl.js"])))=>i.map(i=>d[i]);
 function _mergeNamespaces(n2, m2) {
   for (var i = 0; i < m2.length; i++) {
     const e2 = m2[i];
@@ -8791,7 +8791,7 @@ const deepmerge = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePro
   default: deepmerge$1,
   isPlainObject
 }, Symbol.toStringTag, { value: "Module" }));
-const _excluded$15 = ["values", "unit", "step"];
+const _excluded$17 = ["values", "unit", "step"];
 const sortBreakpointsValues = (values2) => {
   const breakpointsAsArray = Object.keys(values2).map((key) => ({
     key,
@@ -8822,7 +8822,7 @@ function createBreakpoints(breakpoints) {
     },
     unit = "px",
     step = 5
-  } = breakpoints, other = _objectWithoutPropertiesLoose(breakpoints, _excluded$15);
+  } = breakpoints, other = _objectWithoutPropertiesLoose(breakpoints, _excluded$17);
   const sortedValues = sortBreakpointsValues(values2);
   const keys2 = Object.keys(sortedValues);
   function up(key) {
@@ -9810,14 +9810,14 @@ function applyStyles$2(key, styles2) {
   }
   return {};
 }
-const _excluded$14 = ["breakpoints", "palette", "spacing", "shape"];
+const _excluded$16 = ["breakpoints", "palette", "spacing", "shape"];
 function createTheme$3(options = {}, ...args) {
   const {
     breakpoints: breakpointsInput = {},
     palette: paletteInput = {},
     spacing: spacingInput,
     shape: shapeInput = {}
-  } = options, other = _objectWithoutPropertiesLoose(options, _excluded$14);
+  } = options, other = _objectWithoutPropertiesLoose(options, _excluded$16);
   const breakpoints = createBreakpoints(breakpointsInput);
   const spacing = createSpacing(spacingInput);
   let muiTheme = deepmerge$1({
@@ -9893,7 +9893,7 @@ function GlobalStyles$1({
     styles: globalStyles
   });
 }
-const _excluded$13 = ["sx"];
+const _excluded$15 = ["sx"];
 const splitProps = (props) => {
   var _props$theme$unstable, _props$theme;
   const result = {
@@ -9913,7 +9913,7 @@ const splitProps = (props) => {
 function extendSxProp(props) {
   const {
     sx: inSx
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$13);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$15);
   const {
     systemProps,
     otherProps
@@ -9972,7 +9972,7 @@ function clsx() {
   for (var e2, t2, f2 = 0, n2 = "", o = arguments.length; f2 < o; f2++) (e2 = arguments[f2]) && (t2 = r$1(e2)) && (n2 && (n2 += " "), n2 += t2);
   return n2;
 }
-const _excluded$12 = ["className", "component"];
+const _excluded$14 = ["className", "component"];
 function createBox(options = {}) {
   const {
     themeId,
@@ -9988,7 +9988,7 @@ function createBox(options = {}) {
     const _extendSxProp = extendSxProp(inProps), {
       className,
       component = "div"
-    } = _extendSxProp, other = _objectWithoutPropertiesLoose(_extendSxProp, _excluded$12);
+    } = _extendSxProp, other = _objectWithoutPropertiesLoose(_extendSxProp, _excluded$14);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(BoxRoot, _extends$1({
       as: component,
       ref,
@@ -10162,7 +10162,7 @@ const getDisplayName = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defi
   default: getDisplayName$1,
   getFunctionName
 }, Symbol.toStringTag, { value: "Module" }));
-const _excluded$11 = ["ownerState"], _excluded2$7 = ["variants"], _excluded3$3 = ["name", "slot", "skipVariantsResolver", "skipSx", "overridesResolver"];
+const _excluded$13 = ["ownerState"], _excluded2$7 = ["variants"], _excluded3$3 = ["name", "slot", "skipVariantsResolver", "skipSx", "overridesResolver"];
 function isEmpty$3(obj) {
   return Object.keys(obj).length === 0;
 }
@@ -10204,7 +10204,7 @@ function defaultOverridesResolver$1(slot) {
 function processStyleArg$1(callableStyle, _ref, layerName) {
   let {
     ownerState
-  } = _ref, props = _objectWithoutPropertiesLoose(_ref, _excluded$11);
+  } = _ref, props = _objectWithoutPropertiesLoose(_ref, _excluded$13);
   const resolvedStylesArg = typeof callableStyle === "function" ? callableStyle(_extends$1({
     ownerState
   }, props)) : callableStyle;
@@ -10843,7 +10843,7 @@ function resolveComponentProps(componentProps, ownerState, slotState) {
   }
   return componentProps;
 }
-const _excluded$10 = ["elementType", "externalSlotProps", "ownerState", "skipResolvingSlotProps"];
+const _excluded$12 = ["elementType", "externalSlotProps", "ownerState", "skipResolvingSlotProps"];
 function useSlotProps(parameters) {
   var _parameters$additiona;
   const {
@@ -10851,7 +10851,7 @@ function useSlotProps(parameters) {
     externalSlotProps,
     ownerState,
     skipResolvingSlotProps = false
-  } = parameters, rest = _objectWithoutPropertiesLoose(parameters, _excluded$10);
+  } = parameters, rest = _objectWithoutPropertiesLoose(parameters, _excluded$12);
   const resolvedComponentsProps = skipResolvingSlotProps ? {} : resolveComponentProps(externalSlotProps, ownerState);
   const {
     props: mergedProps,
@@ -10904,12 +10904,12 @@ function ThemeProvider$2(props) {
     children: children2
   });
 }
-const _excluded$$ = ["value"];
+const _excluded$11 = ["value"];
 const RtlContext = /* @__PURE__ */ reactExports.createContext();
 function RtlProvider(_ref) {
   let {
     value
-  } = _ref, props = _objectWithoutPropertiesLoose(_ref, _excluded$$);
+  } = _ref, props = _objectWithoutPropertiesLoose(_ref, _excluded$11);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(RtlContext.Provider, _extends$1({
     value: value != null ? value : true
   }, props));
@@ -11045,7 +11045,7 @@ function ThemeProvider$1(props) {
     })
   });
 }
-const _excluded$_ = ["component", "direction", "spacing", "divider", "children", "className", "useFlexGap"];
+const _excluded$10 = ["component", "direction", "spacing", "divider", "children", "className", "useFlexGap"];
 const defaultTheme$3 = createTheme$3();
 const defaultCreateStyledComponent = styled$1("div", {
   name: "MuiStack",
@@ -11168,7 +11168,7 @@ function createStack(options = {}) {
       children: children2,
       className,
       useFlexGap = false
-    } = props, other = _objectWithoutPropertiesLoose(props, _excluded$_);
+    } = props, other = _objectWithoutPropertiesLoose(props, _excluded$10);
     const ownerState = {
       direction,
       spacing,
@@ -11214,7 +11214,7 @@ var interopRequireDefault = { exports: {} };
 var interopRequireDefaultExports = interopRequireDefault.exports;
 const require$$1$1 = /* @__PURE__ */ getAugmentedNamespace(formatMuiErrorMessage);
 const require$$2 = /* @__PURE__ */ getAugmentedNamespace(clamp$1);
-var _interopRequireDefault$D = interopRequireDefaultExports;
+var _interopRequireDefault$E = interopRequireDefaultExports;
 Object.defineProperty(colorManipulator, "__esModule", {
   value: true
 });
@@ -11236,8 +11236,8 @@ colorManipulator.private_safeEmphasize = private_safeEmphasize;
 colorManipulator.private_safeLighten = private_safeLighten;
 colorManipulator.recomposeColor = recomposeColor;
 colorManipulator.rgbToHex = rgbToHex;
-var _formatMuiErrorMessage2 = _interopRequireDefault$D(require$$1$1);
-var _clamp = _interopRequireDefault$D(require$$2);
+var _formatMuiErrorMessage2 = _interopRequireDefault$E(require$$1$1);
+var _clamp = _interopRequireDefault$E(require$$2);
 function clampWrapper(value, min2 = 0, max2 = 1) {
   return (0, _clamp.default)(value, min2, max2);
 }
@@ -11451,7 +11451,7 @@ function blend(background2, overlay, opacity, gamma2 = 1) {
     values: rgb2
   });
 }
-const _excluded$Z = ["mode", "contrastThreshold", "tonalOffset"];
+const _excluded$$ = ["mode", "contrastThreshold", "tonalOffset"];
 const light = {
   // The colors used to style the text.
   text: {
@@ -11619,7 +11619,7 @@ function createPalette(palette) {
     mode = "light",
     contrastThreshold = 3,
     tonalOffset = 0.2
-  } = palette, other = _objectWithoutPropertiesLoose(palette, _excluded$Z);
+  } = palette, other = _objectWithoutPropertiesLoose(palette, _excluded$$);
   const primary = palette.primary || getDefaultPrimary(mode);
   const secondary = palette.secondary || getDefaultSecondary(mode);
   const error = palette.error || getDefaultError(mode);
@@ -11713,7 +11713,7 @@ function createPalette(palette) {
   }, modes[mode]), other);
   return paletteOutput;
 }
-const _excluded$Y = ["fontFamily", "fontSize", "fontWeightLight", "fontWeightRegular", "fontWeightMedium", "fontWeightBold", "htmlFontSize", "allVariants", "pxToRem"];
+const _excluded$_ = ["fontFamily", "fontSize", "fontWeightLight", "fontWeightRegular", "fontWeightMedium", "fontWeightBold", "htmlFontSize", "allVariants", "pxToRem"];
 function round$2(value) {
   return Math.round(value * 1e5) / 1e5;
 }
@@ -11737,7 +11737,7 @@ function createTypography(palette, typography) {
     // Apply the CSS properties to all the variants.
     allVariants,
     pxToRem: pxToRem2
-  } = _ref, other = _objectWithoutPropertiesLoose(_ref, _excluded$Y);
+  } = _ref, other = _objectWithoutPropertiesLoose(_ref, _excluded$_);
   const coef = fontSize / 14;
   const pxToRem = pxToRem2 || ((size) => `${size / htmlFontSize * coef}rem`);
   const buildVariant = (fontWeight, size, lineHeight, letterSpacing, casing) => _extends$1({
@@ -11793,7 +11793,7 @@ function createShadow(...px) {
   return [`${px[0]}px ${px[1]}px ${px[2]}px ${px[3]}px rgba(0,0,0,${shadowKeyUmbraOpacity})`, `${px[4]}px ${px[5]}px ${px[6]}px ${px[7]}px rgba(0,0,0,${shadowKeyPenumbraOpacity})`, `${px[8]}px ${px[9]}px ${px[10]}px ${px[11]}px rgba(0,0,0,${shadowAmbientShadowOpacity})`].join(",");
 }
 const shadows = ["none", createShadow(0, 2, 1, -1, 0, 1, 1, 0, 0, 1, 3, 0), createShadow(0, 3, 1, -2, 0, 2, 2, 0, 0, 1, 5, 0), createShadow(0, 3, 3, -2, 0, 3, 4, 0, 0, 1, 8, 0), createShadow(0, 2, 4, -1, 0, 4, 5, 0, 0, 1, 10, 0), createShadow(0, 3, 5, -1, 0, 5, 8, 0, 0, 1, 14, 0), createShadow(0, 3, 5, -1, 0, 6, 10, 0, 0, 1, 18, 0), createShadow(0, 4, 5, -2, 0, 7, 10, 1, 0, 2, 16, 1), createShadow(0, 5, 5, -3, 0, 8, 10, 1, 0, 3, 14, 2), createShadow(0, 5, 6, -3, 0, 9, 12, 1, 0, 3, 16, 2), createShadow(0, 6, 6, -3, 0, 10, 14, 1, 0, 4, 18, 3), createShadow(0, 6, 7, -4, 0, 11, 15, 1, 0, 4, 20, 3), createShadow(0, 7, 8, -4, 0, 12, 17, 2, 0, 5, 22, 4), createShadow(0, 7, 8, -4, 0, 13, 19, 2, 0, 5, 24, 4), createShadow(0, 7, 9, -4, 0, 14, 21, 2, 0, 5, 26, 4), createShadow(0, 8, 9, -5, 0, 15, 22, 2, 0, 6, 28, 5), createShadow(0, 8, 10, -5, 0, 16, 24, 2, 0, 6, 30, 5), createShadow(0, 8, 11, -5, 0, 17, 26, 2, 0, 6, 32, 5), createShadow(0, 9, 11, -5, 0, 18, 28, 2, 0, 7, 34, 6), createShadow(0, 9, 12, -6, 0, 19, 29, 2, 0, 7, 36, 6), createShadow(0, 10, 13, -6, 0, 20, 31, 3, 0, 8, 38, 7), createShadow(0, 10, 13, -6, 0, 21, 33, 3, 0, 8, 40, 7), createShadow(0, 10, 14, -6, 0, 22, 35, 3, 0, 8, 42, 7), createShadow(0, 11, 14, -7, 0, 23, 36, 3, 0, 9, 44, 8), createShadow(0, 11, 15, -7, 0, 24, 38, 3, 0, 9, 46, 8)];
-const _excluded$X = ["duration", "easing", "delay"];
+const _excluded$Z = ["duration", "easing", "delay"];
 const easing = {
   // This is the most common easing curve.
   easeInOut: "cubic-bezier(0.4, 0, 0.2, 1)",
@@ -11837,7 +11837,7 @@ function createTransitions(inputTransitions) {
       easing: easingOption = mergedEasing.easeInOut,
       delay = 0
     } = options;
-    _objectWithoutPropertiesLoose(options, _excluded$X);
+    _objectWithoutPropertiesLoose(options, _excluded$Z);
     return (Array.isArray(props) ? props : [props]).map((animatedProp) => `${animatedProp} ${typeof durationOption === "string" ? durationOption : formatMs(durationOption)} ${easingOption} ${typeof delay === "string" ? delay : formatMs(delay)}`).join(",");
   };
   return _extends$1({
@@ -11858,14 +11858,14 @@ const zIndex = {
   snackbar: 1400,
   tooltip: 1500
 };
-const _excluded$W = ["breakpoints", "mixins", "spacing", "palette", "transitions", "typography", "shape"];
+const _excluded$Y = ["breakpoints", "mixins", "spacing", "palette", "transitions", "typography", "shape"];
 function createTheme$1(options = {}, ...args) {
   const {
     mixins: mixinsInput = {},
     palette: paletteInput = {},
     transitions: transitionsInput = {},
     typography: typographyInput = {}
-  } = options, other = _objectWithoutPropertiesLoose(options, _excluded$W);
+  } = options, other = _objectWithoutPropertiesLoose(options, _excluded$Y);
   if (options.vars && // The error should throw only for the root theme creation because user is not allowed to use a custom node `vars`.
   // `generateCssVars` is the closest identifier for checking that the `options` is a result of `extendTheme` with CSS variables so that user can create new theme for nested ThemeProvider.
   options.generateCssVars === void 0) {
@@ -11943,22 +11943,22 @@ const require$$5 = /* @__PURE__ */ getAugmentedNamespace(capitalize);
 const require$$6 = /* @__PURE__ */ getAugmentedNamespace(getDisplayName);
 const require$$7 = /* @__PURE__ */ getAugmentedNamespace(createTheme$2);
 const require$$8 = /* @__PURE__ */ getAugmentedNamespace(styleFunctionSx);
-var _interopRequireDefault$C = interopRequireDefaultExports;
+var _interopRequireDefault$D = interopRequireDefaultExports;
 Object.defineProperty(createStyled$1, "__esModule", {
   value: true
 });
 var _default = createStyled$1.default = createStyled2;
 createStyled$1.shouldForwardProp = shouldForwardProp;
 createStyled$1.systemDefaultTheme = void 0;
-var _extends2 = _interopRequireDefault$C(require_extends());
-var _objectWithoutPropertiesLoose2 = _interopRequireDefault$C(requireObjectWithoutPropertiesLoose());
+var _extends2 = _interopRequireDefault$D(require_extends());
+var _objectWithoutPropertiesLoose2 = _interopRequireDefault$D(requireObjectWithoutPropertiesLoose());
 var _styledEngine$1 = _interopRequireWildcard$1(require$$1);
 var _deepmerge = require$$4;
-_interopRequireDefault$C(require$$5);
-_interopRequireDefault$C(require$$6);
-var _createTheme = _interopRequireDefault$C(require$$7);
-var _styleFunctionSx = _interopRequireDefault$C(require$$8);
-const _excluded$V = ["ownerState"], _excluded2$6 = ["variants"], _excluded3$2 = ["name", "slot", "skipVariantsResolver", "skipSx", "overridesResolver"];
+_interopRequireDefault$D(require$$5);
+_interopRequireDefault$D(require$$6);
+var _createTheme = _interopRequireDefault$D(require$$7);
+var _styleFunctionSx = _interopRequireDefault$D(require$$8);
+const _excluded$X = ["ownerState"], _excluded2$6 = ["variants"], _excluded3$2 = ["name", "slot", "skipVariantsResolver", "skipSx", "overridesResolver"];
 function _getRequireWildcardCache$1(e2) {
   if ("function" != typeof WeakMap) return null;
   var r2 = /* @__PURE__ */ new WeakMap(), t2 = /* @__PURE__ */ new WeakMap();
@@ -12019,7 +12019,7 @@ function defaultOverridesResolver(slot) {
 function processStyleArg(callableStyle, _ref, layerName) {
   let {
     ownerState
-  } = _ref, props = (0, _objectWithoutPropertiesLoose2.default)(_ref, _excluded$V);
+  } = _ref, props = (0, _objectWithoutPropertiesLoose2.default)(_ref, _excluded$X);
   const resolvedStylesArg = typeof callableStyle === "function" ? callableStyle((0, _extends2.default)({
     ownerState
   }, props)) : callableStyle;
@@ -12189,11 +12189,11 @@ const styled = _default({
   defaultTheme: defaultTheme$2,
   rootShouldForwardProp
 });
-const _excluded$U = ["theme"];
+const _excluded$W = ["theme"];
 function ThemeProvider(_ref) {
   let {
     theme: themeInput
-  } = _ref, props = _objectWithoutPropertiesLoose(_ref, _excluded$U);
+  } = _ref, props = _objectWithoutPropertiesLoose(_ref, _excluded$W);
   const scopedTheme = themeInput[THEME_ID];
   let finalTheme = scopedTheme || themeInput;
   if (typeof themeInput !== "function") {
@@ -12228,8 +12228,8 @@ function getSvgIconUtilityClass(slot) {
   return generateUtilityClass("MuiSvgIcon", slot);
 }
 generateUtilityClasses("MuiSvgIcon", ["root", "colorPrimary", "colorSecondary", "colorAction", "colorError", "colorDisabled", "fontSizeInherit", "fontSizeSmall", "fontSizeMedium", "fontSizeLarge"]);
-const _excluded$T = ["children", "className", "color", "component", "fontSize", "htmlColor", "inheritViewBox", "titleAccess", "viewBox"];
-const useUtilityClasses$J = (ownerState) => {
+const _excluded$V = ["children", "className", "color", "component", "fontSize", "htmlColor", "inheritViewBox", "titleAccess", "viewBox"];
+const useUtilityClasses$L = (ownerState) => {
   const {
     color: color2,
     fontSize,
@@ -12295,7 +12295,7 @@ const SvgIcon = /* @__PURE__ */ reactExports.forwardRef(function SvgIcon2(inProp
     inheritViewBox = false,
     titleAccess,
     viewBox = "0 0 24 24"
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$T);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$V);
   const hasSvgAsChild = /* @__PURE__ */ reactExports.isValidElement(children2) && children2.type === "svg";
   const ownerState = _extends$1({}, props, {
     color: color2,
@@ -12310,7 +12310,7 @@ const SvgIcon = /* @__PURE__ */ reactExports.forwardRef(function SvgIcon2(inProp
   if (!inheritViewBox) {
     more.viewBox = viewBox;
   }
-  const classes = useUtilityClasses$J(ownerState);
+  const classes = useUtilityClasses$L(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(SvgIconRoot, _extends$1({
     as: component,
     className: clsx(classes.root, className),
@@ -12828,8 +12828,8 @@ function getPaperUtilityClass(slot) {
   return generateUtilityClass("MuiPaper", slot);
 }
 generateUtilityClasses("MuiPaper", ["root", "rounded", "outlined", "elevation", "elevation0", "elevation1", "elevation2", "elevation3", "elevation4", "elevation5", "elevation6", "elevation7", "elevation8", "elevation9", "elevation10", "elevation11", "elevation12", "elevation13", "elevation14", "elevation15", "elevation16", "elevation17", "elevation18", "elevation19", "elevation20", "elevation21", "elevation22", "elevation23", "elevation24"]);
-const _excluded$S = ["className", "component", "elevation", "square", "variant"];
-const useUtilityClasses$I = (ownerState) => {
+const _excluded$U = ["className", "component", "elevation", "square", "variant"];
+const useUtilityClasses$K = (ownerState) => {
   const {
     square,
     elevation,
@@ -12882,14 +12882,14 @@ const Paper = /* @__PURE__ */ reactExports.forwardRef(function Paper2(inProps, r
     elevation = 1,
     square = false,
     variant = "elevation"
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$S);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$U);
   const ownerState = _extends$1({}, props, {
     component,
     elevation,
     square,
     variant
   });
-  const classes = useUtilityClasses$I(ownerState);
+  const classes = useUtilityClasses$K(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(PaperRoot, _extends$1({
     as: component,
     ownerState,
@@ -12897,7 +12897,7 @@ const Paper = /* @__PURE__ */ reactExports.forwardRef(function Paper2(inProps, r
     ref
   }, other));
 });
-const _excluded$R = ["className", "elementType", "ownerState", "externalForwardedProps", "getSlotOwnerState", "internalForwardedProps"], _excluded2$5 = ["component", "slots", "slotProps"], _excluded3$1 = ["component"];
+const _excluded$T = ["className", "elementType", "ownerState", "externalForwardedProps", "getSlotOwnerState", "internalForwardedProps"], _excluded2$5 = ["component", "slots", "slotProps"], _excluded3$1 = ["component"];
 function useSlot(name2, parameters) {
   const {
     className,
@@ -12906,7 +12906,7 @@ function useSlot(name2, parameters) {
     externalForwardedProps,
     getSlotOwnerState,
     internalForwardedProps
-  } = parameters, useSlotPropsParams = _objectWithoutPropertiesLoose(parameters, _excluded$R);
+  } = parameters, useSlotPropsParams = _objectWithoutPropertiesLoose(parameters, _excluded$T);
   const {
     component: rootComponent,
     slots = {
@@ -12985,7 +12985,7 @@ function Ripple(props) {
   });
 }
 const touchRippleClasses = generateUtilityClasses("MuiTouchRipple", ["root", "ripple", "rippleVisible", "ripplePulsate", "child", "childLeaving", "childPulsate"]);
-const _excluded$Q = ["center", "classes", "className"];
+const _excluded$S = ["center", "classes", "className"];
 let _$2 = (t2) => t2, _t$2, _t2$2, _t3$2, _t4$2;
 const DURATION = 550;
 const DELAY_RIPPLE = 80;
@@ -13100,7 +13100,7 @@ const TouchRipple = /* @__PURE__ */ reactExports.forwardRef(function TouchRipple
     center: centerProp = false,
     classes = {},
     className
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$Q);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$S);
   const [ripples, setRipples] = reactExports.useState([]);
   const nextKey = reactExports.useRef(0);
   const rippleCallback = reactExports.useRef(null);
@@ -13258,8 +13258,8 @@ function getButtonBaseUtilityClass(slot) {
   return generateUtilityClass("MuiButtonBase", slot);
 }
 const buttonBaseClasses = generateUtilityClasses("MuiButtonBase", ["root", "disabled", "focusVisible"]);
-const _excluded$P = ["action", "centerRipple", "children", "className", "component", "disabled", "disableRipple", "disableTouchRipple", "focusRipple", "focusVisibleClassName", "LinkComponent", "onBlur", "onClick", "onContextMenu", "onDragLeave", "onFocus", "onFocusVisible", "onKeyDown", "onKeyUp", "onMouseDown", "onMouseLeave", "onMouseUp", "onTouchEnd", "onTouchMove", "onTouchStart", "tabIndex", "TouchRippleProps", "touchRippleRef", "type"];
-const useUtilityClasses$H = (ownerState) => {
+const _excluded$R = ["action", "centerRipple", "children", "className", "component", "disabled", "disableRipple", "disableTouchRipple", "focusRipple", "focusVisibleClassName", "LinkComponent", "onBlur", "onClick", "onContextMenu", "onDragLeave", "onFocus", "onFocusVisible", "onKeyDown", "onKeyUp", "onMouseDown", "onMouseLeave", "onMouseUp", "onTouchEnd", "onTouchMove", "onTouchStart", "tabIndex", "TouchRippleProps", "touchRippleRef", "type"];
+const useUtilityClasses$J = (ownerState) => {
   const {
     disabled,
     focusVisible,
@@ -13353,7 +13353,7 @@ const ButtonBase = /* @__PURE__ */ reactExports.forwardRef(function ButtonBase2(
     TouchRippleProps,
     touchRippleRef,
     type
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$P);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$R);
   const buttonRef = reactExports.useRef(null);
   const rippleRef = reactExports.useRef(null);
   const handleRippleRef = useForkRef(rippleRef, touchRippleRef);
@@ -13500,7 +13500,7 @@ const ButtonBase = /* @__PURE__ */ reactExports.forwardRef(function ButtonBase2(
     tabIndex,
     focusVisible
   });
-  const classes = useUtilityClasses$H(ownerState);
+  const classes = useUtilityClasses$J(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(ButtonBaseRoot, _extends$1({
     as: ComponentProp,
     className: clsx(classes.root, className),
@@ -13539,8 +13539,8 @@ function getIconButtonUtilityClass(slot) {
   return generateUtilityClass("MuiIconButton", slot);
 }
 const iconButtonClasses = generateUtilityClasses("MuiIconButton", ["root", "disabled", "colorInherit", "colorPrimary", "colorSecondary", "colorError", "colorInfo", "colorSuccess", "colorWarning", "edgeStart", "edgeEnd", "sizeSmall", "sizeMedium", "sizeLarge"]);
-const _excluded$O = ["edge", "children", "className", "color", "disabled", "disableFocusRipple", "size"];
-const useUtilityClasses$G = (ownerState) => {
+const _excluded$Q = ["edge", "children", "className", "color", "disabled", "disableFocusRipple", "size"];
+const useUtilityClasses$I = (ownerState) => {
   const {
     classes,
     disabled,
@@ -13634,7 +13634,7 @@ const IconButton = /* @__PURE__ */ reactExports.forwardRef(function IconButton2(
     disabled = false,
     disableFocusRipple = false,
     size = "medium"
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$O);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$Q);
   const ownerState = _extends$1({}, props, {
     edge,
     color: color2,
@@ -13642,7 +13642,7 @@ const IconButton = /* @__PURE__ */ reactExports.forwardRef(function IconButton2(
     disableFocusRipple,
     size
   });
-  const classes = useUtilityClasses$G(ownerState);
+  const classes = useUtilityClasses$I(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(IconButtonRoot, _extends$1({
     className: clsx(classes.root, className),
     centerRipple: true,
@@ -13669,8 +13669,8 @@ const InfoOutlinedIcon = createSvgIcon$1(/* @__PURE__ */ jsxRuntimeExports.jsx("
 const ClearIcon = createSvgIcon$1(/* @__PURE__ */ jsxRuntimeExports.jsx("path", {
   d: "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
 }), "Close");
-const _excluded$N = ["action", "children", "className", "closeText", "color", "components", "componentsProps", "icon", "iconMapping", "onClose", "role", "severity", "slotProps", "slots", "variant"];
-const useUtilityClasses$F = (ownerState) => {
+const _excluded$P = ["action", "children", "className", "closeText", "color", "components", "componentsProps", "icon", "iconMapping", "onClose", "role", "severity", "slotProps", "slots", "variant"];
+const useUtilityClasses$H = (ownerState) => {
   const {
     variant,
     color: color2,
@@ -13814,14 +13814,14 @@ const Alert = /* @__PURE__ */ reactExports.forwardRef(function Alert2(inProps, r
     slotProps = {},
     slots = {},
     variant = "standard"
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$N);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$P);
   const ownerState = _extends$1({}, props, {
     color: color2,
     severity,
     variant,
     colorSeverity: color2 || severity
   });
-  const classes = useUtilityClasses$F(ownerState);
+  const classes = useUtilityClasses$H(ownerState);
   const externalForwardedProps = {
     slots: _extends$1({
       closeButton: components.CloseButton,
@@ -13879,8 +13879,8 @@ function getTypographyUtilityClass(slot) {
   return generateUtilityClass("MuiTypography", slot);
 }
 generateUtilityClasses("MuiTypography", ["root", "h1", "h2", "h3", "h4", "h5", "h6", "subtitle1", "subtitle2", "body1", "body2", "inherit", "button", "caption", "overline", "alignLeft", "alignRight", "alignCenter", "alignJustify", "noWrap", "gutterBottom", "paragraph"]);
-const _excluded$M = ["align", "className", "component", "gutterBottom", "noWrap", "paragraph", "variant", "variantMapping"];
-const useUtilityClasses$E = (ownerState) => {
+const _excluded$O = ["align", "className", "component", "gutterBottom", "noWrap", "paragraph", "variant", "variantMapping"];
+const useUtilityClasses$G = (ownerState) => {
   const {
     align,
     gutterBottom,
@@ -13963,7 +13963,7 @@ const Typography = /* @__PURE__ */ reactExports.forwardRef(function Typography2(
     paragraph = false,
     variant = "body1",
     variantMapping = defaultVariantMapping
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$M);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$O);
   const ownerState = _extends$1({}, props, {
     align,
     color: color2,
@@ -13976,7 +13976,7 @@ const Typography = /* @__PURE__ */ reactExports.forwardRef(function Typography2(
     variantMapping
   });
   const Component2 = component || (paragraph ? "p" : variantMapping[variant] || defaultVariantMapping[variant]) || "span";
-  const classes = useUtilityClasses$E(ownerState);
+  const classes = useUtilityClasses$G(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(TypographyRoot, _extends$1({
     as: Component2,
     ref,
@@ -13988,7 +13988,7 @@ var useThemeWithoutDefault = {};
 Object.defineProperty(useThemeWithoutDefault, "__esModule", {
   value: true
 });
-var default_1$C = useThemeWithoutDefault.default = void 0;
+var default_1$D = useThemeWithoutDefault.default = void 0;
 var React$2 = _interopRequireWildcard(reactExports);
 var _styledEngine = require$$1;
 function _getRequireWildcardCache(e2) {
@@ -14017,7 +14017,7 @@ function useTheme(defaultTheme2 = null) {
   const contextTheme = React$2.useContext(_styledEngine.ThemeContext);
   return !contextTheme || isObjectEmpty$1(contextTheme) ? defaultTheme2 : contextTheme;
 }
-default_1$C = useThemeWithoutDefault.default = useTheme;
+default_1$D = useThemeWithoutDefault.default = useTheme;
 var top$1 = "top";
 var bottom = "bottom";
 var right = "right";
@@ -15408,7 +15408,7 @@ function getPopperUtilityClass(slot) {
   return generateUtilityClass("MuiPopper", slot);
 }
 generateUtilityClasses("MuiPopper", ["root"]);
-const _excluded$L = ["anchorEl", "children", "direction", "disablePortal", "modifiers", "open", "placement", "popperOptions", "popperRef", "slotProps", "slots", "TransitionProps", "ownerState"], _excluded2$4 = ["anchorEl", "children", "container", "direction", "disablePortal", "keepMounted", "modifiers", "open", "placement", "popperOptions", "popperRef", "style", "transition", "slotProps", "slots"];
+const _excluded$N = ["anchorEl", "children", "direction", "disablePortal", "modifiers", "open", "placement", "popperOptions", "popperRef", "slotProps", "slots", "TransitionProps", "ownerState"], _excluded2$4 = ["anchorEl", "children", "container", "direction", "disablePortal", "keepMounted", "modifiers", "open", "placement", "popperOptions", "popperRef", "style", "transition", "slotProps", "slots"];
 function flipPlacement(placement, direction) {
   if (direction === "ltr") {
     return placement;
@@ -15432,7 +15432,7 @@ function resolveAnchorEl$1(anchorEl) {
 function isHTMLElement(element) {
   return element.nodeType !== void 0;
 }
-const useUtilityClasses$D = (ownerState) => {
+const useUtilityClasses$F = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -15459,7 +15459,7 @@ const PopperTooltip = /* @__PURE__ */ reactExports.forwardRef(function PopperToo
     TransitionProps
     // @ts-ignore internal logic
     // prevent from spreading to DOM, it can come from the parent component e.g. Select.
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$L);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$N);
   const tooltipRef = reactExports.useRef(null);
   const ownRef = useForkRef(tooltipRef, forwardedRef);
   const popperRef = reactExports.useRef(null);
@@ -15532,7 +15532,7 @@ const PopperTooltip = /* @__PURE__ */ reactExports.forwardRef(function PopperToo
   if (TransitionProps !== null) {
     childProps.TransitionProps = TransitionProps;
   }
-  const classes = useUtilityClasses$D(props);
+  const classes = useUtilityClasses$F(props);
   const Root2 = (_slots$root = slots.root) != null ? _slots$root : "div";
   const rootProps = useSlotProps({
     elementType: Root2,
@@ -15619,7 +15619,7 @@ const Popper$1 = /* @__PURE__ */ reactExports.forwardRef(function Popper2(props,
     }))
   });
 });
-const _excluded$K = ["anchorEl", "component", "components", "componentsProps", "container", "disablePortal", "keepMounted", "modifiers", "open", "placement", "popperOptions", "popperRef", "transition", "slots", "slotProps"];
+const _excluded$M = ["anchorEl", "component", "components", "componentsProps", "container", "disablePortal", "keepMounted", "modifiers", "open", "placement", "popperOptions", "popperRef", "transition", "slots", "slotProps"];
 const PopperRoot = styled(Popper$1, {
   name: "MuiPopper",
   slot: "Root",
@@ -15627,7 +15627,7 @@ const PopperRoot = styled(Popper$1, {
 })({});
 const Popper = /* @__PURE__ */ reactExports.forwardRef(function Popper22(inProps, ref) {
   var _slots$root;
-  const theme2 = default_1$C();
+  const theme2 = default_1$D();
   const props = useDefaultProps({
     props: inProps,
     name: "MuiPopper"
@@ -15648,7 +15648,7 @@ const Popper = /* @__PURE__ */ reactExports.forwardRef(function Popper22(inProps
     transition,
     slots,
     slotProps
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$K);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$M);
   const RootComponent = (_slots$root = slots == null ? void 0 : slots.root) != null ? _slots$root : components == null ? void 0 : components.Root;
   const otherProps = _extends$1({
     anchorEl,
@@ -15673,6 +15673,88 @@ const Popper = /* @__PURE__ */ reactExports.forwardRef(function Popper22(inProps
     ref
   }));
 });
+function getListSubheaderUtilityClass(slot) {
+  return generateUtilityClass("MuiListSubheader", slot);
+}
+generateUtilityClasses("MuiListSubheader", ["root", "colorPrimary", "colorInherit", "gutters", "inset", "sticky"]);
+const _excluded$L = ["className", "color", "component", "disableGutters", "disableSticky", "inset"];
+const useUtilityClasses$E = (ownerState) => {
+  const {
+    classes,
+    color: color2,
+    disableGutters,
+    inset,
+    disableSticky
+  } = ownerState;
+  const slots = {
+    root: ["root", color2 !== "default" && `color${capitalize$1(color2)}`, !disableGutters && "gutters", inset && "inset", !disableSticky && "sticky"]
+  };
+  return composeClasses(slots, getListSubheaderUtilityClass, classes);
+};
+const ListSubheaderRoot = styled("li", {
+  name: "MuiListSubheader",
+  slot: "Root",
+  overridesResolver: (props, styles2) => {
+    const {
+      ownerState
+    } = props;
+    return [styles2.root, ownerState.color !== "default" && styles2[`color${capitalize$1(ownerState.color)}`], !ownerState.disableGutters && styles2.gutters, ownerState.inset && styles2.inset, !ownerState.disableSticky && styles2.sticky];
+  }
+})(({
+  theme: theme2,
+  ownerState
+}) => _extends$1({
+  boxSizing: "border-box",
+  lineHeight: "48px",
+  listStyle: "none",
+  color: (theme2.vars || theme2).palette.text.secondary,
+  fontFamily: theme2.typography.fontFamily,
+  fontWeight: theme2.typography.fontWeightMedium,
+  fontSize: theme2.typography.pxToRem(14)
+}, ownerState.color === "primary" && {
+  color: (theme2.vars || theme2).palette.primary.main
+}, ownerState.color === "inherit" && {
+  color: "inherit"
+}, !ownerState.disableGutters && {
+  paddingLeft: 16,
+  paddingRight: 16
+}, ownerState.inset && {
+  paddingLeft: 72
+}, !ownerState.disableSticky && {
+  position: "sticky",
+  top: 0,
+  zIndex: 1,
+  backgroundColor: (theme2.vars || theme2).palette.background.paper
+}));
+const ListSubheader = /* @__PURE__ */ reactExports.forwardRef(function ListSubheader2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiListSubheader"
+  });
+  const {
+    className,
+    color: color2 = "default",
+    component = "li",
+    disableGutters = false,
+    disableSticky = false,
+    inset = false
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$L);
+  const ownerState = _extends$1({}, props, {
+    color: color2,
+    component,
+    disableGutters,
+    disableSticky,
+    inset
+  });
+  const classes = useUtilityClasses$E(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(ListSubheaderRoot, _extends$1({
+    as: component,
+    className: clsx(classes.root, className),
+    ref,
+    ownerState
+  }, other));
+});
+ListSubheader.muiSkipListHighlight = true;
 const CancelIcon = createSvgIcon$1(/* @__PURE__ */ jsxRuntimeExports.jsx("path", {
   d: "M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
 }), "Cancel");
@@ -15680,8 +15762,8 @@ function getChipUtilityClass(slot) {
   return generateUtilityClass("MuiChip", slot);
 }
 const chipClasses = generateUtilityClasses("MuiChip", ["root", "sizeSmall", "sizeMedium", "colorError", "colorInfo", "colorPrimary", "colorSecondary", "colorSuccess", "colorWarning", "disabled", "clickable", "clickableColorPrimary", "clickableColorSecondary", "deletable", "deletableColorPrimary", "deletableColorSecondary", "outlined", "filled", "outlinedPrimary", "outlinedSecondary", "filledPrimary", "filledSecondary", "avatar", "avatarSmall", "avatarMedium", "avatarColorPrimary", "avatarColorSecondary", "icon", "iconSmall", "iconMedium", "iconColorPrimary", "iconColorSecondary", "label", "labelSmall", "labelMedium", "deleteIcon", "deleteIconSmall", "deleteIconMedium", "deleteIconColorPrimary", "deleteIconColorSecondary", "deleteIconOutlinedColorPrimary", "deleteIconOutlinedColorSecondary", "deleteIconFilledColorPrimary", "deleteIconFilledColorSecondary", "focusVisible"]);
-const _excluded$J = ["avatar", "className", "clickable", "color", "component", "deleteIcon", "disabled", "icon", "label", "onClick", "onDelete", "onKeyDown", "onKeyUp", "size", "variant", "tabIndex", "skipFocusWhenDisabled"];
-const useUtilityClasses$C = (ownerState) => {
+const _excluded$K = ["avatar", "className", "clickable", "color", "component", "deleteIcon", "disabled", "icon", "label", "onClick", "onDelete", "onKeyDown", "onKeyUp", "size", "variant", "tabIndex", "skipFocusWhenDisabled"];
+const useUtilityClasses$D = (ownerState) => {
   const {
     classes,
     disabled,
@@ -15962,7 +16044,7 @@ const Chip = /* @__PURE__ */ reactExports.forwardRef(function Chip2(inProps, ref
     tabIndex,
     skipFocusWhenDisabled = false
     // TODO v6: Rename to `focusableWhenDisabled`.
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$J);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$K);
   const chipRef = reactExports.useRef(null);
   const handleRef = useForkRef(chipRef, ref);
   const handleDeleteIconClick = (event) => {
@@ -16003,7 +16085,7 @@ const Chip = /* @__PURE__ */ reactExports.forwardRef(function Chip2(inProps, ref
     clickable,
     variant
   });
-  const classes = useUtilityClasses$C(ownerState);
+  const classes = useUtilityClasses$D(ownerState);
   const moreProps = component === ButtonBase ? _extends$1({
     component: ComponentProp || "div",
     focusVisibleClassName: classes.focusVisible
@@ -16050,7 +16132,7 @@ const Chip = /* @__PURE__ */ reactExports.forwardRef(function Chip2(inProps, ref
     }), deleteIcon]
   }));
 });
-const _excluded$I = ["onChange", "maxRows", "minRows", "style", "value"];
+const _excluded$J = ["onChange", "maxRows", "minRows", "style", "value"];
 function getStyleValue(value) {
   return parseInt(value, 10) || 0;
 }
@@ -16085,7 +16167,7 @@ const TextareaAutosize = /* @__PURE__ */ reactExports.forwardRef(function Textar
     minRows = 1,
     style: style2,
     value
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$I);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$J);
   const {
     current: isControlled
   } = reactExports.useRef(value != null);
@@ -16256,7 +16338,7 @@ function getInputBaseUtilityClass(slot) {
   return generateUtilityClass("MuiInputBase", slot);
 }
 const inputBaseClasses = generateUtilityClasses("MuiInputBase", ["root", "formControl", "focused", "disabled", "adornedStart", "adornedEnd", "error", "sizeSmall", "multiline", "colorSecondary", "fullWidth", "hiddenLabel", "readOnly", "input", "inputSizeSmall", "inputMultiline", "inputTypeSearch", "inputAdornedStart", "inputAdornedEnd", "inputHiddenLabel"]);
-const _excluded$H = ["aria-describedby", "autoComplete", "autoFocus", "className", "color", "components", "componentsProps", "defaultValue", "disabled", "disableInjectingGlobalStyles", "endAdornment", "error", "fullWidth", "id", "inputComponent", "inputProps", "inputRef", "margin", "maxRows", "minRows", "multiline", "name", "onBlur", "onChange", "onClick", "onFocus", "onKeyDown", "onKeyUp", "placeholder", "readOnly", "renderSuffix", "rows", "size", "slotProps", "slots", "startAdornment", "type", "value"];
+const _excluded$I = ["aria-describedby", "autoComplete", "autoFocus", "className", "color", "components", "componentsProps", "defaultValue", "disabled", "disableInjectingGlobalStyles", "endAdornment", "error", "fullWidth", "id", "inputComponent", "inputProps", "inputRef", "margin", "maxRows", "minRows", "multiline", "name", "onBlur", "onChange", "onClick", "onFocus", "onKeyDown", "onKeyUp", "placeholder", "readOnly", "renderSuffix", "rows", "size", "slotProps", "slots", "startAdornment", "type", "value"];
 const rootOverridesResolver = (props, styles2) => {
   const {
     ownerState
@@ -16269,7 +16351,7 @@ const inputOverridesResolver = (props, styles2) => {
   } = props;
   return [styles2.input, ownerState.size === "small" && styles2.inputSizeSmall, ownerState.multiline && styles2.inputMultiline, ownerState.type === "search" && styles2.inputTypeSearch, ownerState.startAdornment && styles2.inputAdornedStart, ownerState.endAdornment && styles2.inputAdornedEnd, ownerState.hiddenLabel && styles2.inputHiddenLabel];
 };
-const useUtilityClasses$B = (ownerState) => {
+const useUtilityClasses$C = (ownerState) => {
   const {
     classes,
     color: color2,
@@ -16480,7 +16562,7 @@ const InputBase = /* @__PURE__ */ reactExports.forwardRef(function InputBase2(in
     startAdornment,
     type = "text",
     value: valueProp
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$H);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$I);
   const value = inputPropsProp.value != null ? inputPropsProp.value : valueProp;
   const {
     current: isControlled
@@ -16623,7 +16705,7 @@ const InputBase = /* @__PURE__ */ reactExports.forwardRef(function InputBase2(in
     startAdornment,
     type
   });
-  const classes = useUtilityClasses$B(ownerState);
+  const classes = useUtilityClasses$C(ownerState);
   const Root2 = slots.root || components.Root || InputBaseRoot;
   const rootProps = slotProps.root || componentsProps.root || {};
   const Input3 = slots.input || components.Input || InputBaseComponent;
@@ -16688,7 +16770,7 @@ const filledInputClasses = _extends$1({}, inputBaseClasses, generateUtilityClass
 const ArrowDropDownIcon = createSvgIcon$1(/* @__PURE__ */ jsxRuntimeExports.jsx("path", {
   d: "M7 10l5 5 5-5z"
 }), "ArrowDropDown");
-const _excluded$G = ["addEndListener", "appear", "children", "easing", "in", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting", "style", "timeout", "TransitionComponent"];
+const _excluded$H = ["addEndListener", "appear", "children", "easing", "in", "onEnter", "onEntered", "onEntering", "onExit", "onExited", "onExiting", "style", "timeout", "TransitionComponent"];
 const styles$3 = {
   entering: {
     opacity: 1
@@ -16719,7 +16801,7 @@ const Fade = /* @__PURE__ */ reactExports.forwardRef(function Fade2(props, ref) 
     timeout: timeout2 = defaultTimeout,
     // eslint-disable-next-line react/prop-types
     TransitionComponent = Transition$1
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$G);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$H);
   const nodeRef = reactExports.useRef(null);
   const handleRef = useForkRef(nodeRef, getReactElementRef(children2), ref);
   const normalizedTransitionCallback = (callback) => (maybeIsAppearing) => {
@@ -16798,8 +16880,8 @@ function getBackdropUtilityClass(slot) {
   return generateUtilityClass("MuiBackdrop", slot);
 }
 generateUtilityClasses("MuiBackdrop", ["root", "invisible"]);
-const _excluded$F = ["children", "className", "component", "components", "componentsProps", "invisible", "open", "slotProps", "slots", "TransitionComponent", "transitionDuration"];
-const useUtilityClasses$A = (ownerState) => {
+const _excluded$G = ["children", "className", "component", "components", "componentsProps", "invisible", "open", "slotProps", "slots", "TransitionComponent", "transitionDuration"];
+const useUtilityClasses$B = (ownerState) => {
   const {
     classes,
     invisible
@@ -16852,12 +16934,12 @@ const Backdrop$2 = /* @__PURE__ */ reactExports.forwardRef(function Backdrop2(in
     slots = {},
     TransitionComponent = Fade,
     transitionDuration
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$F);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$G);
   const ownerState = _extends$1({}, props, {
     component,
     invisible
   });
-  const classes = useUtilityClasses$A(ownerState);
+  const classes = useUtilityClasses$B(ownerState);
   const rootSlotProps = (_slotProps$root = slotProps.root) != null ? _slotProps$root : componentsProps.root;
   return /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionComponent, _extends$1({
     in: open,
@@ -16889,8 +16971,8 @@ function getButtonUtilityClass(slot) {
 const buttonClasses = generateUtilityClasses("MuiButton", ["root", "text", "textInherit", "textPrimary", "textSecondary", "textSuccess", "textError", "textInfo", "textWarning", "outlined", "outlinedInherit", "outlinedPrimary", "outlinedSecondary", "outlinedSuccess", "outlinedError", "outlinedInfo", "outlinedWarning", "contained", "containedInherit", "containedPrimary", "containedSecondary", "containedSuccess", "containedError", "containedInfo", "containedWarning", "disableElevation", "focusVisible", "disabled", "colorInherit", "colorPrimary", "colorSecondary", "colorSuccess", "colorError", "colorInfo", "colorWarning", "textSizeSmall", "textSizeMedium", "textSizeLarge", "outlinedSizeSmall", "outlinedSizeMedium", "outlinedSizeLarge", "containedSizeSmall", "containedSizeMedium", "containedSizeLarge", "sizeMedium", "sizeSmall", "sizeLarge", "fullWidth", "startIcon", "endIcon", "icon", "iconSizeSmall", "iconSizeMedium", "iconSizeLarge"]);
 const ButtonGroupContext = /* @__PURE__ */ reactExports.createContext({});
 const ButtonGroupButtonContext = /* @__PURE__ */ reactExports.createContext(void 0);
-const _excluded$E = ["children", "color", "component", "className", "disabled", "disableElevation", "disableFocusRipple", "endIcon", "focusVisibleClassName", "fullWidth", "size", "startIcon", "type", "variant"];
-const useUtilityClasses$z = (ownerState) => {
+const _excluded$F = ["children", "color", "component", "className", "disabled", "disableElevation", "disableFocusRipple", "endIcon", "focusVisibleClassName", "fullWidth", "size", "startIcon", "type", "variant"];
+const useUtilityClasses$A = (ownerState) => {
   const {
     color: color2,
     disableElevation,
@@ -17115,7 +17197,7 @@ const Button = /* @__PURE__ */ reactExports.forwardRef(function Button2(inProps,
     startIcon: startIconProp,
     type,
     variant = "text"
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$E);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$F);
   const ownerState = _extends$1({}, props, {
     color: color2,
     component,
@@ -17127,7 +17209,7 @@ const Button = /* @__PURE__ */ reactExports.forwardRef(function Button2(inProps,
     type,
     variant
   });
-  const classes = useUtilityClasses$z(ownerState);
+  const classes = useUtilityClasses$A(ownerState);
   const startIcon = startIconProp && /* @__PURE__ */ jsxRuntimeExports.jsx(ButtonStartIcon, {
     className: classes.startIcon,
     ownerState,
@@ -17157,8 +17239,8 @@ function getSwitchBaseUtilityClass(slot) {
   return generateUtilityClass("PrivateSwitchBase", slot);
 }
 generateUtilityClasses("PrivateSwitchBase", ["root", "checked", "disabled", "input", "edgeStart", "edgeEnd"]);
-const _excluded$D = ["autoFocus", "checked", "checkedIcon", "className", "defaultChecked", "disabled", "disableFocusRipple", "edge", "icon", "id", "inputProps", "inputRef", "name", "onBlur", "onChange", "onFocus", "readOnly", "required", "tabIndex", "type", "value"];
-const useUtilityClasses$y = (ownerState) => {
+const _excluded$E = ["autoFocus", "checked", "checkedIcon", "className", "defaultChecked", "disabled", "disableFocusRipple", "edge", "icon", "id", "inputProps", "inputRef", "name", "onBlur", "onChange", "onFocus", "readOnly", "required", "tabIndex", "type", "value"];
+const useUtilityClasses$z = (ownerState) => {
   const {
     classes,
     checked,
@@ -17221,7 +17303,7 @@ const SwitchBase = /* @__PURE__ */ reactExports.forwardRef(function SwitchBase2(
     tabIndex,
     type,
     value
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$D);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$E);
   const [checked, setCheckedState] = useControlled({
     controlled: checkedProp,
     default: Boolean(defaultChecked),
@@ -17268,7 +17350,7 @@ const SwitchBase = /* @__PURE__ */ reactExports.forwardRef(function SwitchBase2(
     disableFocusRipple,
     edge
   });
-  const classes = useUtilityClasses$y(ownerState);
+  const classes = useUtilityClasses$z(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(SwitchBaseRoot, _extends$1({
     component: "span",
     className: clsx(classes.root, className),
@@ -17315,8 +17397,8 @@ function getCheckboxUtilityClass(slot) {
   return generateUtilityClass("MuiCheckbox", slot);
 }
 const checkboxClasses = generateUtilityClasses("MuiCheckbox", ["root", "checked", "disabled", "indeterminate", "colorPrimary", "colorSecondary", "sizeSmall", "sizeMedium"]);
-const _excluded$C = ["checkedIcon", "color", "icon", "indeterminate", "indeterminateIcon", "inputProps", "size", "className"];
-const useUtilityClasses$x = (ownerState) => {
+const _excluded$D = ["checkedIcon", "color", "icon", "indeterminate", "indeterminateIcon", "inputProps", "size", "className"];
+const useUtilityClasses$y = (ownerState) => {
   const {
     classes,
     indeterminate,
@@ -17378,7 +17460,7 @@ const Checkbox = /* @__PURE__ */ reactExports.forwardRef(function Checkbox2(inPr
     inputProps,
     size = "medium",
     className
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$C);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$D);
   const icon = indeterminate ? indeterminateIconProp : iconProp;
   const indeterminateIcon = indeterminate ? indeterminateIconProp : checkedIcon;
   const ownerState = _extends$1({}, props, {
@@ -17386,7 +17468,7 @@ const Checkbox = /* @__PURE__ */ reactExports.forwardRef(function Checkbox2(inPr
     indeterminate,
     size
   });
-  const classes = useUtilityClasses$x(ownerState);
+  const classes = useUtilityClasses$y(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(CheckboxRoot, _extends$1({
     type: "checkbox",
     inputProps: _extends$1({
@@ -17409,7 +17491,7 @@ function getCircularProgressUtilityClass(slot) {
   return generateUtilityClass("MuiCircularProgress", slot);
 }
 generateUtilityClasses("MuiCircularProgress", ["root", "determinate", "indeterminate", "colorPrimary", "colorSecondary", "svg", "circle", "circleDeterminate", "circleIndeterminate", "circleDisableShrink"]);
-const _excluded$B = ["className", "color", "disableShrink", "size", "style", "thickness", "value", "variant"];
+const _excluded$C = ["className", "color", "disableShrink", "size", "style", "thickness", "value", "variant"];
 let _$1 = (t2) => t2, _t$1, _t2$1, _t3$1, _t4$1;
 const SIZE = 44;
 const circularRotateKeyframe = keyframes(_t$1 || (_t$1 = _$1`
@@ -17437,7 +17519,7 @@ const circularDashKeyframe = keyframes(_t2$1 || (_t2$1 = _$1`
     stroke-dashoffset: -125px;
   }
 `));
-const useUtilityClasses$w = (ownerState) => {
+const useUtilityClasses$x = (ownerState) => {
   const {
     classes,
     variant,
@@ -17522,7 +17604,7 @@ const CircularProgress = /* @__PURE__ */ reactExports.forwardRef(function Circul
     thickness = 3.6,
     value = 0,
     variant = "indeterminate"
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$B);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$C);
   const ownerState = _extends$1({}, props, {
     color: color2,
     disableShrink,
@@ -17531,7 +17613,7 @@ const CircularProgress = /* @__PURE__ */ reactExports.forwardRef(function Circul
     value,
     variant
   });
-  const classes = useUtilityClasses$w(ownerState);
+  const classes = useUtilityClasses$x(ownerState);
   const circleStyle = {};
   const rootStyle = {};
   const rootProps = {};
@@ -18294,8 +18376,8 @@ function getModalUtilityClass(slot) {
   return generateUtilityClass("MuiModal", slot);
 }
 generateUtilityClasses("MuiModal", ["root", "hidden", "backdrop"]);
-const _excluded$A = ["BackdropComponent", "BackdropProps", "classes", "className", "closeAfterTransition", "children", "container", "component", "components", "componentsProps", "disableAutoFocus", "disableEnforceFocus", "disableEscapeKeyDown", "disablePortal", "disableRestoreFocus", "disableScrollLock", "hideBackdrop", "keepMounted", "onBackdropClick", "onClose", "onTransitionEnter", "onTransitionExited", "open", "slotProps", "slots", "theme"];
-const useUtilityClasses$v = (ownerState) => {
+const _excluded$B = ["BackdropComponent", "BackdropProps", "classes", "className", "closeAfterTransition", "children", "container", "component", "components", "componentsProps", "disableAutoFocus", "disableEnforceFocus", "disableEscapeKeyDown", "disablePortal", "disableRestoreFocus", "disableScrollLock", "hideBackdrop", "keepMounted", "onBackdropClick", "onClose", "onTransitionEnter", "onTransitionExited", "open", "slotProps", "slots", "theme"];
+const useUtilityClasses$w = (ownerState) => {
   const {
     open,
     exited,
@@ -18367,7 +18449,7 @@ const Modal = /* @__PURE__ */ reactExports.forwardRef(function Modal2(inProps, r
     slotProps,
     slots
     // eslint-disable-next-line react/prop-types
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$A);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$B);
   const propsWithDefaults = _extends$1({}, props, {
     closeAfterTransition,
     disableAutoFocus,
@@ -18393,7 +18475,7 @@ const Modal = /* @__PURE__ */ reactExports.forwardRef(function Modal2(inProps, r
   const ownerState = _extends$1({}, propsWithDefaults, {
     exited
   });
-  const classes = useUtilityClasses$v(ownerState);
+  const classes = useUtilityClasses$w(ownerState);
   const childProps = {};
   if (children2.props.tabIndex === void 0) {
     childProps.tabIndex = "-1";
@@ -18465,7 +18547,7 @@ function getDialogUtilityClass(slot) {
 }
 const dialogClasses = generateUtilityClasses("MuiDialog", ["root", "scrollPaper", "scrollBody", "container", "paper", "paperScrollPaper", "paperScrollBody", "paperWidthFalse", "paperWidthXs", "paperWidthSm", "paperWidthMd", "paperWidthLg", "paperWidthXl", "paperFullWidth", "paperFullScreen"]);
 const DialogContext = /* @__PURE__ */ reactExports.createContext({});
-const _excluded$z = ["aria-describedby", "aria-labelledby", "BackdropComponent", "BackdropProps", "children", "className", "disableEscapeKeyDown", "fullScreen", "fullWidth", "maxWidth", "onBackdropClick", "onClick", "onClose", "open", "PaperComponent", "PaperProps", "scroll", "TransitionComponent", "transitionDuration", "TransitionProps"];
+const _excluded$A = ["aria-describedby", "aria-labelledby", "BackdropComponent", "BackdropProps", "children", "className", "disableEscapeKeyDown", "fullScreen", "fullWidth", "maxWidth", "onBackdropClick", "onClick", "onClose", "open", "PaperComponent", "PaperProps", "scroll", "TransitionComponent", "transitionDuration", "TransitionProps"];
 const DialogBackdrop = styled(Backdrop$2, {
   name: "MuiDialog",
   slot: "Backdrop",
@@ -18474,7 +18556,7 @@ const DialogBackdrop = styled(Backdrop$2, {
   // Improve scrollable dialog support.
   zIndex: -1
 });
-const useUtilityClasses$u = (ownerState) => {
+const useUtilityClasses$v = (ownerState) => {
   const {
     classes,
     scroll,
@@ -18624,7 +18706,7 @@ const Dialog = /* @__PURE__ */ reactExports.forwardRef(function Dialog2(inProps,
     TransitionComponent = Fade,
     transitionDuration = defaultTransitionDuration,
     TransitionProps
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$z);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$A);
   const ownerState = _extends$1({}, props, {
     disableEscapeKeyDown,
     fullScreen,
@@ -18632,7 +18714,7 @@ const Dialog = /* @__PURE__ */ reactExports.forwardRef(function Dialog2(inProps,
     maxWidth: maxWidth2,
     scroll
   });
-  const classes = useUtilityClasses$u(ownerState);
+  const classes = useUtilityClasses$v(ownerState);
   const backdropClick = reactExports.useRef();
   const handleMouseDown = (event) => {
     backdropClick.current = event.target === event.currentTarget;
@@ -18709,8 +18791,8 @@ function getDialogActionsUtilityClass(slot) {
   return generateUtilityClass("MuiDialogActions", slot);
 }
 generateUtilityClasses("MuiDialogActions", ["root", "spacing"]);
-const _excluded$y = ["className", "disableSpacing"];
-const useUtilityClasses$t = (ownerState) => {
+const _excluded$z = ["className", "disableSpacing"];
+const useUtilityClasses$u = (ownerState) => {
   const {
     classes,
     disableSpacing
@@ -18750,11 +18832,11 @@ const DialogActions = /* @__PURE__ */ reactExports.forwardRef(function DialogAct
   const {
     className,
     disableSpacing = false
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$y);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$z);
   const ownerState = _extends$1({}, props, {
     disableSpacing
   });
-  const classes = useUtilityClasses$t(ownerState);
+  const classes = useUtilityClasses$u(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(DialogActionsRoot, _extends$1({
     className: clsx(classes.root, className),
     ownerState,
@@ -18769,8 +18851,8 @@ function getDialogTitleUtilityClass(slot) {
   return generateUtilityClass("MuiDialogTitle", slot);
 }
 const dialogTitleClasses = generateUtilityClasses("MuiDialogTitle", ["root"]);
-const _excluded$x = ["className", "dividers"];
-const useUtilityClasses$s = (ownerState) => {
+const _excluded$y = ["className", "dividers"];
+const useUtilityClasses$t = (ownerState) => {
   const {
     classes,
     dividers
@@ -18815,16 +18897,57 @@ const DialogContent = /* @__PURE__ */ reactExports.forwardRef(function DialogCon
   const {
     className,
     dividers = false
-  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$x);
+  } = props, other = _objectWithoutPropertiesLoose(props, _excluded$y);
   const ownerState = _extends$1({}, props, {
     dividers
   });
-  const classes = useUtilityClasses$s(ownerState);
+  const classes = useUtilityClasses$t(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentRoot, _extends$1({
     className: clsx(classes.root, className),
     ownerState,
     ref
   }, other));
+});
+function getDialogContentTextUtilityClass(slot) {
+  return generateUtilityClass("MuiDialogContentText", slot);
+}
+generateUtilityClasses("MuiDialogContentText", ["root"]);
+const _excluded$x = ["children", "className"];
+const useUtilityClasses$s = (ownerState) => {
+  const {
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root"]
+  };
+  const composedClasses = composeClasses(slots, getDialogContentTextUtilityClass, classes);
+  return _extends$1({}, classes, composedClasses);
+};
+const DialogContentTextRoot = styled(Typography, {
+  shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
+  name: "MuiDialogContentText",
+  slot: "Root",
+  overridesResolver: (props, styles2) => styles2.root
+})({});
+const DialogContentText = /* @__PURE__ */ reactExports.forwardRef(function DialogContentText2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiDialogContentText"
+  });
+  const {
+    className
+  } = props, ownerState = _objectWithoutPropertiesLoose(props, _excluded$x);
+  const classes = useUtilityClasses$s(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentTextRoot, _extends$1({
+    component: "p",
+    variant: "body1",
+    color: "text.secondary",
+    ref,
+    ownerState,
+    className: clsx(classes.root, className)
+  }, props, {
+    classes
+  }));
 });
 const _excluded$w = ["className", "id"];
 const useUtilityClasses$r = (ownerState) => {
@@ -51100,7 +51223,9 @@ const en = {
   },
   deployment: {
     shapes: "Shapes",
-    arrows: "Arrows",
+    connectors: "Connectors",
+    search: "Find graphic…",
+    noResults: "No matching graphics",
     empty: "Drag or click a shape to start",
     addText: "Add text",
     save: "Save",
@@ -51110,16 +51235,30 @@ const en = {
     format: "Format",
     resolution: "Resolution",
     cancel: "Cancel",
+    category: {
+      basic: "Basic",
+      deployment: "Deployment"
+    },
     shape: {
       rectangle: "Rectangle",
       database: "Database",
-      cloud: "Cloud"
+      cloud: "Cloud",
+      ec2: "EC2",
+      ecs: "ECS",
+      s3: "S3",
+      rds: "RDS",
+      redshift: "Redshift",
+      documentdb: "DocumentDB"
     },
-    arrow: {
-      solid: "Solid",
-      empty: "Hollow",
-      none: "No head",
-      both: "Both ends"
+    connector: {
+      solid: "Arrow",
+      empty: "Hollow arrow",
+      both: "Double arrow",
+      none: "Line",
+      dashed: "Dashed line",
+      erOne: "One to one",
+      erMany: "Many (crow's foot)",
+      erOneMany: "One to many"
     }
   },
   terminal: {
@@ -51169,7 +51308,8 @@ const en = {
     closeHint: "Click to dismiss",
     noOps: "AI returned no operations.",
     opsDone: "Operations performed: {{count}}",
-    error: "AI error: {{message}}"
+    error: "AI error: {{message}}",
+    responding: "Responding…"
   },
   aiArea: {
     vimHint: "vim command — Enter to run, e.g. :%s/old/new/g"
@@ -51256,6 +51396,7 @@ const en = {
     function: "Function",
     folder: "Folder",
     addElement: "Add element",
+    elementOptions: "Element options",
     rename: "Rename",
     deleteElement: "Delete element",
     edit: "Edit",
@@ -51281,7 +51422,14 @@ const en = {
     generateCode: "Generate code",
     alreadyImplemented: "Code already implemented",
     implemented: "code",
-    stub: "empty"
+    stub: "empty",
+    run: "Run",
+    runApp: "Run app",
+    runFailed: "Could not start the app",
+    cancel: "Cancel",
+    runAnyway: "Run anyway",
+    apiWarnTitle: "API not reachable",
+    apiWarnBody: "This app connects to the API at {{url}}, which it may need to work. The API does not seem to be running. Are you sure you want to run the app?"
   },
   events: {
     open: "File opened",
@@ -51384,7 +51532,8 @@ const en = {
       email: "Email",
       token: "API token",
       project: "Project key",
-      saved: "Jira settings saved"
+      saved: "Jira settings saved",
+      close: "Close"
     }
   },
   browser: {
@@ -51418,7 +51567,9 @@ const pl = {
   },
   deployment: {
     shapes: "Kształty",
-    arrows: "Strzałki",
+    connectors: "Łączniki",
+    search: "Znajdź grafikę…",
+    noResults: "Brak pasujących grafik",
     empty: "Przeciągnij lub kliknij kształt, aby zacząć",
     addText: "Dodaj tekst",
     save: "Zapisz",
@@ -51428,16 +51579,30 @@ const pl = {
     format: "Format",
     resolution: "Rozdzielczość",
     cancel: "Anuluj",
+    category: {
+      basic: "Podstawowe",
+      deployment: "Wdrożenie"
+    },
     shape: {
       rectangle: "Prostokąt",
       database: "Baza danych",
-      cloud: "Chmura"
+      cloud: "Chmura",
+      ec2: "EC2",
+      ecs: "ECS",
+      s3: "S3",
+      rds: "RDS",
+      redshift: "Redshift",
+      documentdb: "DocumentDB"
     },
-    arrow: {
-      solid: "Pełna",
-      empty: "Pusta",
-      none: "Bez grotu",
-      both: "Dwustronna"
+    connector: {
+      solid: "Strzałka",
+      empty: "Pusta strzałka",
+      both: "Dwustronna",
+      none: "Linia",
+      dashed: "Linia przerywana",
+      erOne: "Jeden do jednego",
+      erMany: "Wiele (kurza stopka)",
+      erOneMany: "Jeden do wielu"
     }
   },
   terminal: {
@@ -51487,7 +51652,8 @@ const pl = {
     closeHint: "Kliknij, aby zamknąć",
     noOps: "AI nie zwróciło żadnych operacji.",
     opsDone: "Wykonano operacji: {{count}}",
-    error: "Błąd AI: {{message}}"
+    error: "Błąd AI: {{message}}",
+    responding: "Odpowiadam…"
   },
   aiArea: {
     vimHint: "komenda vim — Enter, aby uruchomić, np. :%s/raz/dwa/g"
@@ -51574,6 +51740,7 @@ const pl = {
     function: "Funkcja",
     folder: "Folder",
     addElement: "Dodaj element",
+    elementOptions: "Opcje elementu",
     rename: "Zmień nazwę",
     deleteElement: "Usuń element",
     edit: "Edytuj",
@@ -51599,7 +51766,14 @@ const pl = {
     generateCode: "Wygeneruj kod",
     alreadyImplemented: "Kod już zaimplementowany",
     implemented: "kod",
-    stub: "pusta"
+    stub: "pusta",
+    run: "Uruchom",
+    runApp: "Uruchom aplikację",
+    runFailed: "Nie udało się uruchomić aplikacji",
+    cancel: "Anuluj",
+    runAnyway: "Uruchom mimo to",
+    apiWarnTitle: "API jest nieosiągalne",
+    apiWarnBody: "Ta aplikacja łączy się z API pod adresem {{url}}, które może być wymagane do jej działania. API wygląda na niedziałające. Czy na pewno chcesz uruchomić aplikację?"
   },
   events: {
     open: "Otwarto plik",
@@ -51702,7 +51876,8 @@ const pl = {
       email: "E-mail",
       token: "Token API",
       project: "Klucz projektu",
-      saved: "Zapisano ustawienia Jiry"
+      saved: "Zapisano ustawienia Jiry",
+      close: "Zamknij"
     }
   },
   browser: {
@@ -52254,47 +52429,47 @@ function requireCreateSvgIcon() {
   })(createSvgIcon);
   return createSvgIcon;
 }
-var _interopRequireDefault$B = interopRequireDefaultExports;
+var _interopRequireDefault$C = interopRequireDefaultExports;
 Object.defineProperty(Add, "__esModule", {
   value: true
 });
-var default_1$B = Add.default = void 0;
-var _createSvgIcon$B = _interopRequireDefault$B(requireCreateSvgIcon());
-var _jsxRuntime$B = jsxRuntimeExports;
-default_1$B = Add.default = (0, _createSvgIcon$B.default)(/* @__PURE__ */ (0, _jsxRuntime$B.jsx)("path", {
+var default_1$C = Add.default = void 0;
+var _createSvgIcon$C = _interopRequireDefault$C(requireCreateSvgIcon());
+var _jsxRuntime$C = jsxRuntimeExports;
+default_1$C = Add.default = (0, _createSvgIcon$C.default)(/* @__PURE__ */ (0, _jsxRuntime$C.jsx)("path", {
   d: "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"
 }), "Add");
 var DeleteOutline = {};
-var _interopRequireDefault$A = interopRequireDefaultExports;
+var _interopRequireDefault$B = interopRequireDefaultExports;
 Object.defineProperty(DeleteOutline, "__esModule", {
   value: true
 });
-var default_1$A = DeleteOutline.default = void 0;
-var _createSvgIcon$A = _interopRequireDefault$A(requireCreateSvgIcon());
-var _jsxRuntime$A = jsxRuntimeExports;
-default_1$A = DeleteOutline.default = (0, _createSvgIcon$A.default)(/* @__PURE__ */ (0, _jsxRuntime$A.jsx)("path", {
+var default_1$B = DeleteOutline.default = void 0;
+var _createSvgIcon$B = _interopRequireDefault$B(requireCreateSvgIcon());
+var _jsxRuntime$B = jsxRuntimeExports;
+default_1$B = DeleteOutline.default = (0, _createSvgIcon$B.default)(/* @__PURE__ */ (0, _jsxRuntime$B.jsx)("path", {
   d: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM8 9h8v10H8zm7.5-5-1-1h-5l-1 1H5v2h14V4z"
 }), "DeleteOutline");
 var PlayArrow = {};
-var _interopRequireDefault$z = interopRequireDefaultExports;
+var _interopRequireDefault$A = interopRequireDefaultExports;
 Object.defineProperty(PlayArrow, "__esModule", {
   value: true
 });
-var default_1$z = PlayArrow.default = void 0;
-var _createSvgIcon$z = _interopRequireDefault$z(requireCreateSvgIcon());
-var _jsxRuntime$z = jsxRuntimeExports;
-default_1$z = PlayArrow.default = (0, _createSvgIcon$z.default)(/* @__PURE__ */ (0, _jsxRuntime$z.jsx)("path", {
+var default_1$A = PlayArrow.default = void 0;
+var _createSvgIcon$A = _interopRequireDefault$A(requireCreateSvgIcon());
+var _jsxRuntime$A = jsxRuntimeExports;
+default_1$A = PlayArrow.default = (0, _createSvgIcon$A.default)(/* @__PURE__ */ (0, _jsxRuntime$A.jsx)("path", {
   d: "M8 5v14l11-7z"
 }), "PlayArrow");
 var Close$1 = {};
-var _interopRequireDefault$y = interopRequireDefaultExports;
+var _interopRequireDefault$z = interopRequireDefaultExports;
 Object.defineProperty(Close$1, "__esModule", {
   value: true
 });
-var default_1$y = Close$1.default = void 0;
-var _createSvgIcon$y = _interopRequireDefault$y(requireCreateSvgIcon());
-var _jsxRuntime$y = jsxRuntimeExports;
-default_1$y = Close$1.default = (0, _createSvgIcon$y.default)(/* @__PURE__ */ (0, _jsxRuntime$y.jsx)("path", {
+var default_1$z = Close$1.default = void 0;
+var _createSvgIcon$z = _interopRequireDefault$z(requireCreateSvgIcon());
+var _jsxRuntime$z = jsxRuntimeExports;
+default_1$z = Close$1.default = (0, _createSvgIcon$z.default)(/* @__PURE__ */ (0, _jsxRuntime$z.jsx)("path", {
   d: "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
 }), "Close");
 const toggleComment = (target) => {
@@ -68257,7 +68432,7 @@ class Commander {
         }
         const sc2 = await window.api.getScript(id2);
         const { runLuaSource } = await __vitePreload(async () => {
-          const { runLuaSource: runLuaSource2 } = await import("./runtime-B4wcA90p.js");
+          const { runLuaSource: runLuaSource2 } = await import("./runtime-9N2SB7Uw.js");
           return { runLuaSource: runLuaSource2 };
         }, true ? __vite__mapDeps([0,1,2]) : void 0, import.meta.url);
         await runLuaSource(sc2.content);
@@ -68274,7 +68449,7 @@ class Commander {
           throw new Error("lua: brak ścieżki");
         }
         const { runLuaFile } = await __vitePreload(async () => {
-          const { runLuaFile: runLuaFile2 } = await import("./runtime-B4wcA90p.js");
+          const { runLuaFile: runLuaFile2 } = await import("./runtime-9N2SB7Uw.js");
           return { runLuaFile: runLuaFile2 };
         }, true ? __vite__mapDeps([0,1,2]) : void 0, import.meta.url);
         await runLuaFile(path);
@@ -68287,7 +68462,7 @@ class Commander {
       summary: 'Uruchamia podany kod Lua w miejscu (np. `lua-eval:cmd("write","hi")`).',
       run: async (arg) => {
         const { runLuaSource } = await __vitePreload(async () => {
-          const { runLuaSource: runLuaSource2 } = await import("./runtime-B4wcA90p.js");
+          const { runLuaSource: runLuaSource2 } = await import("./runtime-9N2SB7Uw.js");
           return { runLuaSource: runLuaSource2 };
         }, true ? __vite__mapDeps([0,1,2]) : void 0, import.meta.url);
         await runLuaSource(arg);
@@ -68300,7 +68475,7 @@ class Commander {
       summary: "Resetuje runtime Lua: odpina wszystkie nasłuchy skryptów i czyści stan.",
       run: async () => {
         const { disposeLua } = await __vitePreload(async () => {
-          const { disposeLua: disposeLua2 } = await import("./runtime-B4wcA90p.js");
+          const { disposeLua: disposeLua2 } = await import("./runtime-9N2SB7Uw.js");
           return { disposeLua: disposeLua2 };
         }, true ? __vite__mapDeps([0,1,2]) : void 0, import.meta.url);
         await disposeLua();
@@ -68602,7 +68777,7 @@ function ScriptsDialog({
     try {
       const list = await window.api.listScripts(project);
       const { runLuaSource, disposeLua } = await __vitePreload(async () => {
-        const { runLuaSource: runLuaSource2, disposeLua: disposeLua2 } = await import("./runtime-B4wcA90p.js");
+        const { runLuaSource: runLuaSource2, disposeLua: disposeLua2 } = await import("./runtime-9N2SB7Uw.js");
         return { runLuaSource: runLuaSource2, disposeLua: disposeLua2 };
       }, true ? __vite__mapDeps([0,1,2]) : void 0, import.meta.url);
       await disposeLua();
@@ -68675,7 +68850,7 @@ function ScriptsDialog({
   const run = async () => {
     try {
       const { runLuaSource } = await __vitePreload(async () => {
-        const { runLuaSource: runLuaSource2 } = await import("./runtime-B4wcA90p.js");
+        const { runLuaSource: runLuaSource2 } = await import("./runtime-9N2SB7Uw.js");
         return { runLuaSource: runLuaSource2 };
       }, true ? __vite__mapDeps([0,1,2]) : void 0, import.meta.url);
       await runLuaSource(draft.content);
@@ -68745,7 +68920,7 @@ function ScriptsDialog({
     const id2 = window.setTimeout(async () => {
       try {
         const { validateLua } = await __vitePreload(async () => {
-          const { validateLua: validateLua2 } = await import("./runtime-B4wcA90p.js");
+          const { validateLua: validateLua2 } = await import("./runtime-9N2SB7Uw.js");
           return { validateLua: validateLua2 };
         }, true ? __vite__mapDeps([0,1,2]) : void 0, import.meta.url);
         const err = await validateLua(draft.content);
@@ -68790,10 +68965,10 @@ function ScriptsDialog({
             onMouseDown: (e2) => e2.stopPropagation(),
             onClick: run,
             disabled: !draft.content.trim(),
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$z, { fontSize: "small" })
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$A, { fontSize: "small" })
           }
         ) }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onMouseDown: (e2) => e2.stopPropagation(), onClick: handleClose2, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$y, { fontSize: "small" }) })
+        /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onMouseDown: (e2) => e2.stopPropagation(), onClick: handleClose2, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$z, { fontSize: "small" }) })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs(Body$1, { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs(Sidebar, { children: [
@@ -68812,7 +68987,7 @@ function ScriptsDialog({
                 ]
               }
             ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { title: t2("scripts.new"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: newDraft, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$B, { fontSize: "small" }) }) })
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { title: t2("scripts.new"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: newDraft, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$C, { fontSize: "small" }) }) })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(List$1, { dense: true, sx: { overflow: "auto", flex: 1, py: 0 }, children: visible.map((s) => /* @__PURE__ */ jsxRuntimeExports.jsxs(ListItemButton, { selected: draft.id === s.id, onClick: () => select2(s), children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -68824,7 +68999,7 @@ function ScriptsDialog({
                 secondaryTypographyProps: { noWrap: true, fontSize: 11 }
               }
             ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: (e2) => remove2(e2, s.id), children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$A, { fontSize: "small" }) })
+            /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: (e2) => remove2(e2, s.id), children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$B, { fontSize: "small" }) })
           ] }, s.id)) })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs(Editor$1, { children: [
@@ -68896,14 +69071,14 @@ function ScriptsDialog({
   ] });
 }
 var ClearAll = {};
-var _interopRequireDefault$x = interopRequireDefaultExports;
+var _interopRequireDefault$y = interopRequireDefaultExports;
 Object.defineProperty(ClearAll, "__esModule", {
   value: true
 });
-var default_1$x = ClearAll.default = void 0;
-var _createSvgIcon$x = _interopRequireDefault$x(requireCreateSvgIcon());
-var _jsxRuntime$x = jsxRuntimeExports;
-default_1$x = ClearAll.default = (0, _createSvgIcon$x.default)(/* @__PURE__ */ (0, _jsxRuntime$x.jsx)("path", {
+var default_1$y = ClearAll.default = void 0;
+var _createSvgIcon$y = _interopRequireDefault$y(requireCreateSvgIcon());
+var _jsxRuntime$y = jsxRuntimeExports;
+default_1$y = ClearAll.default = (0, _createSvgIcon$y.default)(/* @__PURE__ */ (0, _jsxRuntime$y.jsx)("path", {
   d: "M5 13h14v-2H5zm-2 4h14v-2H3zM7 7v2h14V7z"
 }), "ClearAll");
 const WIN_W = Math.min(900, Math.round(window.innerWidth * 0.8));
@@ -69004,10 +69179,10 @@ function LogsDialog({ open, onClose }) {
             logBus.clear();
             window.api.clearLogs().catch(() => void 0);
           },
-          children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$x, { fontSize: "small" })
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$y, { fontSize: "small" })
         }
       ) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onMouseDown: (e2) => e2.stopPropagation(), onClick: onClose, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$y, { fontSize: "small" }) })
+      /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onMouseDown: (e2) => e2.stopPropagation(), onClick: onClose, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$z, { fontSize: "small" }) })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Area, { ref: areaRef, children: entries2.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx(Empty$5, { children: t2("logs.empty") }) : entries2.map((e2, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(Row$5, { $error: e2.level === "error", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(Time, { children: new Date(e2.time).toLocaleString() }),
@@ -69016,14 +69191,14 @@ function LogsDialog({ open, onClose }) {
   ] });
 }
 var OpenInNew = {};
-var _interopRequireDefault$w = interopRequireDefaultExports;
+var _interopRequireDefault$x = interopRequireDefaultExports;
 Object.defineProperty(OpenInNew, "__esModule", {
   value: true
 });
-var default_1$w = OpenInNew.default = void 0;
-var _createSvgIcon$w = _interopRequireDefault$w(requireCreateSvgIcon());
-var _jsxRuntime$w = jsxRuntimeExports;
-default_1$w = OpenInNew.default = (0, _createSvgIcon$w.default)(/* @__PURE__ */ (0, _jsxRuntime$w.jsx)("path", {
+var default_1$x = OpenInNew.default = void 0;
+var _createSvgIcon$x = _interopRequireDefault$x(requireCreateSvgIcon());
+var _jsxRuntime$x = jsxRuntimeExports;
+default_1$x = OpenInNew.default = (0, _createSvgIcon$x.default)(/* @__PURE__ */ (0, _jsxRuntime$x.jsx)("path", {
   d: "M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3z"
 }), "OpenInNew");
 const DEFAULT_DURATION = 3e3;
@@ -69104,7 +69279,7 @@ function ClaudeLoginDialog({ open, onClose }) {
         Button,
         {
           variant: "outlined",
-          startIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$w, { fontSize: "small" }),
+          startIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$x, { fontSize: "small" }),
           onClick: generate,
           sx: { alignSelf: "flex-start" },
           children: t2("claudeLogin.generate")
@@ -69351,61 +69526,37 @@ async function runVimCommand(input) {
   }
   return { handled: true, ok: false, messageKey: "vim.unknown", messageVars: { cmd: parsed.raw } };
 }
-const WAVE_MASK = `url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='80'%20height='24'%3E%3Cpath%20d='M0%2012%20C20%200%2020%200%2040%2012%20S60%2024%2080%2012%20V24%20H0%20Z'%20fill='black'/%3E%3C/svg%3E")`;
-const waveBack = Et`
-  to { -webkit-mask-position: 90px bottom; mask-position: 90px bottom; }
-`;
-const waveFront = Et`
-  to { -webkit-mask-position: 70px bottom; mask-position: 70px bottom; }
-`;
 const Field = gt.div`
   position: relative;
   flex: 1;
   display: flex;
 `;
-const Wave = gt.div`
-  position: absolute;
-  left: 1px;
-  right: 1px;
-  bottom: 1px;
-  height: 30px;
-  pointer-events: none;
-  overflow: hidden;
-  border-bottom-left-radius: 9px;
-  border-bottom-right-radius: 9px;
-
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 100%;
-    -webkit-mask: ${WAVE_MASK} repeat-x bottom;
-    mask: ${WAVE_MASK} repeat-x bottom;
-  }
-
-  &::before {
-    background: color-mix(in srgb, var(--accent, #58a6ff) 22%, transparent);
-    -webkit-mask-size: 90px 26px;
-    mask-size: 90px 26px;
-    animation: ${waveBack} 2.1s linear infinite;
-  }
-
-  &::after {
-    background: color-mix(in srgb, var(--accent, #58a6ff) 42%, transparent);
-    -webkit-mask-size: 70px 20px;
-    mask-size: 70px 20px;
-    animation: ${waveFront} 1.3s linear infinite;
-  }
-`;
 const Bar$2 = gt.div`
   display: flex;
+  flex-direction: column;
   gap: 8px;
   padding: 10px 12px;
   border-top: 1px solid ${colors.border};
   background: ${colors.panel};
+`;
+const rotate = Et`
+  to { transform: rotate(360deg); }
+`;
+const StatusRow = gt.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 12px;
+  color: color-mix(in srgb, var(--accent, #58a6ff) 80%, #c9d1d9);
+`;
+const Spinner = gt.span`
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--accent, #58a6ff) 25%, transparent);
+  border-top-color: var(--accent, #58a6ff);
+  animation: ${rotate} 0.8s linear infinite;
 `;
 const Hint = gt.div`
   position: absolute;
@@ -69440,6 +69591,19 @@ const Input$1 = gt.textarea`
   &:focus {
     border-color: ${colors.controller};
     background: #20283a;
+  }
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--accent, #58a6ff) 55%, transparent);
+    border-radius: 8px;
   }
 `;
 const promptHistory = [];
@@ -69579,8 +69743,11 @@ function AgentBar({
         }
       }
     ),
-    busy && /* @__PURE__ */ jsxRuntimeExports.jsx(Wave, { "aria-hidden": true }),
     !showingReply && status && /* @__PURE__ */ jsxRuntimeExports.jsx(Hint, { $error: status.error, children: t2(status.key, status.vars) }),
+    busy && !showingReply && /* @__PURE__ */ jsxRuntimeExports.jsxs(StatusRow, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Spinner, { "aria-hidden": true }),
+      t2("agent.responding")
+    ] }),
     !showingReply && !status && vimMode && /* @__PURE__ */ jsxRuntimeExports.jsx(Hint, { children: t2("aiArea.vimHint") })
   ] }) });
 }
@@ -69645,7 +69812,7 @@ function EditorTabs({
         minimized.has(t2.path) ? "▢ " : "",
         base(t2.path),
         /* @__PURE__ */ jsxRuntimeExports.jsx(Close, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-          default_1$y,
+          default_1$z,
           {
             sx: { fontSize: 14 },
             onClick: (e2) => {
@@ -69699,6 +69866,9 @@ function useGitAuthor(absFile) {
   }, [key, blame, repoRoot, absFile]);
   return blame === "off" ? "" : author;
 }
+function isHeader(e2) {
+  return "header" in e2;
+}
 function ContextMenu({
   x: x2,
   y: y2,
@@ -69718,17 +69888,34 @@ function ContextMenu({
         bgcolor: "#161b22",
         border: "1px solid #30363d"
       },
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(MenuList, { dense: true, children: items2.map((it2) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-        MenuItem,
-        {
-          onClick: () => {
-            it2.onClick();
-            onClose();
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(MenuList, { dense: true, children: items2.map(
+        (it2, i) => isHeader(it2) ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+          ListSubheader,
+          {
+            disableSticky: true,
+            sx: {
+              bgcolor: "transparent",
+              color: "#8b949e",
+              lineHeight: "24px",
+              fontSize: 11,
+              textTransform: "uppercase",
+              letterSpacing: 0.5
+            },
+            children: it2.header
           },
-          children: it2.label
-        },
-        it2.label
-      )) })
+          `h-${i}`
+        ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+          MenuItem,
+          {
+            onClick: () => {
+              it2.onClick();
+              onClose();
+            },
+            children: it2.label
+          },
+          `i-${i}`
+        )
+      ) })
     }
   );
 }
@@ -69870,9 +70057,65 @@ const Dot$1 = gt.span`
   border-radius: 50%;
   background: ${(p2) => p2.$color};
 `;
-const Dir2 = gt.span`
-  color: ${colors.muted};
-`;
+function sortTree(node2) {
+  node2.children.sort((a2, b2) => a2.dir !== b2.dir ? a2.dir ? -1 : 1 : a2.name.localeCompare(b2.name));
+  node2.children.forEach(sortTree);
+}
+function buildChangedTree(changed) {
+  const root2 = { children: [] };
+  for (const c2 of changed) {
+    const parts = c2.path.split("/").filter(Boolean);
+    let node2 = root2;
+    parts.forEach((part, i) => {
+      const isLeaf = i === parts.length - 1;
+      const path = parts.slice(0, i + 1).join("/");
+      let child = node2.children.find((ch2) => ch2.name === part && ch2.dir === !isLeaf);
+      if (!child) {
+        child = {
+          name: part,
+          path,
+          dir: !isLeaf,
+          status: isLeaf ? c2.status : void 0,
+          absPath: isLeaf ? c2.absPath : void 0,
+          children: []
+        };
+        node2.children.push(child);
+      }
+      node2 = child;
+    });
+  }
+  sortTree(root2);
+  return root2.children;
+}
+function ChangedNode({
+  node: node2,
+  depth,
+  onOpenFile
+}) {
+  const { t: t2 } = useTranslation();
+  if (node2.dir) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Row$4, { $depth: depth, style: { cursor: "default" }, children: [
+        "▾ 📁 ",
+        node2.name
+      ] }),
+      node2.children.map((ch2) => /* @__PURE__ */ jsxRuntimeExports.jsx(ChangedNode, { node: ch2, depth: depth + 1, onOpenFile }, ch2.path))
+    ] });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    Row$4,
+    {
+      $depth: depth,
+      title: node2.path + " · " + t2("review.status." + node2.status),
+      onClick: () => node2.absPath && onOpenFile(node2.absPath),
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Dot$1, { $color: reviewColor[node2.status] ?? colors.muted }),
+        "📄 ",
+        node2.name
+      ]
+    }
+  );
+}
 function FileBrowser({
   root: root2,
   version,
@@ -69992,26 +70235,7 @@ function FileBrowser({
   if (review) {
     return /* @__PURE__ */ jsxRuntimeExports.jsxs(Panel$4, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(Head, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { flex: 1, overflow: "hidden", textOverflow: "ellipsis" }, children: t2("review.changedFiles", { count: changed.length }) }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Tree2, { children: changed.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx(ChangedRow, { style: { color: colors.muted, cursor: "default" }, children: t2("review.noChanges") }) : changed.map((c2) => {
-        const slash2 = c2.path.lastIndexOf("/");
-        const dir = slash2 >= 0 ? c2.path.slice(0, slash2 + 1) : "";
-        const name2 = slash2 >= 0 ? c2.path.slice(slash2 + 1) : c2.path;
-        return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          ChangedRow,
-          {
-            title: c2.path + " · " + t2("review.status." + c2.status),
-            onClick: () => onOpenFile(c2.absPath),
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Dot$1, { $color: reviewColor[c2.status] ?? colors.muted }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { overflow: "hidden", textOverflow: "ellipsis" }, children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(Dir2, { children: dir }),
-                name2
-              ] })
-            ]
-          },
-          c2.absPath
-        );
-      }) })
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Tree2, { children: changed.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx(ChangedRow, { style: { color: colors.muted, cursor: "default" }, children: t2("review.noChanges") }) : buildChangedTree(changed).map((n2) => /* @__PURE__ */ jsxRuntimeExports.jsx(ChangedNode, { node: n2, depth: 0, onOpenFile }, n2.path)) })
     ] });
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Panel$4, { children: [
@@ -70080,47 +70304,47 @@ function FileBrowser({
   ] });
 }
 var Save = {};
-var _interopRequireDefault$v = interopRequireDefaultExports;
+var _interopRequireDefault$w = interopRequireDefaultExports;
 Object.defineProperty(Save, "__esModule", {
   value: true
 });
-var default_1$v = Save.default = void 0;
-var _createSvgIcon$v = _interopRequireDefault$v(requireCreateSvgIcon());
-var _jsxRuntime$v = jsxRuntimeExports;
-default_1$v = Save.default = (0, _createSvgIcon$v.default)(/* @__PURE__ */ (0, _jsxRuntime$v.jsx)("path", {
+var default_1$w = Save.default = void 0;
+var _createSvgIcon$w = _interopRequireDefault$w(requireCreateSvgIcon());
+var _jsxRuntime$w = jsxRuntimeExports;
+default_1$w = Save.default = (0, _createSvgIcon$w.default)(/* @__PURE__ */ (0, _jsxRuntime$w.jsx)("path", {
   d: "M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3m3-10H5V5h10z"
 }), "Save");
 var Fullscreen = {};
-var _interopRequireDefault$u = interopRequireDefaultExports;
+var _interopRequireDefault$v = interopRequireDefaultExports;
 Object.defineProperty(Fullscreen, "__esModule", {
   value: true
 });
-var default_1$u = Fullscreen.default = void 0;
-var _createSvgIcon$u = _interopRequireDefault$u(requireCreateSvgIcon());
-var _jsxRuntime$u = jsxRuntimeExports;
-default_1$u = Fullscreen.default = (0, _createSvgIcon$u.default)(/* @__PURE__ */ (0, _jsxRuntime$u.jsx)("path", {
+var default_1$v = Fullscreen.default = void 0;
+var _createSvgIcon$v = _interopRequireDefault$v(requireCreateSvgIcon());
+var _jsxRuntime$v = jsxRuntimeExports;
+default_1$v = Fullscreen.default = (0, _createSvgIcon$v.default)(/* @__PURE__ */ (0, _jsxRuntime$v.jsx)("path", {
   d: "M7 14H5v5h5v-2H7zm-2-4h2V7h3V5H5zm12 7h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"
 }), "Fullscreen");
 var FullscreenExit = {};
-var _interopRequireDefault$t = interopRequireDefaultExports;
+var _interopRequireDefault$u = interopRequireDefaultExports;
 Object.defineProperty(FullscreenExit, "__esModule", {
   value: true
 });
-var default_1$t = FullscreenExit.default = void 0;
-var _createSvgIcon$t = _interopRequireDefault$t(requireCreateSvgIcon());
-var _jsxRuntime$t = jsxRuntimeExports;
-default_1$t = FullscreenExit.default = (0, _createSvgIcon$t.default)(/* @__PURE__ */ (0, _jsxRuntime$t.jsx)("path", {
+var default_1$u = FullscreenExit.default = void 0;
+var _createSvgIcon$u = _interopRequireDefault$u(requireCreateSvgIcon());
+var _jsxRuntime$u = jsxRuntimeExports;
+default_1$u = FullscreenExit.default = (0, _createSvgIcon$u.default)(/* @__PURE__ */ (0, _jsxRuntime$u.jsx)("path", {
   d: "M5 16h3v3h2v-5H5zm3-8H5v2h5V5H8zm6 11h2v-3h3v-2h-5zm2-11V5h-2v5h5V8z"
 }), "FullscreenExit");
 var Minimize = {};
-var _interopRequireDefault$s = interopRequireDefaultExports;
+var _interopRequireDefault$t = interopRequireDefaultExports;
 Object.defineProperty(Minimize, "__esModule", {
   value: true
 });
-var default_1$s = Minimize.default = void 0;
-var _createSvgIcon$s = _interopRequireDefault$s(requireCreateSvgIcon());
-var _jsxRuntime$s = jsxRuntimeExports;
-default_1$s = Minimize.default = (0, _createSvgIcon$s.default)(/* @__PURE__ */ (0, _jsxRuntime$s.jsx)("path", {
+var default_1$t = Minimize.default = void 0;
+var _createSvgIcon$t = _interopRequireDefault$t(requireCreateSvgIcon());
+var _jsxRuntime$t = jsxRuntimeExports;
+default_1$t = Minimize.default = (0, _createSvgIcon$t.default)(/* @__PURE__ */ (0, _jsxRuntime$t.jsx)("path", {
   d: "M6 19h12v2H6z"
 }), "Minimize");
 const SNAP = 14;
@@ -70986,13 +71210,14 @@ function CodeEditor({
       onSnapChange?.(true);
     }
   }, []);
+  const openSnapped = !!initialSnap;
   const [layout] = reactExports.useState(
-    () => initialGeom && initialGeom.x != null && initialGeom.y != null && initialGeom.w != null && initialGeom.h != null ? { pos: { x: initialGeom.x, y: initialGeom.y }, size: { w: initialGeom.w, h: initialGeom.h } } : initialEditorLayout(!!initialSnap, index)
+    () => !openSnapped && !initialGeom?.snapped && initialGeom && initialGeom.x != null && initialGeom.y != null && initialGeom.w != null && initialGeom.h != null ? { pos: { x: initialGeom.x, y: initialGeom.y }, size: { w: initialGeom.w, h: initialGeom.h } } : initialEditorLayout(openSnapped, index)
   );
   const [size, setSize] = reactExports.useState(layout.size);
   const [pos, setPos] = reactExports.useState(layout.pos);
-  const snapRef = reactExports.useRef(!!initialSnap || !!initialGeom?.snapped);
-  const [snapped, setSnapped] = reactExports.useState(!!initialSnap || !!initialGeom?.snapped);
+  const snapRef = reactExports.useRef(openSnapped);
+  const [snapped, setSnapped] = reactExports.useState(openSnapped);
   const onWinChange = (g2) => {
     setPos({ x: g2.x, y: g2.y });
     setSize({ w: g2.w, h: g2.h });
@@ -71334,6 +71559,13 @@ function CodeEditor({
     cursorRestored.current = true;
   }, [loading, content2, target?.path]);
   reactExports.useEffect(() => {
+    if (!active || loading || minimized || findOpen) {
+      return;
+    }
+    const id2 = window.setTimeout(() => ref.current?.view?.focus(), 0);
+    return () => window.clearTimeout(id2);
+  }, [active, loading, minimized, findOpen]);
+  reactExports.useEffect(() => {
     if (!target) {
       return;
     }
@@ -71560,6 +71792,7 @@ function CodeEditor({
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       Window$1,
       {
+        className: "editor-window",
         x: pos.x,
         y: pos.y,
         w: size.w,
@@ -71607,7 +71840,7 @@ function CodeEditor({
               Button,
               {
                 size: "small",
-                startIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$v, {}),
+                startIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$w, {}),
                 onClick: save,
                 variant: dirty ? "contained" : "text",
                 sx: {
@@ -71619,7 +71852,7 @@ function CodeEditor({
                 children: t2("editor.save")
               }
             ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: () => onMinimize?.(), title: t2("editor.minimize"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$s, { fontSize: "small" }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: () => onMinimize?.(), title: t2("editor.minimize"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$t, { fontSize: "small" }) }),
             /* @__PURE__ */ jsxRuntimeExports.jsx(
               IconButton,
               {
@@ -71628,10 +71861,10 @@ function CodeEditor({
                   appBus.emit("editor:fullscreen", { path: target.path, on: !fullscreen });
                   setFullscreen(!fullscreen);
                 },
-                children: fullscreen ? /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$t, { fontSize: "small" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$u, { fontSize: "small" })
+                children: fullscreen ? /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$u, { fontSize: "small" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$v, { fontSize: "small" })
               }
             ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: handleClose2, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$y, { fontSize: "small" }) })
+            /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: handleClose2, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$z, { fontSize: "small" }) })
           ] })
         ] }),
         children: /* @__PURE__ */ jsxRuntimeExports.jsxs(EditorWrap, { children: [
@@ -71737,80 +71970,80 @@ const EditorContext = reactExports.createContext(() => {
 });
 const useEditor = () => reactExports.useContext(EditorContext);
 var FolderOpen = {};
-var _interopRequireDefault$r = interopRequireDefaultExports;
+var _interopRequireDefault$s = interopRequireDefaultExports;
 Object.defineProperty(FolderOpen, "__esModule", {
   value: true
 });
-var default_1$r = FolderOpen.default = void 0;
-var _createSvgIcon$r = _interopRequireDefault$r(requireCreateSvgIcon());
-var _jsxRuntime$r = jsxRuntimeExports;
-default_1$r = FolderOpen.default = (0, _createSvgIcon$r.default)(/* @__PURE__ */ (0, _jsxRuntime$r.jsx)("path", {
+var default_1$s = FolderOpen.default = void 0;
+var _createSvgIcon$s = _interopRequireDefault$s(requireCreateSvgIcon());
+var _jsxRuntime$s = jsxRuntimeExports;
+default_1$s = FolderOpen.default = (0, _createSvgIcon$s.default)(/* @__PURE__ */ (0, _jsxRuntime$s.jsx)("path", {
   d: "M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2m0 12H4V8h16z"
 }), "FolderOpen");
 var Settings = {};
-var _interopRequireDefault$q = interopRequireDefaultExports;
+var _interopRequireDefault$r = interopRequireDefaultExports;
 Object.defineProperty(Settings, "__esModule", {
   value: true
 });
-var default_1$q = Settings.default = void 0;
-var _createSvgIcon$q = _interopRequireDefault$q(requireCreateSvgIcon());
-var _jsxRuntime$q = jsxRuntimeExports;
-default_1$q = Settings.default = (0, _createSvgIcon$q.default)(/* @__PURE__ */ (0, _jsxRuntime$q.jsx)("path", {
+var default_1$r = Settings.default = void 0;
+var _createSvgIcon$r = _interopRequireDefault$r(requireCreateSvgIcon());
+var _jsxRuntime$r = jsxRuntimeExports;
+default_1$r = Settings.default = (0, _createSvgIcon$r.default)(/* @__PURE__ */ (0, _jsxRuntime$r.jsx)("path", {
   d: "M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6"
 }), "Settings");
 var Code = {};
-var _interopRequireDefault$p = interopRequireDefaultExports;
+var _interopRequireDefault$q = interopRequireDefaultExports;
 Object.defineProperty(Code, "__esModule", {
   value: true
 });
-var default_1$p = Code.default = void 0;
-var _createSvgIcon$p = _interopRequireDefault$p(requireCreateSvgIcon());
-var _jsxRuntime$p = jsxRuntimeExports;
-default_1$p = Code.default = (0, _createSvgIcon$p.default)(/* @__PURE__ */ (0, _jsxRuntime$p.jsx)("path", {
+var default_1$q = Code.default = void 0;
+var _createSvgIcon$q = _interopRequireDefault$q(requireCreateSvgIcon());
+var _jsxRuntime$q = jsxRuntimeExports;
+default_1$q = Code.default = (0, _createSvgIcon$q.default)(/* @__PURE__ */ (0, _jsxRuntime$q.jsx)("path", {
   d: "M9.4 16.6 4.8 12l4.6-4.6L8 6l-6 6 6 6zm5.2 0 4.6-4.6-4.6-4.6L16 6l6 6-6 6z"
 }), "Code");
 var Terminal = {};
-var _interopRequireDefault$o = interopRequireDefaultExports;
+var _interopRequireDefault$p = interopRequireDefaultExports;
 Object.defineProperty(Terminal, "__esModule", {
   value: true
 });
-var default_1$o = Terminal.default = void 0;
-var _createSvgIcon$o = _interopRequireDefault$o(requireCreateSvgIcon());
-var _jsxRuntime$o = jsxRuntimeExports;
-default_1$o = Terminal.default = (0, _createSvgIcon$o.default)(/* @__PURE__ */ (0, _jsxRuntime$o.jsx)("path", {
+var default_1$p = Terminal.default = void 0;
+var _createSvgIcon$p = _interopRequireDefault$p(requireCreateSvgIcon());
+var _jsxRuntime$p = jsxRuntimeExports;
+default_1$p = Terminal.default = (0, _createSvgIcon$p.default)(/* @__PURE__ */ (0, _jsxRuntime$p.jsx)("path", {
   d: "M20 4H4c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.89-2-2-2m0 14H4V8h16zm-2-1h-6v-2h6zM7.5 17l-1.41-1.41L8.67 13l-2.59-2.59L7.5 9l4 4z"
 }), "Terminal");
 var Keyboard = {};
-var _interopRequireDefault$n = interopRequireDefaultExports;
+var _interopRequireDefault$o = interopRequireDefaultExports;
 Object.defineProperty(Keyboard, "__esModule", {
   value: true
 });
-var default_1$n = Keyboard.default = void 0;
-var _createSvgIcon$n = _interopRequireDefault$n(requireCreateSvgIcon());
-var _jsxRuntime$n = jsxRuntimeExports;
-default_1$n = Keyboard.default = (0, _createSvgIcon$n.default)(/* @__PURE__ */ (0, _jsxRuntime$n.jsx)("path", {
+var default_1$o = Keyboard.default = void 0;
+var _createSvgIcon$o = _interopRequireDefault$o(requireCreateSvgIcon());
+var _jsxRuntime$o = jsxRuntimeExports;
+default_1$o = Keyboard.default = (0, _createSvgIcon$o.default)(/* @__PURE__ */ (0, _jsxRuntime$o.jsx)("path", {
   d: "M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2m-9 3h2v2h-2zm0 3h2v2h-2zM8 8h2v2H8zm0 3h2v2H8zm-1 2H5v-2h2zm0-3H5V8h2zm9 7H8v-2h8zm0-4h-2v-2h2zm0-3h-2V8h2zm3 3h-2v-2h2zm0-3h-2V8h2z"
 }), "Keyboard");
 var Notes = {};
-var _interopRequireDefault$m = interopRequireDefaultExports;
+var _interopRequireDefault$n = interopRequireDefaultExports;
 Object.defineProperty(Notes, "__esModule", {
   value: true
 });
-var default_1$m = Notes.default = void 0;
-var _createSvgIcon$m = _interopRequireDefault$m(requireCreateSvgIcon());
-var _jsxRuntime$m = jsxRuntimeExports;
-default_1$m = Notes.default = (0, _createSvgIcon$m.default)(/* @__PURE__ */ (0, _jsxRuntime$m.jsx)("path", {
+var default_1$n = Notes.default = void 0;
+var _createSvgIcon$n = _interopRequireDefault$n(requireCreateSvgIcon());
+var _jsxRuntime$n = jsxRuntimeExports;
+default_1$n = Notes.default = (0, _createSvgIcon$n.default)(/* @__PURE__ */ (0, _jsxRuntime$n.jsx)("path", {
   d: "M3 18h12v-2H3zM3 6v2h18V6zm0 7h18v-2H3z"
 }), "Notes");
 var TaskAlt = {};
-var _interopRequireDefault$l = interopRequireDefaultExports;
+var _interopRequireDefault$m = interopRequireDefaultExports;
 Object.defineProperty(TaskAlt, "__esModule", {
   value: true
 });
-var default_1$l = TaskAlt.default = void 0;
-var _createSvgIcon$l = _interopRequireDefault$l(requireCreateSvgIcon());
-var _jsxRuntime$l = jsxRuntimeExports;
-default_1$l = TaskAlt.default = (0, _createSvgIcon$l.default)(/* @__PURE__ */ (0, _jsxRuntime$l.jsx)("path", {
+var default_1$m = TaskAlt.default = void 0;
+var _createSvgIcon$m = _interopRequireDefault$m(requireCreateSvgIcon());
+var _jsxRuntime$m = jsxRuntimeExports;
+default_1$m = TaskAlt.default = (0, _createSvgIcon$m.default)(/* @__PURE__ */ (0, _jsxRuntime$m.jsx)("path", {
   d: "M22 5.18 10.59 16.6l-4.24-4.24 1.41-1.41 2.83 2.83 10-10zm-2.21 5.04c.13.57.21 1.17.21 1.78 0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8c1.58 0 3.04.46 4.28 1.25l1.44-1.44C16.1 2.67 14.13 2 12 2 6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10c0-1.19-.22-2.33-.6-3.39z"
 }), "TaskAlt");
 const STATS_CHANGE = "stats:change";
@@ -71884,17 +72117,17 @@ function TopBarStats() {
   }, []);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Row$3, { title: t2("stats.today"), children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs(Item, { title: t2("stats.keystrokes"), children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$n, {}),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$o, {}),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Count$1, { children: stats.keystrokes }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Label$1, { children: t2("stats.keystrokes") })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(Item, { title: t2("stats.lines"), children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$m, {}),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$n, {}),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Count$1, { children: stats.lines }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Label$1, { children: t2("stats.lines") })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(Item, { title: t2("stats.tasks"), children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$l, {}),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$m, {}),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Count$1, { children: stats.tasks }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Label$1, { children: t2("stats.tasks") })
     ] }),
@@ -71951,54 +72184,54 @@ function TopBar({ folder, onPickProject, onOpenSettings, onOpenScripts, onOpenLo
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(TopBarRoot, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(TopBarStatsSlot, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(TopBarStats, {}) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { flex: 1 } }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: folder ? "text" : "contained", size: "small", startIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$r, {}), onClick: onPickProject, children: folder ? t2("topbar.changeProject") : t2("topbar.pickProject") }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { size: "small", startIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$q, {}), onClick: onOpenSettings, children: t2("topbar.settings") }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { size: "small", startIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$p, {}), onClick: onOpenScripts, children: t2("topbar.scripts") }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { size: "small", startIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$o, {}), onClick: onOpenLogs, children: t2("topbar.logs") })
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: folder ? "text" : "contained", size: "small", startIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$s, {}), onClick: onPickProject, children: folder ? t2("topbar.changeProject") : t2("topbar.pickProject") }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { size: "small", startIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$r, {}), onClick: onOpenSettings, children: t2("topbar.settings") }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { size: "small", startIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$q, {}), onClick: onOpenScripts, children: t2("topbar.scripts") }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { size: "small", startIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$p, {}), onClick: onOpenLogs, children: t2("topbar.logs") })
   ] });
 }
 var AccountTree = {};
-var _interopRequireDefault$k = interopRequireDefaultExports;
+var _interopRequireDefault$l = interopRequireDefaultExports;
 Object.defineProperty(AccountTree, "__esModule", {
   value: true
 });
-var default_1$k = AccountTree.default = void 0;
-var _createSvgIcon$k = _interopRequireDefault$k(requireCreateSvgIcon());
-var _jsxRuntime$k = jsxRuntimeExports;
-default_1$k = AccountTree.default = (0, _createSvgIcon$k.default)(/* @__PURE__ */ (0, _jsxRuntime$k.jsx)("path", {
+var default_1$l = AccountTree.default = void 0;
+var _createSvgIcon$l = _interopRequireDefault$l(requireCreateSvgIcon());
+var _jsxRuntime$l = jsxRuntimeExports;
+default_1$l = AccountTree.default = (0, _createSvgIcon$l.default)(/* @__PURE__ */ (0, _jsxRuntime$l.jsx)("path", {
   d: "M22 11V3h-7v3H9V3H2v8h7V8h2v10h4v3h7v-8h-7v3h-2V8h2v3z"
 }), "AccountTree");
 var Forum = {};
-var _interopRequireDefault$j = interopRequireDefaultExports;
+var _interopRequireDefault$k = interopRequireDefaultExports;
 Object.defineProperty(Forum, "__esModule", {
   value: true
 });
-var default_1$j = Forum.default = void 0;
-var _createSvgIcon$j = _interopRequireDefault$j(requireCreateSvgIcon());
-var _jsxRuntime$j = jsxRuntimeExports;
-default_1$j = Forum.default = (0, _createSvgIcon$j.default)(/* @__PURE__ */ (0, _jsxRuntime$j.jsx)("path", {
+var default_1$k = Forum.default = void 0;
+var _createSvgIcon$k = _interopRequireDefault$k(requireCreateSvgIcon());
+var _jsxRuntime$k = jsxRuntimeExports;
+default_1$k = Forum.default = (0, _createSvgIcon$k.default)(/* @__PURE__ */ (0, _jsxRuntime$k.jsx)("path", {
   d: "M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1m-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1"
 }), "Forum");
 var Checklist = {};
-var _interopRequireDefault$i = interopRequireDefaultExports;
+var _interopRequireDefault$j = interopRequireDefaultExports;
 Object.defineProperty(Checklist, "__esModule", {
   value: true
 });
-var default_1$i = Checklist.default = void 0;
-var _createSvgIcon$i = _interopRequireDefault$i(requireCreateSvgIcon());
-var _jsxRuntime$i = jsxRuntimeExports;
-default_1$i = Checklist.default = (0, _createSvgIcon$i.default)(/* @__PURE__ */ (0, _jsxRuntime$i.jsx)("path", {
+var default_1$j = Checklist.default = void 0;
+var _createSvgIcon$j = _interopRequireDefault$j(requireCreateSvgIcon());
+var _jsxRuntime$j = jsxRuntimeExports;
+default_1$j = Checklist.default = (0, _createSvgIcon$j.default)(/* @__PURE__ */ (0, _jsxRuntime$j.jsx)("path", {
   d: "M22 7h-9v2h9zm0 8h-9v2h9zM5.54 11 2 7.46l1.41-1.41 2.12 2.12 4.24-4.24 1.41 1.41zm0 8L2 15.46l1.41-1.41 2.12 2.12 4.24-4.24 1.41 1.41z"
 }), "Checklist");
 var RateReview = {};
-var _interopRequireDefault$h = interopRequireDefaultExports;
+var _interopRequireDefault$i = interopRequireDefaultExports;
 Object.defineProperty(RateReview, "__esModule", {
   value: true
 });
-var default_1$h = RateReview.default = void 0;
-var _createSvgIcon$h = _interopRequireDefault$h(requireCreateSvgIcon());
-var _jsxRuntime$h = jsxRuntimeExports;
-default_1$h = RateReview.default = (0, _createSvgIcon$h.default)(/* @__PURE__ */ (0, _jsxRuntime$h.jsx)("path", {
+var default_1$i = RateReview.default = void 0;
+var _createSvgIcon$i = _interopRequireDefault$i(requireCreateSvgIcon());
+var _jsxRuntime$i = jsxRuntimeExports;
+default_1$i = RateReview.default = (0, _createSvgIcon$i.default)(/* @__PURE__ */ (0, _jsxRuntime$i.jsx)("path", {
   d: "M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2M6 14v-2.47l6.88-6.88c.2-.2.51-.2.71 0l1.77 1.77c.2.2.2.51 0 .71L8.47 14zm12 0h-7.5l2-2H18z"
 }), "RateReview");
 const Backdrop$1 = gt.div`
@@ -73654,7 +73887,7 @@ function interpolateTransform(parse2, pxComma, pxParen, degParen) {
       s.push("translate(" + xb2 + pxComma + yb2 + pxParen);
     }
   }
-  function rotate(a2, b2, s, q2) {
+  function rotate2(a2, b2, s, q2) {
     if (a2 !== b2) {
       if (a2 - b2 > 180) b2 += 360;
       else if (b2 - a2 > 180) a2 += 360;
@@ -73682,7 +73915,7 @@ function interpolateTransform(parse2, pxComma, pxParen, degParen) {
     var s = [], q2 = [];
     a2 = parse2(a2), b2 = parse2(b2);
     translate(a2.translateX, a2.translateY, b2.translateX, b2.translateY, s, q2);
-    rotate(a2.rotate, b2.rotate, s, q2);
+    rotate2(a2.rotate, b2.rotate, s, q2);
     skewX(a2.skewX, b2.skewX, s, q2);
     scale(a2.scaleX, a2.scaleY, b2.scaleX, b2.scaleY, s, q2);
     a2 = b2 = null;
@@ -78888,7 +79121,7 @@ const defaultColor = {
   [BackgroundVariant.Lines]: "#eee",
   [BackgroundVariant.Cross]: "#e2e2e2"
 };
-const defaultSize = {
+const defaultSize$1 = {
   [BackgroundVariant.Dots]: 1,
   [BackgroundVariant.Lines]: 1,
   [BackgroundVariant.Cross]: 6
@@ -78910,7 +79143,7 @@ function Background({
   const ref = reactExports.useRef(null);
   const { transform, patternId } = useStore(selector, shallow$1);
   const patternColor = color2 || defaultColor[variant];
-  const patternSize = size || defaultSize[variant];
+  const patternSize = size || defaultSize$1[variant];
   const isDots = variant === BackgroundVariant.Dots;
   const isCross = variant === BackgroundVariant.Cross;
   const gapXY = Array.isArray(gap2) ? gap2 : [gap2, gap2];
@@ -79253,6 +79486,8 @@ class GatewayMapper {
     return (raw.projects ?? []).map((p2) => new Project(p2.id, p2.folder, p2.gitPath, p2.kind));
   }
 }
+const RunAppContext = reactExports.createContext({ runningId: "", run: () => void 0 });
+const useRunApp = () => reactExports.useContext(RunAppContext);
 const CODE_KINDS = /* @__PURE__ */ new Set(["class", "function", "service", "controller", "component", "module"]);
 const breathe = Et`
   0%, 100% { box-shadow: 0 0 10px rgba(242, 204, 96, 0.4); }
@@ -79352,12 +79587,17 @@ const Footer = gt.div`
 `;
 const frameworkIcon = {
   nestjs: "🪺",
-  react: "⚛️"
+  react: "⚛️",
+  go: "🐹",
+  protobuf: "🧬"
 };
 function NodeCard({ data, selected }) {
   const { t: t2 } = useTranslation();
   const openFile = useEditor();
+  const { runningId, run } = useRunApp();
   const { review, statusByAbs } = useGit();
+  const isReactApp = data.kind === "app" && data.framework === "react";
+  const isRunning = runningId === data.id;
   const author = useGitAuthor(data.absFile);
   const kColor = kindColor[data.kind] ?? colors.muted;
   const route = data instanceof Controller ? data.route.toString() : "";
@@ -79414,7 +79654,35 @@ function NodeCard({ data, selected }) {
     )) }) : null,
     data.framework ? /* @__PURE__ */ jsxRuntimeExports.jsxs(Footer, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: frameworkIcon[data.framework] ?? "🔧" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: data.framework })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: data.framework }),
+      isReactApp ? /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { title: t2("graph.runApp"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button,
+        {
+          size: "small",
+          variant: "outlined",
+          disabled: isRunning,
+          onClick: (e2) => {
+            e2.stopPropagation();
+            run(data);
+          },
+          startIcon: isRunning ? /* @__PURE__ */ jsxRuntimeExports.jsx(CircularProgress, { size: 11, sx: { color: "#f85149" } }) : /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$A, { sx: { fontSize: 13 } }),
+          sx: {
+            ml: "auto",
+            minWidth: 0,
+            py: 0,
+            px: 0.75,
+            fontSize: 11,
+            lineHeight: 1.6,
+            color: "#f85149",
+            borderColor: "#f85149",
+            fontWeight: 700,
+            textTransform: "none",
+            "& .MuiButton-startIcon": { mr: 0.5 },
+            "&:hover": { borderColor: "#f85149", background: "rgba(248,81,73,0.12)" }
+          },
+          children: t2("graph.run")
+        }
+      ) }) : null
     ] }) : null,
     /* @__PURE__ */ jsxRuntimeExports.jsx(Handle$1, { type: "source", position: Position.Right, style: { background: color2 } })
   ] });
@@ -79465,11 +79733,13 @@ function NodeContextMenu({
   const isCodeEntity = !isContainer && !!node2.absFile;
   if (isContainer) {
     const items22 = [
+      { header: t2("graph.elementOptions") },
+      { label: `✏️  ${t2("graph.rename")}`, onClick: () => onRename(node2) },
+      { label: `🗑️  ${t2("graph.deleteElement")}`, onClick: () => onDelete(node2) },
+      { header: t2("graph.addElement") },
       { label: `🟥  ${t2("graph.class")}`, onClick: () => onAdd2(addTargetDir(node2), "class", node2) },
       { label: `λ  ${t2("graph.function")}`, onClick: () => onAdd2(addTargetDir(node2), "function", node2) },
-      { label: `📁  ${t2("graph.folder")}`, onClick: () => onAdd2(addTargetDir(node2), "folder", node2) },
-      { label: `✏️  ${t2("graph.rename")}`, onClick: () => onRename(node2) },
-      { label: `🗑️  ${t2("graph.deleteElement")}`, onClick: () => onDelete(node2) }
+      { label: `📁  ${t2("graph.folder")}`, onClick: () => onAdd2(addTargetDir(node2), "folder", node2) }
     ];
     return /* @__PURE__ */ jsxRuntimeExports.jsx(ContextMenu, { x: x2, y: y2, onClose, items: items22 });
   }
@@ -79675,6 +79945,8 @@ function GraphView({
   }, [graph, parentOf]);
   const rootDir = rootNode?.file ?? "";
   const rootFolderId = rootNode?.id ?? "";
+  const [runningId, setRunningId] = reactExports.useState("");
+  const [apiWarn, setApiWarn] = reactExports.useState(null);
   reactExports.useEffect(() => {
     setLocalNodes((prev2) => prev2.filter((ln) => !graph.nodes().some((n2) => n2.name === ln.name)));
   }, [graph]);
@@ -80177,7 +80449,46 @@ function GraphView({
     }
     setRenameNode(null);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  const appDir = (node2) => {
+    const file = node2.file;
+    if (file.startsWith("/") || /^[a-zA-Z]:[\\/]/.test(file)) {
+      return file;
+    }
+    return graph.folder.replace(/[\\/]$/, "") + "/" + file.replace(/^[\\/]/, "");
+  };
+  const startReactApp = async (node2) => {
+    setApiWarn(null);
+    setRunningId(node2.id);
+    try {
+      const { url } = await window.api.reactRun(appDir(node2));
+      appBus.emit("browser:open", { url });
+      appBus.emit("view:request", { to: "browser" });
+    } catch {
+      toast.error(t2("graph.runFailed"));
+    } finally {
+      setRunningId("");
+    }
+  };
+  const runReactApp = async (node2) => {
+    if (runningId) {
+      return;
+    }
+    setRunningId(node2.id);
+    try {
+      const { url: apiUrl } = await window.api.reactDetectApi(appDir(node2)).catch(() => ({ url: "" }));
+      if (apiUrl) {
+        const { ok: ok2 } = await window.api.reactProbe(apiUrl).catch(() => ({ ok: false }));
+        if (!ok2) {
+          setRunningId("");
+          setApiWarn({ node: node2, url: apiUrl });
+          return;
+        }
+      }
+    } catch {
+    }
+    await startReactApp(node2);
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(RunAppContext.Provider, { value: { runningId, run: runReactApp }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
     "div",
     {
       ref: wrapRef,
@@ -80551,31 +80862,131 @@ function GraphView({
             /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: () => setDescNode(null), children: t2("common.cancel") }),
             /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "contained", onClick: confirmDescribe, children: t2("graph.saveDescription") })
           ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(Dialog, { open: !!apiWarn, onClose: () => setApiWarn(null), children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogTitle, { children: t2("graph.apiWarnTitle") }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentText, { children: t2("graph.apiWarnBody", { url: apiWarn?.url ?? "" }) }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogActions, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: () => setApiWarn(null), children: t2("graph.cancel") }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { color: "error", variant: "contained", onClick: () => apiWarn && startReactApp(apiWarn.node), children: t2("graph.runAnyway") })
+          ] })
         ] })
       ]
     }
-  );
+  ) });
 }
 var Hub = {};
-var _interopRequireDefault$g = interopRequireDefaultExports;
+var _interopRequireDefault$h = interopRequireDefaultExports;
 Object.defineProperty(Hub, "__esModule", {
   value: true
 });
-var default_1$g = Hub.default = void 0;
-var _createSvgIcon$g = _interopRequireDefault$g(requireCreateSvgIcon());
-var _jsxRuntime$g = jsxRuntimeExports;
-default_1$g = Hub.default = (0, _createSvgIcon$g.default)(/* @__PURE__ */ (0, _jsxRuntime$g.jsx)("path", {
+var default_1$h = Hub.default = void 0;
+var _createSvgIcon$h = _interopRequireDefault$h(requireCreateSvgIcon());
+var _jsxRuntime$h = jsxRuntimeExports;
+default_1$h = Hub.default = (0, _createSvgIcon$h.default)(/* @__PURE__ */ (0, _jsxRuntime$h.jsx)("path", {
   d: "M8.4 18.2c.38.5.6 1.12.6 1.8 0 1.66-1.34 3-3 3s-3-1.34-3-3 1.34-3 3-3c.44 0 .85.09 1.23.26l1.41-1.77c-.92-1.03-1.29-2.39-1.09-3.69l-2.03-.68c-.54.83-1.46 1.38-2.52 1.38-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3c0 .07 0 .14-.01.21l2.03.68c.64-1.21 1.82-2.09 3.22-2.32V5.91C9.96 5.57 9 4.4 9 3c0-1.66 1.34-3 3-3s3 1.34 3 3c0 1.4-.96 2.57-2.25 2.91v2.16c1.4.23 2.58 1.11 3.22 2.32L18 9.71V9.5c0-1.66 1.34-3 3-3s3 1.34 3 3-1.34 3-3 3c-1.06 0-1.98-.55-2.52-1.37l-2.03.68c.2 1.29-.16 2.65-1.09 3.69l1.41 1.77c.38-.18.79-.27 1.23-.27 1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3c0-.68.22-1.3.6-1.8l-1.41-1.77c-1.35.75-3.01.76-4.37 0z"
 }), "Hub");
+const DIAGRAM_CATEGORIES = [
+  {
+    id: "basic",
+    titleKey: "deployment.category.basic",
+    shapes: ["rectangle", "database", "cloud"]
+  },
+  {
+    id: "amazon",
+    titleKey: "deployment.category.deployment",
+    shapes: ["ec2", "ecs", "s3", "rds", "redshift", "documentdb"]
+  }
+];
+function parseKind(kind) {
+  const i = kind.indexOf("/");
+  if (i < 0) {
+    return { category: "basic", name: kind };
+  }
+  return { category: kind.slice(0, i), name: kind.slice(i + 1) };
+}
+function isKnownKind(kind) {
+  const { category, name: name2 } = parseKind(kind);
+  return DIAGRAM_CATEGORIES.some((c2) => c2.id === category && c2.shapes.includes(name2));
+}
+const CONNECTOR_SPECS = {
+  solid: { dashed: false, start: "none", end: "arrow" },
+  empty: { dashed: false, start: "none", end: "arrowEmpty" },
+  both: { dashed: false, start: "arrow", end: "arrow" },
+  none: { dashed: false, start: "none", end: "none" },
+  dashed: { dashed: true, start: "none", end: "none" },
+  erOne: { dashed: false, start: "bar", end: "bar" },
+  erMany: { dashed: false, start: "none", end: "crow" },
+  erOneMany: { dashed: false, start: "bar", end: "crow" }
+};
+const CONNECTOR_STYLES = [
+  "solid",
+  "empty",
+  "both",
+  "none",
+  "dashed",
+  "erOne",
+  "erMany",
+  "erOneMany"
+];
+function isArrowStyle(v2) {
+  return v2 != null && Object.prototype.hasOwnProperty.call(CONNECTOR_SPECS, v2);
+}
+function defaultSize(kind) {
+  const { category, name: name2 } = parseKind(kind);
+  if (category === "basic") {
+    if (name2 === "database") {
+      return { width: 140, height: 120 };
+    }
+    if (name2 === "cloud") {
+      return { width: 180, height: 110 };
+    }
+    return { width: 160, height: 90 };
+  }
+  return { width: 96, height: 112 };
+}
 const Panel$2 = gt.aside`
   display: flex;
   flex-direction: column;
-  width: 132px;
-  flex: 0 0 132px;
+  width: 200px;
+  flex: 0 0 200px;
   background: ${colors.panel};
   border-right: 1px solid ${colors.border};
   overflow-y: auto;
   user-select: none;
+`;
+const SearchSection = gt.div`
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 8px;
+  background: ${colors.panel};
+  border-bottom: 1px solid ${colors.border};
+`;
+const SearchInput = gt.input`
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  background: ${colors.bg};
+  border: 1px solid ${colors.border};
+  border-radius: 6px;
+  color: #e6edf3;
+  font-size: 12px;
+
+  &::placeholder {
+    color: ${colors.muted};
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent, ${colors.controller});
+  }
+`;
+const NoResults = gt.div`
+  padding: 12px 8px;
+  color: ${colors.muted};
+  font-size: 12px;
+  text-align: center;
 `;
 const Section = gt.div`
   padding: 10px 8px;
@@ -80588,6 +80999,37 @@ const SectionTitle = gt.div`
   color: ${colors.muted};
   margin-bottom: 8px;
 `;
+const CategoryTitle = gt.button`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  margin-bottom: ${(p2) => p2.$open ? "8px" : "0"};
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: ${(p2) => p2.$open ? "#fff" : "#e6edf3"};
+  transition: color 0.15s, margin-bottom 0.28s ease;
+
+  &:hover {
+    color: #fff;
+  }
+`;
+const Caret = gt.span`
+  display: inline-block;
+  transition: transform 0.28s ease;
+  transform: rotate(${(p2) => p2.$open ? "90deg" : "0deg"});
+`;
+const ShapeList = gt.div`
+  overflow: hidden;
+  max-height: ${(p2) => p2.$open ? "1200px" : "0"};
+  opacity: ${(p2) => p2.$open ? 1 : 0};
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+`;
 const ShapeButton = gt.button`
   display: flex;
   flex-direction: column;
@@ -80599,7 +81041,7 @@ const ShapeButton = gt.button`
   background: ${colors.bg};
   border: 1px solid ${colors.border};
   border-radius: 6px;
-  color: ${colors.muted};
+  color: #e6edf3;
   cursor: grab;
   font-size: 11px;
 
@@ -80622,117 +81064,163 @@ const ArrowButton = gt.button`
   background: ${(p2) => p2.$active ? "var(--accent, #58a6ff)" : colors.bg};
   border: 1px solid ${(p2) => p2.$active ? "var(--accent, #58a6ff)" : colors.border};
   border-radius: 6px;
-  color: ${(p2) => p2.$active ? "#000" : colors.muted};
+  color: ${(p2) => p2.$active ? "var(--accent-contrast, #fff)" : "#e6edf3"};
   cursor: pointer;
   font-size: 11px;
 
   &:hover {
-    color: ${(p2) => p2.$active ? "#000" : "#fff"};
+    color: ${(p2) => p2.$active ? "var(--accent-contrast, #fff)" : "#fff"};
   }
 
   svg {
     flex: 0 0 auto;
   }
 `;
-function ShapePreview({ kind }) {
-  const common2 = { fill: "#fff", stroke: "#000", strokeWidth: 2 };
-  if (kind === "rectangle") {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: 36, height: 26, viewBox: "0 0 36 26", children: /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: 2, y: 2, width: 32, height: 22, ...common2 }) });
-  }
-  if (kind === "database") {
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: 30, height: 28, viewBox: "0 0 30 28", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M2 6 L2 22 A13 4 0 0 0 28 22 L28 6", ...common2 }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("ellipse", { cx: 15, cy: 6, rx: 13, ry: 4, ...common2 })
-    ] });
-  }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: 40, height: 26, viewBox: "0 0 40 26", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "path",
-    {
-      d: "M9 22 A7 7 0 0 1 8 10 A8 8 0 0 1 22 5 A6 6 0 0 1 32 12 A6 6 0 0 1 30 22 Z",
-      ...common2,
-      strokeLinejoin: "round"
-    }
-  ) });
+const PreviewImg = gt.img`
+  width: 40px;
+  height: 30px;
+  object-fit: contain;
+  pointer-events: none;
+`;
+const ShapeName = gt.span`
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-word;
+`;
+function ShapePreview({ category, name: name2 }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(PreviewImg, { src: `/shapes/${category}/${name2}.svg`, alt: name2 });
 }
-function ArrowPreview({ style: style2 }) {
-  const head = (id2, hollow, flip2) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "marker",
-    {
-      id: id2,
-      markerWidth: 10,
-      markerHeight: 10,
-      refX: flip2 ? 1 : 8,
-      refY: 4,
-      orient: "auto",
-      markerUnits: "userSpaceOnUse",
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "path",
-        {
-          d: flip2 ? "M8,0 L0,4 L8,8 Z" : "M0,0 L8,4 L0,8 Z",
-          fill: hollow ? "#fff" : "#fff",
-          stroke: "#fff",
-          strokeWidth: 1
-        }
-      )
-    }
-  );
-  const sid = `gp-${style2}`;
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: 30, height: 10, viewBox: "0 0 30 10", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("defs", { children: [
-      style2 !== "none" && head(`${sid}-e`, style2 === "empty", false),
-      style2 === "both" && head(`${sid}-s`, false, true)
-    ] }),
+function endCapGlyph(cap) {
+  if (cap === "arrow") {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("polygon", { points: "33,7 25,3 25,11", fill: "#fff", stroke: "#fff" });
+  }
+  if (cap === "arrowEmpty") {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("polygon", { points: "33,7 25,3 25,11", fill: "none", stroke: "#fff", strokeWidth: 1.2 });
+  }
+  if (cap === "crow") {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M24,7 L33,2 M24,7 L33,7 M24,7 L33,12", fill: "none", stroke: "#fff", strokeWidth: 1.2 });
+  }
+  if (cap === "bar") {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: 26, y1: 2, x2: 26, y2: 12, stroke: "#fff", strokeWidth: 1.6 });
+  }
+  return null;
+}
+function startCapGlyph(cap) {
+  if (cap === "arrow") {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("polygon", { points: "1,7 9,3 9,11", fill: "#fff", stroke: "#fff" });
+  }
+  if (cap === "arrowEmpty") {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("polygon", { points: "1,7 9,3 9,11", fill: "none", stroke: "#fff", strokeWidth: 1.2 });
+  }
+  if (cap === "crow") {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M10,7 L1,2 M10,7 L1,7 M10,7 L1,12", fill: "none", stroke: "#fff", strokeWidth: 1.2 });
+  }
+  if (cap === "bar") {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: 8, y1: 2, x2: 8, y2: 12, stroke: "#fff", strokeWidth: 1.6 });
+  }
+  return null;
+}
+function ConnectorPreview({ style: style2 }) {
+  const spec = CONNECTOR_SPECS[style2] ?? CONNECTOR_SPECS.solid;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: 34, height: 14, viewBox: "0 0 34 14", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       "line",
       {
-        x1: 2,
-        y1: 5,
+        x1: 6,
+        y1: 7,
         x2: 28,
-        y2: 5,
+        y2: 7,
         stroke: "#fff",
         strokeWidth: 1.4,
-        markerEnd: style2 !== "none" ? `url(#${sid}-e)` : void 0,
-        markerStart: style2 === "both" ? `url(#${sid}-s)` : void 0
+        strokeDasharray: spec.dashed ? "4 3" : void 0
       }
-    )
+    ),
+    startCapGlyph(spec.start),
+    endCapGlyph(spec.end)
   ] });
 }
-const SHAPES = ["rectangle", "database", "cloud"];
-const ARROWS = ["solid", "empty", "none", "both"];
-function Gallery({ arrow: arrow2, onArrowChange, onAddShape }) {
+function DiagramElementsCategory({
+  category,
+  shapes,
+  open,
+  onToggle,
+  onAddShape
+}) {
   const { t: t2 } = useTranslation();
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Panel$2, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(Section, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(SectionTitle, { children: t2("deployment.shapes") }),
-      SHAPES.map((kind) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Section, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(CategoryTitle, { $open: open, onClick: onToggle, "aria-expanded": open, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: t2(category.titleKey) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Caret, { $open: open, children: "▸" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ShapeList, { $open: open, "aria-hidden": !open, children: shapes.map((name2) => {
+      const kind = `${category.id}/${name2}`;
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs(
         ShapeButton,
         {
           draggable: true,
+          tabIndex: open ? 0 : -1,
           onDragStart: (e2) => {
             e2.dataTransfer.setData("application/deployment-shape", kind);
             e2.dataTransfer.effectAllowed = "copy";
           },
           onClick: () => onAddShape(kind),
-          title: t2(`deployment.shape.${kind}`),
+          title: t2(`deployment.shape.${name2}`),
           children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(ShapePreview, { kind }),
-            t2(`deployment.shape.${kind}`)
+            /* @__PURE__ */ jsxRuntimeExports.jsx(ShapePreview, { category: category.id, name: name2 }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(ShapeName, { children: t2(`deployment.shape.${name2}`) })
           ]
         },
         kind
-      ))
-    ] }),
+      );
+    }) })
+  ] });
+}
+function Gallery({ arrow: arrow2, onArrowChange, onAddShape }) {
+  const { t: t2 } = useTranslation();
+  const [openId, setOpenId] = reactExports.useState(DIAGRAM_CATEGORIES[0]?.id ?? "");
+  const [query, setQuery] = reactExports.useState("");
+  const q2 = query.trim().toLowerCase();
+  const searching = q2.length > 0;
+  const groups = DIAGRAM_CATEGORIES.map((category) => ({
+    category,
+    shapes: category.shapes.filter(
+      (name2) => !searching || name2.toLowerCase().includes(q2) || t2(`deployment.shape.${name2}`).toLowerCase().includes(q2)
+    )
+  })).filter((g2) => !searching || g2.shapes.length > 0);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Panel$2, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SearchSection, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      SearchInput,
+      {
+        type: "search",
+        value: query,
+        onChange: (e2) => setQuery(e2.target.value),
+        placeholder: t2("deployment.search"),
+        "aria-label": t2("deployment.search")
+      }
+    ) }),
+    groups.map(({ category, shapes }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+      DiagramElementsCategory,
+      {
+        category,
+        shapes,
+        open: searching || openId === category.id,
+        onToggle: () => setOpenId(category.id),
+        onAddShape
+      },
+      category.id
+    )),
+    searching && groups.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx(NoResults, { children: t2("deployment.noResults") }) : null,
     /* @__PURE__ */ jsxRuntimeExports.jsxs(Section, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(SectionTitle, { children: t2("deployment.arrows") }),
-      ARROWS.map((style2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      /* @__PURE__ */ jsxRuntimeExports.jsx(SectionTitle, { children: t2("deployment.connectors") }),
+      CONNECTOR_STYLES.map((style2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
         ArrowButton,
         {
           $active: arrow2 === style2,
           onClick: () => onArrowChange(style2),
-          title: t2(`deployment.arrow.${style2}`),
+          title: t2(`deployment.connector.${style2}`),
           children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowPreview, { style: style2 }),
-            t2(`deployment.arrow.${style2}`)
+            /* @__PURE__ */ jsxRuntimeExports.jsx(ConnectorPreview, { style: style2 }),
+            t2(`deployment.connector.${style2}`)
           ]
         },
         style2
@@ -80762,10 +81250,10 @@ ${edges}
 `;
 }
 function asKind(v2) {
-  return v2 === "database" || v2 === "cloud" ? v2 : "rectangle";
+  return v2 && v2.length > 0 ? v2 : "rectangle";
 }
 function asArrow(v2) {
-  return v2 === "empty" || v2 === "none" || v2 === "both" ? v2 : "solid";
+  return isArrowStyle(v2) ? v2 : "solid";
 }
 function xmlToDiagram(xml) {
   const dom = new DOMParser().parseFromString(xml, "application/xml");
@@ -80790,10 +81278,11 @@ function xmlToDiagram(xml) {
   return { version: 1, nodes, edges };
 }
 function outline(kind) {
-  if (kind === "database") {
+  const { category, name: name2 } = parseKind(kind);
+  if (category === "basic" && name2 === "database") {
     return '<g fill="#fff" stroke="#000" stroke-width="2"><path d="M2 14 L2 86 A48 12 0 0 0 98 86 L98 14"/><ellipse cx="50" cy="14" rx="48" ry="12"/></g>';
   }
-  if (kind === "cloud") {
+  if (category === "basic" && name2 === "cloud") {
     return '<path d="M25 78 A20 20 0 0 1 22 40 A22 22 0 0 1 60 28 A18 18 0 0 1 88 48 A16 16 0 0 1 82 78 Z" fill="#fff" stroke="#000" stroke-width="2" stroke-linejoin="round"/>';
   }
   return '<rect x="1" y="1" width="98" height="98" fill="#fff" stroke="#000" stroke-width="2"/>';
@@ -80826,6 +81315,47 @@ function arrowHead(tip, dir, filled) {
   const fill = filled ? "#000" : "#fff";
   return `<polygon points="${tip.x},${tip.y} ${p1} ${p2}" fill="${fill}" stroke="#000" stroke-width="2"/>`;
 }
+function crowFoot(tip, dir) {
+  const len = Math.hypot(dir.x, dir.y) || 1;
+  const ux = dir.x / len;
+  const uy = dir.y / len;
+  const back = 14;
+  const half = 8;
+  const bx = tip.x - ux * back;
+  const by = tip.y - uy * back;
+  const px = -uy;
+  const py = ux;
+  const l2 = `${tip.x + px * half},${tip.y + py * half}`;
+  const r2 = `${tip.x - px * half},${tip.y - py * half}`;
+  return `<path d="M${bx},${by} L${l2} M${bx},${by} L${tip.x},${tip.y} M${bx},${by} L${r2}" fill="none" stroke="#000" stroke-width="2"/>`;
+}
+function barCap(tip, dir) {
+  const len = Math.hypot(dir.x, dir.y) || 1;
+  const ux = dir.x / len;
+  const uy = dir.y / len;
+  const back = 7;
+  const half = 9;
+  const cx = tip.x - ux * back;
+  const cy = tip.y - uy * back;
+  const px = -uy;
+  const py = ux;
+  return `<line x1="${cx + px * half}" y1="${cy + py * half}" x2="${cx - px * half}" y2="${cy - py * half}" stroke="#000" stroke-width="2"/>`;
+}
+function capMarkup(cap, tip, dir) {
+  if (cap === "arrow") {
+    return arrowHead(tip, dir, true);
+  }
+  if (cap === "arrowEmpty") {
+    return arrowHead(tip, dir, false);
+  }
+  if (cap === "crow") {
+    return crowFoot(tip, dir);
+  }
+  if (cap === "bar") {
+    return barCap(tip, dir);
+  }
+  return "";
+}
 function escapeText(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -80849,15 +81379,11 @@ function edgeMarkup(e2, byId) {
   const cb2 = center$1(b2);
   const pa2 = boundaryPoint(cb2, a2);
   const pb2 = boundaryPoint(ca2, b2);
-  const line2 = `<line x1="${pa2.x}" y1="${pa2.y}" x2="${pb2.x}" y2="${pb2.y}" stroke="#000" stroke-width="2"/>`;
-  let heads = "";
-  if (e2.arrow === "solid" || e2.arrow === "empty" || e2.arrow === "both") {
-    heads += arrowHead(pb2, { x: pb2.x - pa2.x, y: pb2.y - pa2.y }, e2.arrow !== "empty");
-  }
-  if (e2.arrow === "both") {
-    heads += arrowHead(pa2, { x: pa2.x - pb2.x, y: pa2.y - pb2.y }, true);
-  }
-  return line2 + heads;
+  const spec = CONNECTOR_SPECS[e2.arrow] ?? CONNECTOR_SPECS.solid;
+  const dash = spec.dashed ? ' stroke-dasharray="8 6"' : "";
+  const line2 = `<line x1="${pa2.x}" y1="${pa2.y}" x2="${pb2.x}" y2="${pb2.y}" stroke="#000" stroke-width="2"${dash}/>`;
+  const caps = capMarkup(spec.end, pb2, { x: pb2.x - pa2.x, y: pb2.y - pa2.y }) + capMarkup(spec.start, pa2, { x: pa2.x - pb2.x, y: pa2.y - pb2.y });
+  return line2 + caps;
 }
 function diagramToSvg(doc2) {
   const pad = 24;
@@ -80901,11 +81427,6 @@ function svgToPngBlob(svg2, scale) {
     img.src = url;
   });
 }
-const DEFAULT_SHAPE_SIZE = {
-  rectangle: { width: 160, height: 90 },
-  database: { width: 140, height: 120 },
-  cloud: { width: 180, height: 110 }
-};
 const STORE_PROJECT = "__deployment__";
 const MIN_SCALE = 0.2;
 const MAX_SCALE = 3;
@@ -80919,17 +81440,17 @@ function storeKey(folder) {
   return folder || "__global__";
 }
 function makeNode(kind, x2, y2) {
-  const size = DEFAULT_SHAPE_SIZE[kind];
+  const size = defaultSize(kind);
   return { id: nextId("shape"), kind, label: "", x: x2, y: y2, width: size.width, height: size.height };
 }
-function renderOutline(kind) {
+function renderOutline(name2) {
   const stroke = "#000";
   const fill = "#fff";
   const sw = 2;
-  if (kind === "rectangle") {
+  if (name2 === "rectangle") {
     return /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: 1, y: 1, width: 98, height: 98, fill, stroke, strokeWidth: sw });
   }
-  if (kind === "database") {
+  if (name2 === "database") {
     return /* @__PURE__ */ jsxRuntimeExports.jsxs("g", { fill, stroke, strokeWidth: sw, children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M2 14 L2 86 A48 12 0 0 0 98 86 L98 14" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("ellipse", { cx: 50, cy: 14, rx: 48, ry: 12 })
@@ -80946,6 +81467,16 @@ function renderOutline(kind) {
     }
   );
 }
+function shapeInset(kind) {
+  const { category, name: name2 } = parseKind(kind);
+  if (category === "basic" && name2 === "cloud") {
+    return { x: 0.66, y: 0.52 };
+  }
+  if (category === "basic" && name2 === "database") {
+    return { x: 0.97, y: 0.95 };
+  }
+  return { x: 1, y: 1 };
+}
 function borderPoint(n2, towardX, towardY) {
   const cx = n2.x + n2.width / 2;
   const cy = n2.y + n2.height / 2;
@@ -80954,11 +81485,36 @@ function borderPoint(n2, towardX, towardY) {
   if (dx === 0 && dy === 0) {
     return { x: cx, y: cy };
   }
-  const scale = 1 / Math.max(Math.abs(dx) / (n2.width / 2), Math.abs(dy) / (n2.height / 2));
+  const inset = shapeInset(n2.kind);
+  const hx = n2.width / 2 * inset.x;
+  const hy = n2.height / 2 * inset.y;
+  const scale = 1 / Math.max(Math.abs(dx) / hx, Math.abs(dy) / hy);
   return { x: cx + dx * scale, y: cy + dy * scale };
 }
 function center(n2) {
   return { x: n2.x + n2.width / 2, y: n2.y + n2.height / 2 };
+}
+const END_MARKER = {
+  none: void 0,
+  arrow: "url(#dep-solid)",
+  arrowEmpty: "url(#dep-empty)",
+  crow: "url(#dep-crow)",
+  bar: "url(#dep-bar)"
+};
+const START_MARKER = {
+  none: void 0,
+  arrow: "url(#dep-solid-start)",
+  arrowEmpty: void 0,
+  crow: void 0,
+  bar: "url(#dep-bar)"
+};
+function connectorRender(arrow2) {
+  const spec = CONNECTOR_SPECS[arrow2] ?? CONNECTOR_SPECS.solid;
+  return {
+    dash: spec.dashed ? "7 5" : void 0,
+    startMarker: START_MARKER[spec.start],
+    endMarker: END_MARKER[spec.end]
+  };
 }
 const Root$2 = gt.div`
   display: flex;
@@ -80980,7 +81536,7 @@ const TBtn = gt.button`
   background: ${colors.bg};
   border: 1px solid ${colors.border};
   border-radius: 6px;
-  color: ${colors.muted};
+  color: #e6edf3;
   font-size: 12px;
   cursor: pointer;
 
@@ -81046,6 +81602,35 @@ const Label = gt.div`
   color: #000;
   font-size: 13px;
   line-height: 1.25;
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: none;
+  pointer-events: none;
+`;
+const IconWrap = gt.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 2px;
+`;
+const IconImg = gt.img`
+  flex: 1 1 auto;
+  min-height: 0;
+  max-width: 100%;
+  object-fit: contain;
+  pointer-events: none;
+`;
+const IconLabel = gt.div`
+  flex: 0 0 auto;
+  max-width: 100%;
+  text-align: center;
+  color: #000;
+  font-size: 12px;
+  line-height: 1.2;
   white-space: pre-wrap;
   word-break: break-word;
   user-select: none;
@@ -81190,7 +81775,7 @@ function DeploymentViewComponent({ ctx }) {
     (kind) => {
       const r2 = canvasRef.current?.getBoundingClientRect();
       const c2 = r2 ? canvasPoint(r2.left + r2.width / 2, r2.top + r2.height / 2) : { x: 240, y: 200 };
-      const size = DEFAULT_SHAPE_SIZE[kind];
+      const size = defaultSize(kind);
       setNodes((ns) => ns.concat(makeNode(kind, c2.x - size.width / 2, c2.y - size.height / 2)));
     },
     [canvasPoint]
@@ -81199,11 +81784,11 @@ function DeploymentViewComponent({ ctx }) {
     (e2) => {
       e2.preventDefault();
       const kind = e2.dataTransfer.getData("application/deployment-shape");
-      if (kind !== "rectangle" && kind !== "database" && kind !== "cloud") {
+      if (!isKnownKind(kind)) {
         return;
       }
       const p2 = canvasPoint(e2.clientX, e2.clientY);
-      const size = DEFAULT_SHAPE_SIZE[kind];
+      const size = defaultSize(kind);
       setNodes((ns) => ns.concat(makeNode(kind, p2.x - size.width / 2, p2.y - size.height / 2)));
     },
     [canvasPoint]
@@ -81244,11 +81829,20 @@ function DeploymentViewComponent({ ctx }) {
       const sy = e2.clientY;
       const ow = n2.width;
       const oh2 = n2.height;
+      const locked = parseKind(n2.kind).category !== "basic";
+      const aspect = ow / oh2;
       const move = (ev) => {
         const scale = viewRef.current.scale;
+        const dw = (ev.clientX - sx) / scale;
+        const dh2 = (ev.clientY - sy) / scale;
+        if (locked) {
+          const width2 = Math.max(70, Math.round(ow + Math.max(dw, dh2 * aspect)));
+          patchNode(n2.id, { width: width2, height: Math.round(width2 / aspect) });
+          return;
+        }
         patchNode(n2.id, {
-          width: Math.max(70, Math.round(ow + (ev.clientX - sx) / scale)),
-          height: Math.max(50, Math.round(oh2 + (ev.clientY - sy) / scale))
+          width: Math.max(70, Math.round(ow + dw)),
+          height: Math.max(50, Math.round(oh2 + dh2))
         });
       };
       const up = () => {
@@ -81437,7 +82031,9 @@ function DeploymentViewComponent({ ctx }) {
                     /* @__PURE__ */ jsxRuntimeExports.jsxs("defs", { children: [
                       /* @__PURE__ */ jsxRuntimeExports.jsx("marker", { id: "dep-solid", markerWidth: 12, markerHeight: 12, refX: 9, refY: 5, orient: "auto", markerUnits: "userSpaceOnUse", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M0,0 L10,5 L0,10 Z", fill: "#000" }) }),
                       /* @__PURE__ */ jsxRuntimeExports.jsx("marker", { id: "dep-empty", markerWidth: 12, markerHeight: 12, refX: 9, refY: 5, orient: "auto", markerUnits: "userSpaceOnUse", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M0.5,0.5 L10,5 L0.5,9.5 Z", fill: "#fff", stroke: "#000", strokeWidth: 1 }) }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("marker", { id: "dep-solid-start", markerWidth: 12, markerHeight: 12, refX: 1, refY: 5, orient: "auto", markerUnits: "userSpaceOnUse", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M10,0 L0,5 L10,10 Z", fill: "#000" }) })
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("marker", { id: "dep-solid-start", markerWidth: 12, markerHeight: 12, refX: 1, refY: 5, orient: "auto", markerUnits: "userSpaceOnUse", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M10,0 L0,5 L10,10 Z", fill: "#000" }) }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("marker", { id: "dep-crow", markerWidth: 18, markerHeight: 16, refX: 16, refY: 8, orient: "auto", markerUnits: "userSpaceOnUse", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M0,8 L16,1 M0,8 L16,8 M0,8 L16,15", fill: "none", stroke: "#000", strokeWidth: 1.6 }) }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("marker", { id: "dep-bar", markerWidth: 12, markerHeight: 16, refX: 6, refY: 8, orient: "auto", markerUnits: "userSpaceOnUse", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M6,1 L6,15", stroke: "#000", strokeWidth: 1.8 }) })
                     ] }),
                     edges.map((e2) => {
                       const s = nodeById(e2.source);
@@ -81449,8 +82045,7 @@ function DeploymentViewComponent({ ctx }) {
                       const tc2 = center(tg2);
                       const p1 = borderPoint(s, tc2.x, tc2.y);
                       const p2 = borderPoint(tg2, sc2.x, sc2.y);
-                      const endMarker = e2.arrow === "none" ? void 0 : e2.arrow === "empty" ? "url(#dep-empty)" : "url(#dep-solid)";
-                      const startMarker = e2.arrow === "both" ? "url(#dep-solid-start)" : void 0;
+                      const { dash, startMarker, endMarker } = connectorRender(e2.arrow);
                       return /* @__PURE__ */ jsxRuntimeExports.jsxs("g", { children: [
                         /* @__PURE__ */ jsxRuntimeExports.jsx(
                           "line",
@@ -81478,6 +82073,7 @@ function DeploymentViewComponent({ ctx }) {
                             y2: p2.y,
                             stroke: "#000",
                             strokeWidth: selEdge === e2.id ? 2.5 : 1.6,
+                            strokeDasharray: dash,
                             markerEnd: endMarker,
                             markerStart: startMarker
                           }
@@ -81497,46 +82093,56 @@ function DeploymentViewComponent({ ctx }) {
                       }
                     )
                   ] }),
-                  nodes.map((n2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                    ShapeBox,
-                    {
-                      $selected: selNode === n2.id,
-                      style: { left: n2.x, top: n2.y, width: n2.width, height: n2.height },
-                      onMouseDown: (e2) => startMove(e2, n2),
-                      onDoubleClick: (e2) => {
-                        e2.stopPropagation();
-                        setEditing(n2.id);
-                      },
-                      children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Outline, { viewBox: "0 0 100 100", preserveAspectRatio: "none", children: renderOutline(n2.kind) }),
-                        editing === n2.id ? /* @__PURE__ */ jsxRuntimeExports.jsx(
-                          EditArea,
-                          {
-                            autoFocus: true,
-                            defaultValue: n2.label,
-                            onMouseDown: (e2) => e2.stopPropagation(),
-                            onBlur: (e2) => commitLabel(n2.id, e2.target.value),
-                            onKeyDown: (e2) => {
-                              if (e2.key === "Enter" && !e2.shiftKey) {
-                                e2.preventDefault();
-                                commitLabel(n2.id, e2.target.value);
-                              }
-                              if (e2.key === "Escape") {
-                                e2.preventDefault();
-                                setEditing(null);
-                              }
-                            }
+                  nodes.map((n2) => {
+                    const { category, name: name2 } = parseKind(n2.kind);
+                    const isBasic = category === "basic";
+                    const editArea = /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      EditArea,
+                      {
+                        autoFocus: true,
+                        defaultValue: n2.label,
+                        onMouseDown: (e2) => e2.stopPropagation(),
+                        onBlur: (e2) => commitLabel(n2.id, e2.target.value),
+                        onKeyDown: (e2) => {
+                          if (e2.key === "Enter" && !e2.shiftKey) {
+                            e2.preventDefault();
+                            commitLabel(n2.id, e2.target.value);
                           }
-                        ) : /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { children: n2.label }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Dot, { style: { left: "50%", top: 0 }, onMouseDown: (e2) => startConnect(e2, n2.id) }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Dot, { style: { left: "100%", top: "50%" }, onMouseDown: (e2) => startConnect(e2, n2.id) }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Dot, { style: { left: "50%", top: "100%" }, onMouseDown: (e2) => startConnect(e2, n2.id) }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Dot, { style: { left: 0, top: "50%" }, onMouseDown: (e2) => startConnect(e2, n2.id) }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(ResizeHandle, { onMouseDown: (e2) => startResize(e2, n2) })
-                      ]
-                    },
-                    n2.id
-                  ))
+                          if (e2.key === "Escape") {
+                            e2.preventDefault();
+                            setEditing(null);
+                          }
+                        }
+                      }
+                    );
+                    return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      ShapeBox,
+                      {
+                        $selected: selNode === n2.id,
+                        style: { left: n2.x, top: n2.y, width: n2.width, height: n2.height },
+                        onMouseDown: (e2) => startMove(e2, n2),
+                        onDoubleClick: (e2) => {
+                          e2.stopPropagation();
+                          setEditing(n2.id);
+                        },
+                        children: [
+                          isBasic ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(Outline, { viewBox: "0 0 100 100", preserveAspectRatio: "none", children: renderOutline(name2) }),
+                            editing === n2.id ? editArea : /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { children: n2.label })
+                          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(IconWrap, { children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(IconImg, { src: `/shapes/${category}/${name2}.svg`, alt: name2, draggable: false }),
+                            editing === n2.id ? editArea : /* @__PURE__ */ jsxRuntimeExports.jsx(IconLabel, { children: n2.label })
+                          ] }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(Dot, { style: { left: "50%", top: 0 }, onMouseDown: (e2) => startConnect(e2, n2.id) }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(Dot, { style: { left: "100%", top: "50%" }, onMouseDown: (e2) => startConnect(e2, n2.id) }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(Dot, { style: { left: "50%", top: "100%" }, onMouseDown: (e2) => startConnect(e2, n2.id) }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(Dot, { style: { left: 0, top: "50%" }, onMouseDown: (e2) => startConnect(e2, n2.id) }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(ResizeHandle, { onMouseDown: (e2) => startResize(e2, n2) })
+                        ]
+                      },
+                      n2.id
+                    );
+                  })
                 ]
               }
             ),
@@ -81604,7 +82210,7 @@ async function openTextFile(ext) {
 const deploymentView = {
   key: "deployment",
   titleKey: "views.deployment",
-  Icon: default_1$g,
+  Icon: default_1$h,
   Component: DeploymentViewComponent
 };
 const MAX_MESSAGES = 400;
@@ -81823,38 +82429,49 @@ function formatTime(ts) {
   });
 }
 var CheckCircle = {};
-var _interopRequireDefault$f = interopRequireDefaultExports;
+var _interopRequireDefault$g = interopRequireDefaultExports;
 Object.defineProperty(CheckCircle, "__esModule", {
   value: true
 });
-var default_1$f = CheckCircle.default = void 0;
-var _createSvgIcon$f = _interopRequireDefault$f(requireCreateSvgIcon());
-var _jsxRuntime$f = jsxRuntimeExports;
-default_1$f = CheckCircle.default = (0, _createSvgIcon$f.default)(/* @__PURE__ */ (0, _jsxRuntime$f.jsx)("path", {
+var default_1$g = CheckCircle.default = void 0;
+var _createSvgIcon$g = _interopRequireDefault$g(requireCreateSvgIcon());
+var _jsxRuntime$g = jsxRuntimeExports;
+default_1$g = CheckCircle.default = (0, _createSvgIcon$g.default)(/* @__PURE__ */ (0, _jsxRuntime$g.jsx)("path", {
   d: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8z"
 }), "CheckCircle");
 var RadioButtonUnchecked = {};
-var _interopRequireDefault$e = interopRequireDefaultExports;
+var _interopRequireDefault$f = interopRequireDefaultExports;
 Object.defineProperty(RadioButtonUnchecked, "__esModule", {
   value: true
 });
-var default_1$e = RadioButtonUnchecked.default = void 0;
-var _createSvgIcon$e = _interopRequireDefault$e(requireCreateSvgIcon());
-var _jsxRuntime$e = jsxRuntimeExports;
-default_1$e = RadioButtonUnchecked.default = (0, _createSvgIcon$e.default)(/* @__PURE__ */ (0, _jsxRuntime$e.jsx)("path", {
+var default_1$f = RadioButtonUnchecked.default = void 0;
+var _createSvgIcon$f = _interopRequireDefault$f(requireCreateSvgIcon());
+var _jsxRuntime$f = jsxRuntimeExports;
+default_1$f = RadioButtonUnchecked.default = (0, _createSvgIcon$f.default)(/* @__PURE__ */ (0, _jsxRuntime$f.jsx)("path", {
   d: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8"
 }), "RadioButtonUnchecked");
 var CallSplit = {};
-var _interopRequireDefault$d = interopRequireDefaultExports;
+var _interopRequireDefault$e = interopRequireDefaultExports;
 Object.defineProperty(CallSplit, "__esModule", {
   value: true
 });
-var default_1$d = CallSplit.default = void 0;
-var _createSvgIcon$d = _interopRequireDefault$d(requireCreateSvgIcon());
-var _jsxRuntime$d = jsxRuntimeExports;
-default_1$d = CallSplit.default = (0, _createSvgIcon$d.default)(/* @__PURE__ */ (0, _jsxRuntime$d.jsx)("path", {
+var default_1$e = CallSplit.default = void 0;
+var _createSvgIcon$e = _interopRequireDefault$e(requireCreateSvgIcon());
+var _jsxRuntime$e = jsxRuntimeExports;
+default_1$e = CallSplit.default = (0, _createSvgIcon$e.default)(/* @__PURE__ */ (0, _jsxRuntime$e.jsx)("path", {
   d: "m14 4 2.29 2.29-2.88 2.88 1.42 1.42 2.88-2.88L20 10V4zm-4 0H4v6l2.29-2.29 4.71 4.7V20h2v-8.41l-5.29-5.3z"
 }), "CallSplit");
+var Link = {};
+var _interopRequireDefault$d = interopRequireDefaultExports;
+Object.defineProperty(Link, "__esModule", {
+  value: true
+});
+var default_1$d = Link.default = void 0;
+var _createSvgIcon$d = _interopRequireDefault$d(requireCreateSvgIcon());
+var _jsxRuntime$d = jsxRuntimeExports;
+default_1$d = Link.default = (0, _createSvgIcon$d.default)(/* @__PURE__ */ (0, _jsxRuntime$d.jsx)("path", {
+  d: "M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1M8 13h8v-2H8zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5"
+}), "Link");
 const EMPTY_JIRA = { baseUrl: "", email: "", token: "", project: "" };
 const Root$1 = gt.div`
   height: 100%;
@@ -81869,17 +82486,6 @@ const Main = gt.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-`;
-const Side = gt.div`
-  width: 320px;
-  flex: 0 0 320px;
-  border-left: 1px solid ${colors.border};
-  background: ${colors.panel};
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  padding: 16px;
-  gap: 16px;
 `;
 const Header = gt.div`
   display: flex;
@@ -81943,13 +82549,6 @@ const StatusChipWrap = gt.div`
   flex: 0 0 auto;
   margin-right: 8px;
 `;
-const SideTitle = gt(Typography)`
-  font-weight: 600;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: ${colors.muted};
-`;
 const statusColor = {
   todo: colors.muted,
   doing: colors.controller,
@@ -81970,6 +82569,7 @@ function TasksView({ ctx }) {
   const [autoBranch, setAutoBranch] = reactExports.useState(true);
   const [jira, setJira] = reactExports.useState(EMPTY_JIRA);
   const [jiraBusy, setJiraBusy] = reactExports.useState(false);
+  const [jiraOpen, setJiraOpen] = reactExports.useState(false);
   const reload = reactExports.useCallback(async () => {
     try {
       const rows = await api.tasksList(project);
@@ -82101,7 +82701,8 @@ function TasksView({ ctx }) {
             label: `${t2("tasks.active")}: ${activeTask.title}`,
             sx: { maxWidth: 240 }
           }
-        ) })
+        ) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { size: "small", variant: "outlined", startIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$d, {}), onClick: () => setJiraOpen(true), children: t2("tasks.jira.connect") })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs(AddRow, { onSubmit: addTask, children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -82114,7 +82715,7 @@ function TasksView({ ctx }) {
             onChange: (e2) => setNewTitle(e2.target.value)
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { type: "submit", variant: "contained", startIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$B, {}), disabled: !newTitle.trim(), children: t2("tasks.addBtn") })
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { type: "submit", variant: "contained", startIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$C, {}), disabled: !newTitle.trim(), children: t2("tasks.addBtn") })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(List, { children: tasks.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx(Empty$2, { children: t2("tasks.empty") }) : tasks.map((task) => {
         const done = task.status === "done";
@@ -82128,7 +82729,7 @@ function TasksView({ ctx }) {
                 cycleStatus(task);
               },
               sx: { color: statusColor[task.status] },
-              children: done ? /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$f, { fontSize: "small" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$e, { fontSize: "small" })
+              children: done ? /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$g, { fontSize: "small" }) : task.status === "doing" ? /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$A, { fontSize: "small" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$f, { fontSize: "small" })
             }
           ) }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs(RowBody, { children: [
@@ -82140,7 +82741,7 @@ function TasksView({ ctx }) {
                 {
                   size: "small",
                   variant: "outlined",
-                  icon: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$d, { sx: { fontSize: 12 } }),
+                  icon: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$e, { sx: { fontSize: 12 } }),
                   label: task.branch,
                   sx: { height: 18, fontSize: 10, maxWidth: 180 }
                 }
@@ -82165,72 +82766,64 @@ function TasksView({ ctx }) {
                 removeTask(task);
               },
               sx: { color: colors.muted },
-              children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$A, { fontSize: "small" })
+              children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$B, { fontSize: "small" })
             }
           ) })
         ] }, task.id);
       }) })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(Side, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        FormControlLabel,
-        {
-          control: /* @__PURE__ */ jsxRuntimeExports.jsx(Checkbox, { checked: autoBranch, onChange: (e2) => setAutoBranch(e2.target.checked), size: "small" }),
-          label: t2("tasks.autoBranch")
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(SideTitle, { variant: "subtitle2", gutterBottom: true, children: t2("tasks.jira.connect") }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            TextField,
-            {
-              size: "small",
-              label: t2("tasks.jira.baseUrl"),
-              value: jira.baseUrl,
-              onChange: (e2) => setJira((p2) => ({ ...p2, baseUrl: e2.target.value }))
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            TextField,
-            {
-              size: "small",
-              label: t2("tasks.jira.email"),
-              value: jira.email,
-              onChange: (e2) => setJira((p2) => ({ ...p2, email: e2.target.value }))
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            TextField,
-            {
-              size: "small",
-              type: "password",
-              label: t2("tasks.jira.token"),
-              value: jira.token,
-              onChange: (e2) => setJira((p2) => ({ ...p2, token: e2.target.value }))
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            TextField,
-            {
-              size: "small",
-              label: t2("tasks.jira.project"),
-              value: jira.project,
-              onChange: (e2) => setJira((p2) => ({ ...p2, project: e2.target.value }))
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "outlined", size: "small", disabled: jiraBusy, onClick: saveJira, children: t2("tasks.jira.connect") }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Button,
-            {
-              variant: "contained",
-              size: "small",
-              disabled: jiraBusy || !jira.baseUrl,
-              onClick: importJira,
-              children: t2("tasks.jira.import")
-            }
-          )
-        ] })
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(Dialog, { open: jiraOpen, onClose: () => setJiraOpen(false), maxWidth: "xs", fullWidth: true, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(DialogTitle, { children: t2("tasks.jira.connect") }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: 12, marginTop: 4 }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          FormControlLabel,
+          {
+            control: /* @__PURE__ */ jsxRuntimeExports.jsx(Checkbox, { checked: autoBranch, onChange: (e2) => setAutoBranch(e2.target.checked), size: "small" }),
+            label: t2("tasks.autoBranch")
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          TextField,
+          {
+            size: "small",
+            label: t2("tasks.jira.baseUrl"),
+            value: jira.baseUrl,
+            onChange: (e2) => setJira((p2) => ({ ...p2, baseUrl: e2.target.value }))
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          TextField,
+          {
+            size: "small",
+            label: t2("tasks.jira.email"),
+            value: jira.email,
+            onChange: (e2) => setJira((p2) => ({ ...p2, email: e2.target.value }))
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          TextField,
+          {
+            size: "small",
+            type: "password",
+            label: t2("tasks.jira.token"),
+            value: jira.token,
+            onChange: (e2) => setJira((p2) => ({ ...p2, token: e2.target.value }))
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          TextField,
+          {
+            size: "small",
+            label: t2("tasks.jira.project"),
+            value: jira.project,
+            onChange: (e2) => setJira((p2) => ({ ...p2, project: e2.target.value }))
+          }
+        )
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogActions, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: () => setJiraOpen(false), children: t2("tasks.jira.close") }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "outlined", disabled: jiraBusy, onClick: saveJira, children: t2("tasks.jira.connect") }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "contained", disabled: jiraBusy || !jira.baseUrl, onClick: importJira, children: t2("tasks.jira.import") })
       ] })
     ] })
   ] });
@@ -82529,7 +83122,7 @@ async function getFactory() {
   if (!factoryPromise) {
     factoryPromise = (async () => {
       const { LuaFactory } = await __vitePreload(async () => {
-        const { LuaFactory: LuaFactory2 } = await import("./__vite-browser-external-Dgcnt-AB.js").then((n2) => n2.i);
+        const { LuaFactory: LuaFactory2 } = await import("./__vite-browser-external-Cvo1cMax.js").then((n2) => n2.i);
         return { LuaFactory: LuaFactory2 };
       }, true ? [] : void 0, import.meta.url);
       const glue = (await __vitePreload(async () => {
@@ -82846,7 +83439,7 @@ function MacrosPanel({
     /* @__PURE__ */ jsxRuntimeExports.jsxs(PanelHead, { children: [
       t2("browser.macros"),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Spacer, {}),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { title: t2("browser.newMacro"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: startNew, sx: { color: "#8b949e" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$B, { fontSize: "small" }) }) })
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { title: t2("browser.newMacro"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: startNew, sx: { color: "#8b949e" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$C, { fontSize: "small" }) }) })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(MacroList, { children: macros.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(MacroRow, { $sel: m2.id === selId, onClick: () => select2(m2), children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(MacroName, { children: m2.name }),
@@ -82861,10 +83454,10 @@ function MacrosPanel({
             run();
           },
           sx: { color: colors.service },
-          children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$z, { fontSize: "small" })
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$A, { fontSize: "small" })
         }
       ) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { title: t2("fileTree.delete"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: (e2) => remove2(m2, e2), sx: { color: colors.danger }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$A, { fontSize: "small" }) }) })
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { title: t2("fileTree.delete"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: (e2) => remove2(m2, e2), sx: { color: colors.danger }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$B, { fontSize: "small" }) }) })
     ] }, m2.id)) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(Editor, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -82877,8 +83470,8 @@ function MacrosPanel({
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(CodeArea, { value: code, placeholder: t2("browser.macroBodyHint"), onChange: (e2) => setCode(e2.target.value), spellCheck: false }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: 6 }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { title: t2("browser.recordMacro"), children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: save, sx: { color: colors.controller }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$v, { fontSize: "small" }) }) }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { title: t2("browser.runMacro"), children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", disabled: running, onClick: run, sx: { color: colors.service }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$z, { fontSize: "small" }) }) }) })
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { title: t2("browser.recordMacro"), children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: save, sx: { color: colors.controller }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$w, { fontSize: "small" }) }) }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { title: t2("browser.runMacro"), children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", disabled: running, onClick: run, sx: { color: colors.service }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$A, { fontSize: "small" }) }) }) })
       ] })
     ] }),
     logs.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(LogBox, { children: logs.map((l2, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(LogLine, { $err: l2.level === "error", children: l2.text }, i)) })
@@ -83060,7 +83653,7 @@ function BrowserWindow({
           children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$8, { fontSize: "small" })
         }
       ) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { title: t2("common.close"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: onClose, sx: { color: "#8b949e" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$y, { fontSize: "small" }) }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { title: t2("common.close"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: onClose, sx: { color: "#8b949e" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$z, { fontSize: "small" }) }) }),
       macrosOpen && /* @__PURE__ */ jsxRuntimeExports.jsx(MacrosPanel, { api, getWebview, onClose: () => setMacrosOpen(false) })
     ] })
   ] });
@@ -83144,6 +83737,13 @@ const NewBtn = gt.button`
   }
 `;
 const HOME_URL = "https://duckduckgo.com";
+function sameOrigin(url) {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return url;
+  }
+}
 let pageSeq = 0;
 function makePage(url, offset2) {
   pageSeq += 1;
@@ -83193,9 +83793,32 @@ function BrowserView({ ctx }) {
     },
     [ctx.bus]
   );
+  const openUrl = reactExports.useCallback(
+    (url) => {
+      if (!url) {
+        return;
+      }
+      enabledRef.current = true;
+      ctx.api.browserSetEnabled(true).catch(() => void 0);
+      setPages((prev2) => {
+        const existing = prev2.find((p22) => sameOrigin(p22.url) === sameOrigin(url));
+        if (existing) {
+          setActiveId(existing.id);
+          return prev2.map((p22) => p22.id === existing.id ? { ...p22, url } : p22);
+        }
+        const p2 = makePage(url, prev2.length);
+        setActiveId(p2.id);
+        return [...prev2, p2];
+      });
+    },
+    [ctx.api]
+  );
+  reactExports.useEffect(() => {
+    return ctx.bus.on("browser:open", (p2) => openUrl(p2.url));
+  }, [ctx.bus, openUrl]);
   const hasPages = pages.length > 0;
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Root, { "data-browser-scene": true, children: [
-    hasPages && /* @__PURE__ */ jsxRuntimeExports.jsx(Toolbar, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { title: t2("browser.newWindow"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: addPage, sx: { color: "#8b949e" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$B, { fontSize: "small" }) }) }) }),
+    hasPages && /* @__PURE__ */ jsxRuntimeExports.jsx(Toolbar, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { title: t2("browser.newWindow"), children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { size: "small", onClick: addPage, sx: { color: "#8b949e" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$C, { fontSize: "small" }) }) }) }),
     pages.map((p2) => /* @__PURE__ */ jsxRuntimeExports.jsx(
       BrowserWindow,
       {
@@ -83212,7 +83835,7 @@ function BrowserView({ ctx }) {
     !hasPages && /* @__PURE__ */ jsxRuntimeExports.jsxs(Empty$1, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$c, { sx: { fontSize: 48, opacity: 0.5 } }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs(NewBtn, { onClick: addPage, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$B, { fontSize: "small" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(default_1$C, { fontSize: "small" }),
         t2("browser.newWindow")
       ] })
     ] })
@@ -83228,7 +83851,7 @@ const browserView = {
 const editorView = {
   key: "editor",
   titleKey: "views.editor",
-  Icon: default_1$p,
+  Icon: default_1$q,
   Component: CodeEditorView,
   keepMounted: true,
   showsFileTree: true,
@@ -83260,28 +83883,27 @@ function DiagramComponent({ ctx }) {
 const diagramView = {
   key: "diagram",
   titleKey: "views.diagram",
-  Icon: default_1$k,
+  Icon: default_1$l,
   Component: DiagramComponent,
-  showsFileTree: true,
   hostsEditors: true
 };
 const messagesView = {
   key: "messages",
   titleKey: "views.messages",
-  Icon: default_1$j,
+  Icon: default_1$k,
   Component: MessagesView,
   keepMounted: true
 };
 const tasksView = {
   key: "tasks",
   titleKey: "views.tasks",
-  Icon: default_1$i,
+  Icon: default_1$j,
   Component: TasksView
 };
 const reviewView = {
   key: "review",
   titleKey: "views.review",
-  Icon: default_1$h,
+  Icon: default_1$i,
   Component: CodeEditorView,
   keepMounted: true,
   showsFileTree: true,
@@ -83290,7 +83912,7 @@ const reviewView = {
 const terminalView = {
   key: "terminal",
   titleKey: "views.terminal",
-  Icon: default_1$o,
+  Icon: default_1$p,
   Component: TerminalView,
   keepMounted: true
 };
@@ -83533,7 +84155,7 @@ function iconForPath(p2) {
     case "h":
     case "cpp":
     case "cs":
-      return { Icon: default_1$p, color: kindColor.function };
+      return { Icon: default_1$q, color: kindColor.function };
     case "json":
     case "yaml":
     case "yml":
@@ -83564,9 +84186,9 @@ function iconForPath(p2) {
     case "bash":
     case "zsh":
     case "fish":
-      return { Icon: default_1$o, color: kindColor.service };
+      return { Icon: default_1$p, color: kindColor.service };
     case "lua":
-      return { Icon: default_1$p, color: kindColor.module };
+      return { Icon: default_1$q, color: kindColor.module };
     default:
       return { Icon: ext ? default_1$3 : default_1, color: colors.muted };
   }
@@ -83937,6 +84559,7 @@ function useAppSettings(onNeedClaudeLogin) {
   }, []);
   reactExports.useEffect(() => {
     document.documentElement.style.setProperty("--accent", accentBy(accent).color);
+    document.documentElement.style.setProperty("--accent-contrast", accentBy(accent).contrast ?? "#ffffff");
     if (settingsLoaded.current) {
       window.api.setSettings({ appTheme: accent });
     }
@@ -84221,12 +84844,19 @@ function useProjectScan(onInitialScan) {
   }, []);
   reactExports.useEffect(() => {
     const onMouse = (e2) => {
-      if (e2.button === 3) {
-        e2.preventDefault();
-        back();
+      if (e2.button !== 3 && e2.button !== 4) {
+        return;
       }
-      if (e2.button === 4) {
-        e2.preventDefault();
+      e2.preventDefault();
+      const dir = e2.button === 3 ? "prev" : "next";
+      const overEditor = e2.target instanceof Element && e2.target.closest(".editor-window") != null;
+      if (overEditor) {
+        appBus.emit("editor:nav", { dir });
+        return;
+      }
+      if (dir === "prev") {
+        back();
+      } else {
         forward();
       }
     };
@@ -84289,6 +84919,20 @@ function useEditors(activeView, folder) {
   const ws = workspaces[editorScope];
   const scopeRef = reactExports.useRef(editorScope);
   scopeRef.current = editorScope;
+  const allEditors = reactExports.useMemo(() => {
+    const seen2 = /* @__PURE__ */ new Set();
+    const out = [];
+    for (const scope of ["editor", "diagram"]) {
+      for (const e2 of workspaces[scope].editors) {
+        if (seen2.has(e2.path)) {
+          continue;
+        }
+        seen2.add(e2.path);
+        out.push({ path: e2.path, scope });
+      }
+    }
+    return out;
+  }, [workspaces]);
   const patchWorkspace = reactExports.useCallback(
     (scope, patch) => {
       setWorkspaces((prev2) => {
@@ -84464,6 +85108,7 @@ function useEditors(activeView, folder) {
   return {
     ws,
     workspaces,
+    allEditors,
     editorScope,
     scopeRef,
     lastDir,
@@ -84858,6 +85503,9 @@ function App() {
     setActiveView(to);
     appBus.emit("view:change", { from: from2, to });
   }, []);
+  const restoredTabFolder = reactExports.useRef("");
+  const onInitialScanRef = reactExports.useRef(() => {
+  });
   const settings = useAppSettings(() => setClaudeLoginOpen(true));
   const {
     vimOn,
@@ -84878,7 +85526,7 @@ function App() {
     setGitBlame
   } = settings;
   const muiTheme = reactExports.useMemo(() => makeTheme(accent), [accent]);
-  const scan = useProjectScan(() => switchView("diagram"));
+  const scan = useProjectScan(() => onInitialScanRef.current());
   const {
     folder,
     graph,
@@ -84894,10 +85542,39 @@ function App() {
     refreshCurrentView,
     expandApp
   } = scan;
+  const restoreProjectTab = reactExports.useCallback(
+    async (f2) => {
+      let target = "diagram";
+      if (f2) {
+        try {
+          const saved = await window.api.getState("view:last:" + f2);
+          if (saved && VIEWS.some((v2) => v2.key === saved)) {
+            target = saved;
+          }
+        } catch {
+        }
+      }
+      restoredTabFolder.current = f2;
+      switchView(target);
+    },
+    [switchView]
+  );
+  reactExports.useEffect(() => {
+    onInitialScanRef.current = () => {
+      void restoreProjectTab(folder);
+    };
+  }, [folder, restoreProjectTab]);
+  reactExports.useEffect(() => {
+    if (!folder || restoredTabFolder.current !== folder) {
+      return;
+    }
+    window.api.setState("view:last:" + folder, activeView);
+  }, [activeView, folder]);
   const editors = useEditors(activeView, folder);
   const {
     ws,
     workspaces,
+    allEditors,
     scopeRef,
     lastDir,
     patchWorkspace,
@@ -84914,6 +85591,40 @@ function App() {
   const activeDef = reactExports.useMemo(() => VIEWS.find((v2) => v2.key === activeView), [activeView]);
   const showsFileTree = !!activeDef?.showsFileTree;
   const hostsEditors = !!activeDef?.hostsEditors;
+  const scopeView = (scope) => scope;
+  const selectUnionTab = reactExports.useCallback(
+    (path) => {
+      const tab = allEditors.find((t2) => t2.path === path);
+      if (!tab) {
+        return;
+      }
+      switchView(scopeView(tab.scope));
+      patchWorkspace(tab.scope, (w2) => {
+        const minimized = new Set(w2.minimized);
+        minimized.delete(path);
+        return { minimized, activeEditor: path };
+      });
+      appBus.emit("editor:activate", { path });
+    },
+    [allEditors, switchView, patchWorkspace]
+  );
+  const closeUnionTab = reactExports.useCallback(
+    (path) => {
+      const tab = allEditors.find((t2) => t2.path === path);
+      if (!tab) {
+        return;
+      }
+      appBus.emit("editor:close", { path });
+      patchWorkspace(tab.scope, (w2) => {
+        const minimized = new Set(w2.minimized);
+        minimized.delete(path);
+        const snappedTop = new Set(w2.snappedTop);
+        snappedTop.delete(path);
+        return { editors: w2.editors.filter((e2) => e2.path !== path), minimized, snappedTop };
+      });
+    },
+    [allEditors, patchWorkspace]
+  );
   useDiskWatch(folder, refreshForPath);
   const { review, reviewFiles, gitState } = useGitReview(folder, activeView, gitBlame);
   const { agentBusy, agentReply, pendingAsk, runAsk, runAgent, onAskChoose, clearReply } = useAiAgent({
@@ -84973,7 +85684,7 @@ function App() {
           return;
         }
         const { runLuaSource, disposeLua } = await __vitePreload(async () => {
-          const { runLuaSource: runLuaSource2, disposeLua: disposeLua2 } = await import("./runtime-B4wcA90p.js");
+          const { runLuaSource: runLuaSource2, disposeLua: disposeLua2 } = await import("./runtime-9N2SB7Uw.js");
           return { runLuaSource: runLuaSource2, disposeLua: disposeLua2 };
         }, true ? __vite__mapDeps([0,1,2]) : void 0, import.meta.url);
         await disposeLua();
@@ -85088,14 +85799,14 @@ function App() {
         onOpenLogs: () => setLogsOpen(true)
       }
     ),
-    hostsEditors && /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
       EditorTabs,
       {
-        editors: ws.editors,
-        active: ws.activeEditor,
-        minimized: ws.minimized,
-        onSelect: selectEditor,
-        onClose: closeEditor
+        editors: allEditors,
+        active: hostsEditors ? ws.activeEditor : "",
+        minimized: /* @__PURE__ */ new Set([...workspaces.editor.minimized, ...workspaces.diagram.minimized]),
+        onSelect: selectUnionTab,
+        onClose: closeUnionTab
       }
     ),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(Content, { children: [

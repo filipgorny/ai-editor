@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import ContextMenu from './ContextMenu'
+import ContextMenu, { type MenuEntry } from './ContextMenu'
 import type { Node } from '../model'
 
 type Kind = 'class' | 'function' | 'folder'
@@ -48,12 +48,14 @@ export default function NodeContextMenu({
   const isCodeEntity = !isContainer && !!node.absFile
 
   if (isContainer) {
-    const items = [
+    const items: MenuEntry[] = [
+      { header: t('graph.elementOptions') },
+      { label: `✏️  ${t('graph.rename')}`, onClick: () => onRename(node) },
+      { label: `🗑️  ${t('graph.deleteElement')}`, onClick: () => onDelete(node) },
+      { header: t('graph.addElement') },
       { label: `🟥  ${t('graph.class')}`, onClick: () => onAdd(addTargetDir(node), 'class', node) },
       { label: `λ  ${t('graph.function')}`, onClick: () => onAdd(addTargetDir(node), 'function', node) },
-      { label: `📁  ${t('graph.folder')}`, onClick: () => onAdd(addTargetDir(node), 'folder', node) },
-      { label: `✏️  ${t('graph.rename')}`, onClick: () => onRename(node) },
-      { label: `🗑️  ${t('graph.deleteElement')}`, onClick: () => onDelete(node) }
+      { label: `📁  ${t('graph.folder')}`, onClick: () => onAdd(addTargetDir(node), 'folder', node) }
     ]
 
     return <ContextMenu x={x} y={y} onClose={onClose} items={items} />

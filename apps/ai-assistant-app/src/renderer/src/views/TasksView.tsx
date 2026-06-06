@@ -16,6 +16,10 @@ import {
   Button,
   Checkbox,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   FormControlLabel,
   IconButton,
   TextField,
@@ -26,7 +30,9 @@ import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
+import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import CallSplitIcon from '@mui/icons-material/CallSplit'
+import LinkIcon from '@mui/icons-material/Link'
 import type { ViewContext } from './types'
 import { colors } from '../styles/tokens'
 import { toast } from '../toast'
@@ -63,18 +69,6 @@ const Main = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-`
-
-const Side = styled.div`
-  width: 320px;
-  flex: 0 0 320px;
-  border-left: 1px solid ${colors.border};
-  background: ${colors.panel};
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  padding: 16px;
-  gap: 16px;
 `
 
 const Header = styled.div`
@@ -150,14 +144,6 @@ const StatusChipWrap = styled.div`
   margin-right: 8px;
 `
 
-const SideTitle = styled(Typography)`
-  font-weight: 600;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: ${colors.muted};
-`
-
 const statusColor: Record<TaskRow['status'], string> = {
   todo: colors.muted,
   doing: colors.controller,
@@ -189,6 +175,7 @@ export default function TasksView({ ctx }: { ctx: ViewContext }): React.JSX.Elem
   const [autoBranch, setAutoBranch] = useState(true)
   const [jira, setJira] = useState<JiraForm>(EMPTY_JIRA)
   const [jiraBusy, setJiraBusy] = useState(false)
+  const [jiraOpen, setJiraOpen] = useState(false)
 
   const reload = useCallback(async () => {
     try {
@@ -360,6 +347,10 @@ export default function TasksView({ ctx }: { ctx: ViewContext }): React.JSX.Elem
               />
             </Tooltip>
           )}
+
+          <Button size="small" variant="outlined" startIcon={<LinkIcon />} onClick={() => setJiraOpen(true)}>
+            {t('tasks.jira.connect')}
+          </Button>
         </Header>
 
         <AddRow onSubmit={addTask}>
@@ -396,6 +387,8 @@ export default function TasksView({ ctx }: { ctx: ViewContext }): React.JSX.Elem
                     >
                       {done ? (
                         <CheckCircleIcon fontSize="small" />
+                      ) : task.status === 'doing' ? (
+                        <PlayArrowIcon fontSize="small" />
                       ) : (
                         <RadioButtonUncheckedIcon fontSize="small" />
                       )}
@@ -450,18 +443,16 @@ export default function TasksView({ ctx }: { ctx: ViewContext }): React.JSX.Elem
         </List>
       </Main>
 
-      <Side>
-        <FormControlLabel
-          control={<Checkbox checked={autoBranch} onChange={(e) => setAutoBranch(e.target.checked)} size="small" />}
-          label={t('tasks.autoBranch')}
-        />
+      <Dialog open={jiraOpen} onClose={() => setJiraOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>{t('tasks.jira.connect')}</DialogTitle>
 
-        <div>
-          <SideTitle variant="subtitle2" gutterBottom>
-            {t('tasks.jira.connect')}
-          </SideTitle>
+        <DialogContent>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 4 }}>
+            <FormControlLabel
+              control={<Checkbox checked={autoBranch} onChange={(e) => setAutoBranch(e.target.checked)} size="small" />}
+              label={t('tasks.autoBranch')}
+            />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
             <TextField
               size="small"
               label={t('tasks.jira.baseUrl')}
@@ -490,22 +481,21 @@ export default function TasksView({ ctx }: { ctx: ViewContext }): React.JSX.Elem
               value={jira.project}
               onChange={(e) => setJira((p) => ({ ...p, project: e.target.value }))}
             />
-
-            <Button variant="outlined" size="small" disabled={jiraBusy} onClick={saveJira}>
-              {t('tasks.jira.connect')}
-            </Button>
-
-            <Button
-              variant="contained"
-              size="small"
-              disabled={jiraBusy || !jira.baseUrl}
-              onClick={importJira}
-            >
-              {t('tasks.jira.import')}
-            </Button>
           </div>
-        </div>
-      </Side>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setJiraOpen(false)}>{t('tasks.jira.close')}</Button>
+
+          <Button variant="outlined" disabled={jiraBusy} onClick={saveJira}>
+            {t('tasks.jira.connect')}
+          </Button>
+
+          <Button variant="contained" disabled={jiraBusy || !jira.baseUrl} onClick={importJira}>
+            {t('tasks.jira.import')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Root>
   )
 }

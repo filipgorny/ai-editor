@@ -10,8 +10,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	_ "github.com/filipgorny/ai-architect/plugins/nestjs" // rejestracja pluginu
-	_ "github.com/filipgorny/ai-architect/plugins/react"  // rejestracja pluginu
+	_ "github.com/filipgorny/ai-architect/plugins/golang"   // rejestracja pluginu
+	_ "github.com/filipgorny/ai-architect/plugins/nestjs"   // rejestracja pluginu
+	_ "github.com/filipgorny/ai-architect/plugins/protobuf" // rejestracja pluginu
+	_ "github.com/filipgorny/ai-architect/plugins/react"    // rejestracja pluginu
 	aiv1 "github.com/filipgorny/ai-architect/proto/ai/v1"
 	scannerv1 "github.com/filipgorny/ai-architect/proto/scanner/v1"
 	"github.com/filipgorny/ai-architect/services/scanner/internal/config"

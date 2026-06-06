@@ -294,6 +294,12 @@ const api = {
   browserHistory: (id: string): Promise<{ url: string; title: string; ts: number }[]> =>
     ipcRenderer.invoke('browser:history', id),
 
+  // ---- React app runner (Run button on the code diagram) ----
+  reactDetectApi: (cwd: string): Promise<{ url: string }> => ipcRenderer.invoke('react:detectApi', cwd),
+  reactProbe: (url: string): Promise<{ ok: boolean }> => ipcRenderer.invoke('react:probe', url),
+  reactRun: (cwd: string): Promise<{ url: string }> => ipcRenderer.invoke('react:run', cwd),
+  reactStop: (): Promise<boolean> => ipcRenderer.invoke('react:stop'),
+
   // ---- Tasks store (view 4) ----
   tasksList: (project: string): Promise<Task[]> => ipcRenderer.invoke('tasks:list', project),
   tasksSave: (t: {

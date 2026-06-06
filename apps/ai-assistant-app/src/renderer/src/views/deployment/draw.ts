@@ -6,7 +6,17 @@
 //      as ShapeNode.renderOutline, so an export looks like the canvas.
 //   3. PNG rasterization of that SVG at a chosen scale (the export dialog's "resolution").
 
-import type { ArrowStyle, PersistedDiagram, PersistedEdge, PersistedNode, ShapeKind } from './types'
+import {
+  CONNECTOR_SPECS,
+  isArrowStyle,
+  parseKind,
+  type ArrowStyle,
+  type EndCap,
+  type PersistedDiagram,
+  type PersistedEdge,
+  type PersistedNode,
+  type ShapeKind
+} from './types'
 
 // — XML (.draw) —
 
@@ -38,11 +48,11 @@ export function diagramToXml(doc: PersistedDiagram): string {
 }
 
 function asKind(v: string | null): ShapeKind {
-  return v === 'database' || v === 'cloud' ? v : 'rectangle'
+  return v && v.length > 0 ? v : 'rectangle'
 }
 
 function asArrow(v: string | null): ArrowStyle {
-  return v === 'empty' || v === 'none' || v === 'both' ? v : 'solid'
+  return isArrowStyle(v) ? v : 'solid'
 }
 
 // xmlToDiagram parses a .draw XML document back into the persisted model. Returns null on
@@ -77,13 +87,17 @@ export function xmlToDiagram(xml: string): PersistedDiagram | null {
 // — SVG render —
 
 // outline returns the kind-specific silhouette markup in a 0..100 viewBox (mirrors
-// ShapeNode.renderOutline), to be placed inside a per-node nested <svg> that scales it.
+// DeploymentView.renderOutline), to be placed inside a per-node nested <svg> that scales it.
+// Icon-based shapes (AWS) export as a plain rectangle: their svgs live under public/shapes
+// and can't be inlined into the standalone export blob, so we fall back to a labelled box.
 function outline(kind: ShapeKind): string {
-  if (kind === 'database') {
+  const { category, name } = parseKind(kind)
+
+  if (category === 'basic' && name === 'database') {
     return '<g fill="#fff" stroke="#000" stroke-width="2"><path d="M2 14 L2 86 A48 12 0 0 0 98 86 L98 14"/><ellipse cx="50" cy="14" rx="48" ry="12"/></g>'
   }
 
-  if (kind === 'cloud') {
+  if (category === 'basic' && name === 'cloud') {
     return '<path d="M25 78 A20 20 0 0 1 22 40 A22 22 0 0 1 60 28 A18 18 0 0 1 88 48 A16 16 0 0 1 82 78 Z" fill="#fff" stroke="#000" stroke-width="2" stroke-linejoin="round"/>'
   }
 
@@ -128,6 +142,60 @@ function arrowHead(tip: { x: number; y: number }, dir: { x: number; y: number },
   return `<polygon points="${tip.x},${tip.y} ${p1} ${p2}" fill="${fill}" stroke="#000" stroke-width="2"/>`
 }
 
+// crowFoot returns the ER "many" fork: three prongs opening from a base point toward `tip`
+// (which sits on the entity boundary), along `dir` (pointing outward to that entity).
+function crowFoot(tip: { x: number; y: number }, dir: { x: number; y: number }): string {
+  const len = Math.hypot(dir.x, dir.y) || 1
+  const ux = dir.x / len
+  const uy = dir.y / len
+  const back = 14
+  const half = 8
+  const bx = tip.x - ux * back
+  const by = tip.y - uy * back
+  const px = -uy
+  const py = ux
+  const l = `${tip.x + px * half},${tip.y + py * half}`
+  const r = `${tip.x - px * half},${tip.y - py * half}`
+
+  return `<path d="M${bx},${by} L${l} M${bx},${by} L${tip.x},${tip.y} M${bx},${by} L${r}" fill="none" stroke="#000" stroke-width="2"/>`
+}
+
+// barCap returns the ER "one" tick: a short segment crossing the line just inside `tip`.
+function barCap(tip: { x: number; y: number }, dir: { x: number; y: number }): string {
+  const len = Math.hypot(dir.x, dir.y) || 1
+  const ux = dir.x / len
+  const uy = dir.y / len
+  const back = 7
+  const half = 9
+  const cx = tip.x - ux * back
+  const cy = tip.y - uy * back
+  const px = -uy
+  const py = ux
+
+  return `<line x1="${cx + px * half}" y1="${cy + py * half}" x2="${cx - px * half}" y2="${cy - py * half}" stroke="#000" stroke-width="2"/>`
+}
+
+// capMarkup draws one end cap at `tip`, oriented outward along `dir`.
+function capMarkup(cap: EndCap, tip: { x: number; y: number }, dir: { x: number; y: number }): string {
+  if (cap === 'arrow') {
+    return arrowHead(tip, dir, true)
+  }
+
+  if (cap === 'arrowEmpty') {
+    return arrowHead(tip, dir, false)
+  }
+
+  if (cap === 'crow') {
+    return crowFoot(tip, dir)
+  }
+
+  if (cap === 'bar') {
+    return barCap(tip, dir)
+  }
+
+  return ''
+}
+
 function escapeText(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
@@ -161,19 +229,16 @@ function edgeMarkup(e: PersistedEdge, byId: Map<string, PersistedNode>): string 
   const cb = center(b)
   const pa = boundaryPoint(cb, a)
   const pb = boundaryPoint(ca, b)
-  const line = `<line x1="${pa.x}" y1="${pa.y}" x2="${pb.x}" y2="${pb.y}" stroke="#000" stroke-width="2"/>`
+  const spec = CONNECTOR_SPECS[e.arrow] ?? CONNECTOR_SPECS.solid
+  const dash = spec.dashed ? ' stroke-dasharray="8 6"' : ''
+  const line = `<line x1="${pa.x}" y1="${pa.y}" x2="${pb.x}" y2="${pb.y}" stroke="#000" stroke-width="2"${dash}/>`
 
-  let heads = ''
+  // End cap points outward to the target; start cap outward to the source.
+  const caps =
+    capMarkup(spec.end, pb, { x: pb.x - pa.x, y: pb.y - pa.y }) +
+    capMarkup(spec.start, pa, { x: pa.x - pb.x, y: pa.y - pb.y })
 
-  if (e.arrow === 'solid' || e.arrow === 'empty' || e.arrow === 'both') {
-    heads += arrowHead(pb, { x: pb.x - pa.x, y: pb.y - pa.y }, e.arrow !== 'empty')
-  }
-
-  if (e.arrow === 'both') {
-    heads += arrowHead(pa, { x: pa.x - pb.x, y: pa.y - pb.y }, true)
-  }
-
-  return line + heads
+  return line + caps
 }
 
 // diagramToSvg builds a standalone SVG of the whole diagram (tight bounding box + padding).

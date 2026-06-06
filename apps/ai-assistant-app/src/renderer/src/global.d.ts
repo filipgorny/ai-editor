@@ -197,6 +197,12 @@ declare global {
       browserNavigate(id: string, url: string): Promise<{ url: string }>
       browserHistory(id: string): Promise<{ url: string; title: string; ts: number }[]>
 
+      // ---- React app runner (Run button on the code diagram) ----
+      reactDetectApi(cwd: string): Promise<{ url: string }>
+      reactProbe(url: string): Promise<{ ok: boolean }>
+      reactRun(cwd: string): Promise<{ url: string }>
+      reactStop(): Promise<boolean>
+
       // ---- Tasks store (view 4) ----
       tasksList(project: string): Promise<Task[]>
       tasksSave(t: {

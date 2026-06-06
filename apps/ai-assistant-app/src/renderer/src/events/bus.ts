@@ -94,6 +94,9 @@ export type AppEventMap = {
   'stats:change': { keystrokes: number; lines: number; tasks: number }
   'terminal:title': { id: string; title: string }
   'browser:navigate': { id: string; url: string }
+  // Any component asks the browser view to open a URL in a page (e.g. the diagram's Run
+  // button opening a freshly-started React dev server). BrowserView subscribes.
+  'browser:open': { url: string }
   'deployment:dirty': { changed: boolean }
 
   // — Keyboard (see keys.ts / SCRIPTING.md). 'key:<combo>' variants are emitted dynamically. —
