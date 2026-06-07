@@ -238,7 +238,8 @@ export default {
     delete: 'Element deleted'
   },
   error: {
-    render: 'Render error'
+    render: 'Render error',
+    js: 'Error: {{message}}'
   },
   scripts: {
     title: 'Scripts',

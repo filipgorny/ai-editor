@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
+import { toast } from '@/toast'
 import { ThemeProvider } from '@mui/material/styles'
 import { makeTheme } from './theme'
 import { Node } from './model'
@@ -67,6 +69,8 @@ end)
 }
 
 export default function App() {
+  const { t } = useTranslation()
+
   // activeView drives the view shell (rail + ViewHost). scanning is an independent
   // overlay flag (ScanModal) that no longer hijacks the whole stage.
   const [activeView, setActiveView] = useState<ViewKey>(DEFAULT_VIEW)
@@ -443,6 +447,28 @@ export default function App() {
 
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  // Surface any uncaught JS error / unhandled promise rejection as a toast, so failures
+  // (e.g. while expanding a node) are visible instead of dying silently in the console.
+  useEffect(() => {
+    const onError = (e: ErrorEvent): void => {
+      toast.error(t('error.js', { message: e.message || String(e.error?.message ?? e.error ?? 'error') }))
+    }
+
+    const onRejection = (e: PromiseRejectionEvent): void => {
+      const r = e.reason
+
+      toast.error(t('error.js', { message: typeof r === 'string' ? r : String(r?.message ?? r ?? 'rejection') }))
+    }
+
+    window.addEventListener('error', onError)
+    window.addEventListener('unhandledrejection', onRejection)
+
+    return () => {
+      window.removeEventListener('error', onError)
+      window.removeEventListener('unhandledrejection', onRejection)
+    }
+  }, [t])
 
   // Global keystroke counter — batches keydowns and flushes to statsBump every ~2.5s so
   // the topbar's daily counter updates without an IPC call per key.

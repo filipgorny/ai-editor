@@ -28,10 +28,11 @@ func NewBuilder(db *gorm.DB) *Builder {
 // folderTree dorzuca do grafu żółte węzły-foldery (per katalog) i krawędzie
 // "contains", tworząc drzewko wg ścieżek.
 type folderTree struct {
-	g       *gatewayv1.Graph
-	ids     map[string]string        // dirpath -> nodeID
-	baseDir string                   // absolutna baza (do pola File folderów)
-	modules map[string]store.Element // dirpath -> module element (a dir that declares a @Module)
+	g        *gatewayv1.Graph
+	ids      map[string]string        // dirpath -> nodeID
+	baseDir  string                   // absolutna baza (do pola File folderów)
+	language string                   // the app's language, carried onto module nodes
+	modules  map[string]store.Element // dirpath -> module element (a dir that declares a @Module)
 }
 
 func newFolderTree(g *gatewayv1.Graph, rootName, baseDir string) *folderTree {
@@ -58,7 +59,7 @@ func (t *folderTree) ensure(dir string) string {
 	if m, ok := t.modules[dir]; ok {
 		node = &gatewayv1.Node{
 			Id: "module:" + dir, Kind: "module", Name: m.Name, File: m.File,
-			Functions: m.Functions, Framework: m.Framework,
+			Functions: m.Functions, Framework: m.Framework, Language: t.language,
 			AbsFile: filepath.Join(t.baseDir, m.File),
 		}
 	} else {
@@ -180,6 +181,17 @@ func ignoredDir(name string) bool {
 	return strings.HasPrefix(name, "bazel-")
 }
 
+// isFrameworkKind reports whether an entity kind is framework-specific (so it carries a
+// framework label), as opposed to a plain language-level entity (class/function/model).
+func isFrameworkKind(kind string) bool {
+	switch kind {
+	case "module", "controller", "service", "component", "guard", "pipe", "middleware", "gateway", "resolver":
+		return true
+	}
+
+	return false
+}
+
 // BuildAppGraph zwraca wewnętrzny graf aplikacji: WSZYSTKIE byty ładowane jednym
 // zapytaniem, w drzewku folderów wg ścieżek plików, z funkcjami i frameworkiem.
 func (b *Builder) BuildAppGraph(ctx context.Context, appID int64) (*gatewayv1.Graph, error) {
@@ -199,6 +211,7 @@ func (b *Builder) BuildAppGraph(ctx context.Context, appID int64) (*gatewayv1.Gr
 
 	g := &gatewayv1.Graph{ProjectId: app.ProjectID, Folder: proj.Folder}
 	tree := newFolderTree(g, app.Name, appDir)
+	tree.language = app.Language
 
 	// A directory that declares a @Module becomes a module node (folderTree.ensure). Map each
 	// such directory to its module element so the tree folds it in instead of showing a folder
@@ -229,9 +242,19 @@ func (b *Builder) BuildAppGraph(ctx context.Context, appID int64) (*gatewayv1.Gr
 
 		nodeID := e.Kind + ":" + e.Name
 
+		// Every entity carries the app's LANGUAGE (so a plain function shows "typescript", not
+		// "lang ?"). The FRAMEWORK is shown only on framework-specific entities — a plain class
+		// or function is language-level and must NOT inherit the app's framework (e.g. a toast
+		// helper is not a Svelte component).
+		framework := ""
+
+		if isFrameworkKind(e.Kind) {
+			framework = e.Framework
+		}
+
 		g.Nodes = append(g.Nodes, &gatewayv1.Node{
 			Id: nodeID, Kind: e.Kind, Name: e.Name, File: e.File,
-			Route: e.Route, Functions: e.Functions, Framework: e.Framework,
+			Route: e.Route, Functions: e.Functions, Framework: framework, Language: app.Language,
 			AbsFile: filepath.Join(appDir, e.File),
 		})
 

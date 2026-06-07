@@ -1,4 +1,4 @@
-import { _ as __vitePreload, e as commonjsGlobal } from "./index-CWiMyzFO.js";
+import { _ as __vitePreload, e as commonjsGlobal } from "./index-BX7JzDLB.js";
 function _mergeNamespaces(n, m) {
   for (var i = 0; i < m.length; i++) {
     const e = m[i];

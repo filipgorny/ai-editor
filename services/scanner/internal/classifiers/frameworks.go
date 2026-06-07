@@ -95,7 +95,9 @@ func (vueFW) Score(dir string) (int, bool) {
 		return 92, true
 	}
 
-	if dep(dir, "vue") {
+	// Require real Vue usage (.vue components), not just a `vue` dependency — a plain TS
+	// package that happens to depend on vue is not a Vue app.
+	if dep(dir, "vue") && hasExt(dir, ".vue") {
 		return 80, true
 	}
 
@@ -107,6 +109,17 @@ type svelteFW struct{}
 func (svelteFW) Framework() string { return "svelte" }
 func (svelteFW) Language() string  { return "" }
 func (svelteFW) Score(dir string) (int, bool) {
+	// Require real Svelte usage (.svelte components or a svelte.config), not merely a `svelte`
+	// dependency — a plain TS package that lists svelte is NOT a Svelte project (this is what
+	// caused plain util functions to be mislabelled "svelte").
+	hasSvelte := hasExt(dir, ".svelte") ||
+		fileExists(filepath.Join(dir, "svelte.config.js")) ||
+		fileExists(filepath.Join(dir, "svelte.config.ts"))
+
+	if !hasSvelte {
+		return 0, false
+	}
+
 	if dep(dir, "@sveltejs/kit") {
 		return 92, true
 	}

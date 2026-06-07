@@ -1,0 +1,1 @@
+- każdy detektor języka i frameworka powinien być w osobnym pliku

@@ -238,7 +238,8 @@ export default {
     delete: 'Usunięto element'
   },
   error: {
-    render: 'Błąd renderowania'
+    render: 'Błąd renderowania',
+    js: 'Błąd: {{message}}'
   },
   scripts: {
     title: 'Skrypty',
