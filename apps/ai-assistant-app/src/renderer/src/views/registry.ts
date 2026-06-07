@@ -22,13 +22,13 @@ import ChecklistIcon from '@mui/icons-material/Checklist'
 import RateReviewIcon from '@mui/icons-material/RateReview'
 import TerminalIcon from '@mui/icons-material/Terminal'
 import type { ViewDefinition, ViewKey, ViewContext } from './types'
-import CodeEditorView from './CodeEditorView'
-import GraphView from '../components/GraphView'
-import { deploymentView } from './DeploymentView'
-import MessagesView from './MessagesView'
-import TasksView from './TasksView'
-import TerminalView from './TerminalView'
-import { browserView } from './BrowserView'
+import CodeEditorView from '@/views/editor/CodeEditorView'
+import GraphView from '@/views/diagram/GraphView'
+import { deploymentView } from '@/views/deployment/DeploymentView'
+import MessagesView from '@/views/messages/MessagesView'
+import TasksView from '@/views/tasks/TasksView'
+import TerminalView from '@/views/terminal/TerminalView'
+import { browserView } from '@/views/browser/BrowserView'
 
 // — Built-in: 0 editor — floating CodeEditor windows over the wallpaper.
 const editorView: ViewDefinition = {
@@ -70,12 +70,15 @@ function DiagramComponent({ ctx }: { ctx: ViewContext }): React.JSX.Element | nu
   })
 }
 
-// — Built-in: 1 diagram — existing code graph (GraphView).
+// — Built-in: 1 diagram — existing code graph (GraphView). keepMounted so the diagram keeps
+// its state (expanded folders/apps, pan/zoom, drill-downs) when you switch to another view
+// and back — without it the view unmounts and the graph collapses to its initial state.
 const diagramView: ViewDefinition = {
   key: 'diagram',
   titleKey: 'views.diagram',
   Icon: AccountTreeIcon,
   Component: DiagramComponent,
+  keepMounted: true,
   hostsEditors: true
 }
 

@@ -58,6 +58,9 @@ func (s *Server) Scan(req *gatewayv1.ScanRequest, out gatewayv1.Gateway_ScanServ
 	}
 
 	var projectID int64
+	// Ścieżki aplikacji wykrytych w TYM skanie — po zakończeniu usuwamy z bazy te, których
+	// już nie ma (np. dawniej błędnie rozpoznany folder), żeby nie zostawały duplikaty.
+	var seenAppPaths []string
 
 	for {
 		ev, err := in.Recv()
@@ -88,10 +91,11 @@ func (s *Server) Scan(req *gatewayv1.ScanRequest, out gatewayv1.Gateway_ScanServ
 		case ev.GetApp() != nil:
 			a := ev.GetApp()
 
-			if _, e := s.store.UpsertApp(ctx, projectID, a.GetName(), a.GetPath(), a.GetFramework(), a.GetHasPlugin()); e != nil {
+			if _, e := s.store.UpsertApp(ctx, projectID, a.GetName(), a.GetPath(), a.GetFramework(), a.GetLanguage(), a.GetKind(), a.GetHasPlugin()); e != nil {
 				return e
 			}
 
+			seenAppPaths = append(seenAppPaths, a.GetPath())
 			p.CurrentFile = a.GetName()
 			p.Message = "serwis: " + a.GetName()
 
@@ -99,6 +103,10 @@ func (s *Server) Scan(req *gatewayv1.ScanRequest, out gatewayv1.Gateway_ScanServ
 			p.Message = ev.GetLog().GetMessage()
 
 		case ev.GetDone() != nil:
+			if e := s.store.PruneApps(ctx, projectID, seenAppPaths); e != nil {
+				return e
+			}
+
 			p.Done = true
 		}
 

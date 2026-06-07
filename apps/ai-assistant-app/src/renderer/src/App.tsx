@@ -3,20 +3,20 @@ import styled from 'styled-components'
 import { ThemeProvider } from '@mui/material/styles'
 import { makeTheme } from './theme'
 import { Node } from './model'
-import ScanModal from './components/ScanModal'
-import SettingsDialog from './components/SettingsDialog'
-import ScriptsDialog from './components/ScriptsDialog'
-import LogsDialog from './components/LogsDialog'
-import ClaudeLoginDialog from './components/ClaudeLoginDialog'
-import AiAskModal from './components/AiAskModal'
-import ToastHost from './components/ToastHost'
-import AgentBar from './components/AgentBar'
-import EditorTabs from './components/EditorTabs'
-import FileBrowser from './components/FileBrowser'
-import CodeEditor from './components/CodeEditor'
-import { EditorContext } from './components/EditorContext'
-import { GitContext } from './components/GitContext'
-import TopBar from './components/TopBar'
+import ScanModal from '@/common/dialogs/ScanModal'
+import SettingsDialog from '@/common/dialogs/SettingsDialog'
+import ScriptsDialog from '@/common/dialogs/ScriptsDialog'
+import LogsDialog from '@/common/dialogs/LogsDialog'
+import ClaudeLoginDialog from '@/common/dialogs/ClaudeLoginDialog'
+import AiAskModal from '@/common/dialogs/AiAskModal'
+import ToastHost from '@/ui/ToastHost'
+import AgentBar from '@/common/AgentBar'
+import EditorTabs from '@/common/editor/EditorTabs'
+import FileBrowser from '@/common/FileBrowser'
+import CodeEditor from '@/common/editor/CodeEditor'
+import { EditorContext } from '@/common/editor/EditorContext'
+import { GitContext } from '@/common/GitContext'
+import TopBar from '@/common/TopBar'
 import { appBus } from './events'
 import { commander } from './commander/Commander'
 import { VIEWS, DEFAULT_VIEW } from './views/registry'
@@ -24,8 +24,8 @@ import type { ViewContext, ViewKey } from './views/types'
 import ViewRail from './views/ViewRail'
 import ViewHost from './views/ViewHost'
 import { useViewKeys } from './hooks/useViewKeys'
-import Telescope, { useTelescopeChord } from './components/Telescope'
-import { installKeystrokeCounter } from './components/TopBarStats'
+import Telescope, { useTelescopeChord } from '@/common/Telescope'
+import { installKeystrokeCounter } from '@/common/TopBarStats'
 import { useAppSettings } from './hooks/useAppSettings'
 import { useProjectScan } from './hooks/useProjectScan'
 import { useEditors } from './hooks/useEditors'
@@ -272,6 +272,25 @@ export default function App() {
     [allEditors, patchWorkspace]
   )
 
+  // closeAllEditors — close EVERY open window across both view workspaces (the union tab strip).
+  // Backs the tab strip's Clear button and the Commander 'closeAll' command (single source of
+  // truth). layoutByPath is left intact so reopened files restore their geometry.
+  const closeAllEditors = useCallback((): void => {
+    for (const tab of allEditors) {
+      appBus.emit('editor:close', { path: tab.path })
+    }
+
+    for (const scope of ['editor', 'diagram'] as const) {
+      patchWorkspace(scope, {
+        editors: [],
+        activeEditor: '',
+        minimized: new Set<string>(),
+        snappedTop: new Set<string>(),
+        closingEditors: new Set<string>()
+      })
+    }
+  }, [allEditors, patchWorkspace])
+
   // React to on-disk changes (filer watcher) → refresh the graph for the changed path.
   useDiskWatch(folder, refreshForPath)
 
@@ -281,6 +300,7 @@ export default function App() {
   // AI agent (Ask + file-writing agent) wired to the live editor / graph / file ops.
   const { agentBusy, agentReply, pendingAsk, runAsk, runAgent, onAskChoose, clearReply } = useAiAgent({
     folder,
+    activeView,
     selectedNode,
     activeEditorPath: ws.activeEditor,
     graphRef,
@@ -308,6 +328,7 @@ export default function App() {
       closeEditor,
       selectEditor,
       minimizeEditor,
+      closeAllEditors,
       listEditors: () => workspaces[scopeRef.current].editors.map((e) => e.path),
       activePath: () => workspaces[scopeRef.current].activeEditor,
       pickProject: pickAndScan,
@@ -391,6 +412,36 @@ export default function App() {
 
   useEffect(() => {
     return appBus.on('telescope:open', () => setTelescopeOpen(true))
+  }, [])
+
+  // F5 — refresh what's in focus: reload the active editor's file from disk if one is open,
+  // otherwise re-scan/refresh the current view (the diagram). A ref holds the latest closure
+  // so the keydown listener is registered once.
+  const onF5Ref = useRef<() => void>(() => {})
+
+  onF5Ref.current = () => {
+    const activePath = hostsEditors ? ws.activeEditor : ''
+
+    if (activePath) {
+      appBus.emit('editor:reload', { path: activePath })
+    } else {
+      refreshCurrentView()
+    }
+  }
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key !== 'F5') {
+        return
+      }
+
+      e.preventDefault()
+      onF5Ref.current()
+    }
+
+    window.addEventListener('keydown', onKey)
+
+    return () => window.removeEventListener('keydown', onKey)
   }, [])
 
   // Global keystroke counter — batches keydowns and flushes to statsBump every ~2.5s so
@@ -511,6 +562,7 @@ export default function App() {
         minimized={new Set([...workspaces.editor.minimized, ...workspaces.diagram.minimized])}
         onSelect={selectUnionTab}
         onClose={closeUnionTab}
+        onClearAll={closeAllEditors}
       />
 
       <Content>
@@ -540,6 +592,8 @@ export default function App() {
         busy={agentBusy}
         reply={agentReply}
         onClearReply={clearReply}
+        asBubble={activeView !== 'messages'}
+        onOpenChat={() => switchView('messages')}
       />
 
       <ScanModal open={scanning} progress={progress} log={log} error={error} />

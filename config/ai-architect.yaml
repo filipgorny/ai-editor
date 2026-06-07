@@ -13,8 +13,10 @@ scanners:
   plugins:                     # scanner uruchamia WSZYSTKIE na każdym serwisie
     - nestjs
     - react
+    - vite
     - go
     - protobuf
+    - typescript
   scan:
     concurrency: 0             # 0 = wszystkie rdzenie CPU
     max_files: 0               # 0 = bez limitu

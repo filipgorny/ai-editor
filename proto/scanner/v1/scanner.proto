@@ -80,6 +80,8 @@ message AppDetected {
   string path = 4;      // względem roota projektu
   string framework = 5; // "nestjs" | "" gdy nierozpoznany
   bool has_plugin = 6;
+  string language = 7;  // "typescript" | "go" | … (classifier verdict)
+  string kind = 8;      // "app" (runnable) | "package" (library), classifier verdict
 }
 
 message Module {

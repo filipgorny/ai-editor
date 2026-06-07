@@ -13,6 +13,8 @@
 import { EditorSelection } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { appBus } from '../events'
+import type { ViewKey } from '../views/types'
+import { deploymentCommands } from './commands/deployment'
 
 // EditorHandle — the slice of the active editor window the Commander drives. The active
 // CodeEditor registers one of these via bindEditor(); methods read live state so the
@@ -35,6 +37,9 @@ export type CommanderHost = {
   closeEditor: (path: string) => void
   selectEditor: (path: string) => void
   minimizeEditor: (path: string) => void
+  // closeAllEditors closes EVERY open window across all view workspaces (the union tab strip),
+  // not just the active scope's editors that listEditors() reports.
+  closeAllEditors: () => void
   listEditors: () => string[]
   activePath: () => string
   pickProject: () => void
@@ -45,18 +50,38 @@ export type CommanderHost = {
 
 export type CommandResult = { ok: boolean; error?: string }
 
-// CommandSpec — one registered command. `params` documents the expected argument (for
-// help / COMMANDS.md); `run` does the work and may throw — run() turns that into an error.
-export type CommandSpec = {
+// CQRS split — a command's DECLARATION is separate from its HANDLER:
+//
+//   CommandDef     — what the command IS: name, group, the argument it expects, a summary.
+//                    This is the catalog the help, the command palette and the AI read. A
+//                    def can exist with no handler bound yet (e.g. a screen-scoped command
+//                    whose view isn't mounted) — it shows in the catalog but isn't runnable.
+//   CommandHandler — what the command DOES: a function of the raw argument. Registered
+//                    separately (often by the feature/view that owns the command), so the
+//                    declaration and the behaviour live apart and bind by name.
+//
+// Declarations live in commander/commands/*; handlers are registered by the owning code
+// (e.g. DeploymentView). `register()`/`registerScoped()` are convenience wrappers that do
+// both at once (used by the builtins and Lua scripts).
+export type CommandDef = {
   name: string
   group: string
   params: string
   summary: string
-  run: (arg: string) => void | Promise<void>
 }
 
+export type CommandHandler = (arg: string) => void | Promise<void>
+
+// CommandSpec — a def with its handler attached (the convenience shape for register()).
+export type CommandSpec = CommandDef & { run: CommandHandler }
+
+// CommandInfo — a catalog entry plus whether a handler is currently bound (i.e. runnable now).
+export type CommandInfo = CommandDef & { available: boolean }
+
 class Commander {
-  private commands = new Map<string, CommandSpec>()
+  // The catalog (declarations) and the bound behaviours, keyed by command name — kept apart.
+  private defs = new Map<string, CommandDef>()
+  private handlers = new Map<string, CommandHandler>()
   private active: EditorHandle | null = null
   private host: Partial<CommanderHost> = {}
 
@@ -94,17 +119,69 @@ class Commander {
 
   // — public API (called by scripts) —
 
-  // register adds (or overrides) a command — the extension point for user scripts.
+  // — command declarations (the catalog) —
+
+  // define adds command DECLARATIONS to the catalog and returns a disposer that removes them.
+  define(defs: CommandDef[]): () => void {
+    defs.forEach((d) => this.defs.set(d.name, d))
+
+    return () => defs.forEach((d) => this.defs.delete(d.name))
+  }
+
+  // — command handlers (the behaviour) —
+
+  // handle binds a HANDLER to a command name and returns a disposer. The owning code (a view,
+  // a script) calls this on mount and disposes on unmount; the declaration may already exist
+  // in the catalog (define) independently.
+  handle(name: string, handler: CommandHandler): () => void {
+    this.handlers.set(name, handler)
+
+    return () => {
+      if (this.handlers.get(name) === handler) {
+        this.handlers.delete(name)
+      }
+    }
+  }
+
+  // bindHandlers binds many handlers at once (name → fn) and returns one disposer for all.
+  bindHandlers(map: Record<string, CommandHandler>): () => void {
+    const offs = Object.entries(map).map(([name, fn]) => this.handle(name, fn))
+
+    return () => offs.forEach((off) => off())
+  }
+
+  // — convenience: declaration + handler together (used by builtins and Lua scripts) —
+
+  // register declares a command AND binds its handler in one call.
   register(spec: CommandSpec): void {
-    this.commands.set(spec.name, spec)
+    const { run, ...def } = spec
+
+    this.defs.set(def.name, def)
+    this.handlers.set(def.name, run)
   }
 
+  // registerScoped registers several full commands at once and returns a disposer that removes
+  // both their declarations and handlers — the shape a view uses in a mount/unmount effect.
+  registerScoped(specs: CommandSpec[]): () => void {
+    specs.forEach((s) => this.register(s))
+
+    return () => specs.forEach((s) => this.unregister(s.name))
+  }
+
+  // unregister removes a command's declaration AND handler by name.
+  unregister(name: string): void {
+    this.defs.delete(name)
+    this.handlers.delete(name)
+  }
+
+  // has reports whether a command is RUNNABLE now (a handler is bound).
   has(name: string): boolean {
-    return this.commands.has(name)
+    return this.handlers.has(name)
   }
 
-  list(): CommandSpec[] {
-    return [...this.commands.values()]
+  // list returns the catalog with, for each command, whether a handler is currently bound.
+  list(): CommandInfo[] {
+    return [...this.defs.values()].map((d) => ({ ...d, available: this.handlers.has(d.name) }))
   }
 
   // run parses one command string and dispatches it. Unknown commands and thrown errors
@@ -120,17 +197,20 @@ class Commander {
     const name = (colon === -1 ? trimmed : trimmed.slice(0, colon)).trim()
     // arg keeps everything after the first colon verbatim (whitespace matters for write).
     const arg = colon === -1 ? '' : trimmed.slice(colon + 1)
-    const cmd = this.commands.get(name)
+    const handler = this.handlers.get(name)
 
-    if (!cmd) {
-      const message = `unknown command: ${name}`
+    if (!handler) {
+      // Distinguish a declared-but-unbound command (e.g. its screen isn't open) from a typo.
+      const message = this.defs.has(name)
+        ? `command "${name}" is not available right now (its screen may not be open)`
+        : `unknown command: ${name}`
       appBus.emit('command:error', { name, arg, message })
 
       return { ok: false, error: message }
     }
 
     try {
-      await cmd.run(arg)
+      await handler(arg)
       appBus.emit('command:run', { name, arg })
 
       return { ok: true }
@@ -266,6 +346,29 @@ class Commander {
 
   private registerBuiltins(): void {
     const def = (spec: CommandSpec): void => this.register(spec)
+
+    // ——————————————————————————— Views (navigation between screens) ———————————————————————————
+
+    def({
+      name: 'view',
+      group: 'Widoki',
+      params: 'editor|diagram|deployment|messages|tasks|review|terminal|browser',
+      summary: 'Przełącza aktywny ekran aplikacji.',
+      run: (arg) => {
+        const to = arg.trim()
+
+        if (!to) {
+          throw new Error('view: brak nazwy ekranu')
+        }
+
+        appBus.emit('view:request', { to: to as ViewKey })
+      }
+    })
+
+    // Screen-scoped command DECLARATIONS are added to the catalog here (so help/palette/AI
+    // always know they exist), but their HANDLERS are bound by the owning view while mounted
+    // (see DeploymentView). This is the CQRS split: commands here, handlers there.
+    this.define(deploymentCommands)
 
     // ——————————————————————————— Text editing ———————————————————————————
 
@@ -1027,6 +1130,13 @@ class Commander {
       params: '—',
       summary: 'Zamyka wszystkie otwarte edytory.',
       run: () => {
+        // Prefer the host's union close-all (every workspace); fall back to the active scope.
+        if (this.host.closeAllEditors) {
+          this.host.closeAllEditors()
+
+          return
+        }
+
         const editors = this.host.listEditors?.() ?? []
 
         for (const p of editors) {

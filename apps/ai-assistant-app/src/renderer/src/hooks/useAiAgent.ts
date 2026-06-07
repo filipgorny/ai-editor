@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { Graph, Node } from '../model'
 import { appBus } from '../events'
 import { commander } from '../commander/Commander'
-import type { EditorTarget } from '../components/CodeEditor'
-import type { AskUserPrompt } from '../components/AiAskModal'
+import type { EditorTarget } from '@/common/editor/CodeEditor'
+import type { AskUserPrompt } from '@/common/dialogs/AiAskModal'
+import type { ViewKey } from '../views/types'
 
 // How long an agent-opened editor window stays (after the live typing) before it
 // fades out and closes — enough to see the change without lingering.
@@ -12,6 +13,7 @@ const AGENT_WINDOW_DWELL_MS = 2600
 
 type AiAgentDeps = {
   folder: string
+  activeView: ViewKey
   selectedNode: Node | null
   activeEditorPath: string
   graphRef: React.MutableRefObject<Graph | null>
@@ -26,6 +28,7 @@ type AiAgentDeps = {
 export function useAiAgent(deps: AiAgentDeps) {
   const {
     folder,
+    activeView,
     selectedNode,
     activeEditorPath,
     graphRef,
@@ -43,6 +46,12 @@ export function useAiAgent(deps: AiAgentDeps) {
   // pytanie zadane przez agenta (skill ask_user) → modal z wariantami; null = brak
   const [pendingAsk, setPendingAsk] = useState<AskUserPrompt | null>(null)
 
+  // Zmiana zakładki chowa dymek odpowiedzi AI — np. po zapytaniu w zakładce czatu odpowiedź
+  // jest już w jej logu, więc balonik nie „wędruje" za nami na inne widoki.
+  useEffect(() => {
+    setAgentReply('')
+  }, [activeView])
+
   // serializeGraph zwraca zwięzłą strukturę grafu dla skilla get_graph.
   const serializeGraph = (): string => {
     const g = graphRef.current
@@ -57,9 +66,42 @@ export function useAiAgent(deps: AiAgentDeps) {
     return JSON.stringify({ nodes, edges })
   }
 
+  // describeScreen captures WHAT THE USER IS CURRENTLY LOOKING AT, sent with every prompt so
+  // the model can resolve "this/that/here". The screen is the active view; on file views we
+  // add the open file's path, on the code diagram the selected element. Returns a compact
+  // object embedded as JSON in the prompt (see the initial prompt in the Go agent).
+  const describeScreen = (): Record<string, unknown> => {
+    const sel = selectedNode
+    const screen: Record<string, unknown> = { screen: activeView }
+
+    if (activeView === 'diagram' && sel) {
+      screen.element = { kind: sel.kind, name: sel.name, file: sel.absFile || sel.file || '' }
+    } else if (activeEditorPath) {
+      screen.file = activeEditorPath
+    }
+
+    // Advertise the higher-level app commands the model may drive via run_command. The
+    // low-level editor groups (typing/cursor/selection/clipboard) are noise for the agent,
+    // so they're filtered out — the model edits files through the file-writing agent instead.
+    const HIDDEN_GROUPS = new Set(['Edycja', 'Kursor', 'Zaznaczenie', 'Schowek'])
+
+    screen.commands = commander
+      .list()
+      .filter((c) => c.available && !HIDDEN_GROUPS.has(c.group))
+      .map((c) => ({ name: c.name, params: c.params, summary: c.summary }))
+
+    return screen
+  }
+
   // runSkill wykonuje żądanie skilla po stronie aplikacji. Zwraca treść, albo undefined gdy
   // odpowiedź przyjdzie później (ask_user — po wyborze w modalu).
   const runSkill = async (req: AiSkillRequest): Promise<string | undefined> => {
+    if (req.name === 'run_command') {
+      const res = await commander.run(req.args)
+
+      return res.ok ? `ok: ${req.args}` : `error: ${res.error ?? 'command failed'}`
+    }
+
     if (req.name === 'read_file') {
       const live = commander.activeEditor()
 
@@ -102,10 +144,14 @@ export function useAiAgent(deps: AiAgentDeps) {
 
     setAgentBusy(true)
     setAgentReply('')
+    // The chat log shows the CLEAN prompt; the screen context is appended only to what the
+    // model receives, as a JSON blob it can parse (see the Go agent's initial prompt).
     appBus.emit('agent:start', { prompt, dir })
 
+    const fullPrompt = `${prompt}\n\n<currentView>${JSON.stringify(describeScreen())}</currentView>`
+
     window.api.aiAsk({
-      prompt,
+      prompt: fullPrompt,
       dir,
       lang: i18n.language,
       context: {

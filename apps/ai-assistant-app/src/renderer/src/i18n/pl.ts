@@ -121,6 +121,8 @@ export default {
     themeLabel: 'Motyw edytora',
     themeVariedDark: '🎲 Różne ciemne — inny dla każdego pliku',
     themeVariedLight: '🎲 Różne jasne — inny dla każdego pliku',
+    themeAutogenDark: '🧬 Autogenerowane ciemne — z nazwy i pakietu',
+    themeAutogenLight: '🧬 Autogenerowane jasne — z nazwy i pakietu',
     accentLabel: 'Kolor motywu',
     wallpaperLabel: 'Tapeta',
     language: 'Język',
@@ -179,7 +181,9 @@ export default {
     aiNoChange: 'AI nie zwróciło zmian',
     unsavedConfirm: 'Masz niezapisane zmiany. Porzucić je?',
     saved: 'Zapisano plik',
-    loadError: '// nie udało się wczytać pliku'
+    loadError: '// nie udało się wczytać pliku',
+    clearTabs: 'Wyczyść',
+    clearTabsTitle: 'Zamknij wszystkie otwarte okna'
   },
   graph: {
     relinkHint: 'Kliknij folder docelowy ({{name}}) — Esc anuluje',
@@ -216,6 +220,7 @@ export default {
     stub: 'pusta',
     run: 'Uruchom',
     runApp: 'Uruchom aplikację',
+    langUnknown: 'język ?',
     runFailed: 'Nie udało się uruchomić aplikacji',
     cancel: 'Anuluj',
     runAnyway: 'Uruchom mimo to',

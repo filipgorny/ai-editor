@@ -153,39 +153,49 @@ body {
   color: #e6edf3;
 }
 
-// Ghost-uwagi (ESLint / AI) jako komiksowy dymek po PRAWEJ od linii (nie zawija).
+// Ghost-uwagi (ESLint / AI) jako blok POD linią kodu — zaczyna się od WCIĘCIA kodu, BEZ
+// ramki, z tłem lekko ciemniejszym od edytora (półprzezroczyste → działa na każdym motywie).
+// Tekst DZIEDZICZY kolor edytora (jasny na ciemnych, ciemny na jasnych). Szerokość ograniczona
+// do widocznej części kodu (--cm-ghost-width), więc długi tekst ZAWIJA się do kolejnej linii —
+// bez poziomego scrolla. Typ uwagi pokazuje ikona (⛔ błąd / ⚠️ ostrzeżenie / 💬 AI).
 .cm-ghost-bubble {
-  display: inline-block;
-  margin-left: 22px;
-  padding: 0 8px 0 10px;
-  border-radius: 12px;
-  border: 1px solid currentColor;
-  background: #000;
-  font-size: 13px;
-  font-style: normal;
-  line-height: 1.5;
+  display: block;
   position: relative;
-  vertical-align: middle;
-  white-space: nowrap;
-  pointer-events: auto; // cały dymek klikalny → zamyka
+  margin: 2px 0 3px;
+  padding: 3px 26px 3px 8px;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.16);
+  font-size: 12.5px;
+  font-style: normal;
+  line-height: 1.45;
+  color: inherit; // kolor tekstu jak w edytorze (zależny od motywu)
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  pointer-events: auto; // cały blok klikalny → zamyka
   cursor: pointer;
 }
 
 .cm-ghost-bubble:hover {
-  filter: brightness(1.25);
+  background: rgba(0, 0, 0, 0.24);
 }
 
-.cm-ghost-bubble::before {
-  content: '';
-  position: absolute;
-  left: -6px;
-  top: 50%;
-  transform: translateY(-50%);
-  border: 5px solid transparent;
-  border-right-color: currentColor;
+.cm-ghost-icon {
+  margin-right: 6px;
+}
+
+.cm-ghost-text {
+  opacity: 0.92;
 }
 
 .cm-ghost-x {
-  color: #8b949e;
+  position: absolute;
+  top: 3px;
+  right: 8px;
+  opacity: 0.5;
   font-weight: 700;
+}
+
+.cm-ghost-x:hover {
+  opacity: 1;
 }

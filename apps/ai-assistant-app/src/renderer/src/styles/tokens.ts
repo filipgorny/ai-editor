@@ -20,5 +20,17 @@ export const kindColor: Record<string, string> = {
   service: '#3fb950',
   component: '#61dafb',
   class: '#f85149',
-  function: '#ffa657'
+  function: '#ffa657',
+  model: '#db61a2'
+}
+
+// Kolor węzła aplikacji zależny od frameworka — by serwisy Go, modele Protobuf
+// i fronty React były od razu rozróżnialne na grafie (fallback: kolor 'app').
+export const frameworkColor: Record<string, string> = {
+  react: '#61dafb',
+  nestjs: '#e0234e',
+  vite: '#646cff',
+  typescript: '#3178c6',
+  go: '#00add8',
+  protobuf: '#db61a2'
 }

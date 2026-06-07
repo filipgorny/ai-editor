@@ -36,15 +36,53 @@ func Apps(root string) []App {
 		}
 	}
 
-	add(jsApps(root))
-	add(GoApps(root))
-	add(ProtoApps(root))
+	js := jsApps(root)
+	gos := GoApps(root)
+
+	add(js)
+	add(gos)
+	add(ProtoApps(root, append(append([]App{}, js...), gos...)))
+
+	// Drop grouping directories that merely CONTAIN other workspace apps (e.g. a top-level
+	// `apps/` holding the real applications). Such a directory is a folder, not an app — even
+	// if it carries a package.json — so any entry whose path is an ANCESTOR of another entry's
+	// path is removed. Evidence-based (by the tree shape), not by directory name.
+	apps = dropContainers(apps)
 
 	sort.Slice(apps, func(i, j int) bool {
 		return apps[i].Path < apps[j].Path
 	})
 
 	return apps
+}
+
+// dropContainers removes any app whose path is an ancestor of another app's path.
+func dropContainers(apps []App) []App {
+	isAncestor := func(parent string) bool {
+		p := filepath.ToSlash(parent)
+
+		for _, other := range apps {
+			o := filepath.ToSlash(other.Path)
+
+			if o != p && strings.HasPrefix(o, p+"/") {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	var kept []App
+
+	for _, a := range apps {
+		if a.Path == "." || isAncestor(a.Path) {
+			continue
+		}
+
+		kept = append(kept, a)
+	}
+
+	return kept
 }
 
 // jsApps wylicza aplikacje JS/TS z globów workspaces. Każdy katalog musi zawierać
@@ -145,49 +183,79 @@ func serviceRootFromCmd(mainPath string) string {
 	return ""
 }
 
-// ProtoApps grupuje pliki .proto po katalogu najwyższego poziomu (względem roota)
-// i tworzy z każdego takiego katalogu jedną aplikację Protobuf (np. proto). Dzięki
-// temu modele można przeglądać jako osobną aplikację na grafie.
-func ProtoApps(root string) []App {
-	seen := map[string]bool{}
+// ProtoApps tworzy aplikacje Protobuf TYLKO z dedykowanych katalogów modeli — czyli
+// katalogów najwyższego poziomu (bezpośrednie dzieci roota) zawierających pliki .proto,
+// które NIE są aplikacją JS/Go ani nie zawierają takiej aplikacji (taken). Dzięki temu
+// folder grupujący jak `apps` (z apkami w środku) ani apka TS trzymająca u siebie .proto
+// nie zostaną błędnie uznane za pakiet protobuf.
+func ProtoApps(root string, taken []App) []App {
+	// isAppDirOrAncestor — katalog rel jest aplikacją albo zawiera jakąś aplikację.
+	isAppDirOrAncestor := func(rel string) bool {
+		slash := filepath.ToSlash(rel)
+
+		for _, a := range taken {
+			p := filepath.ToSlash(a.Path)
+
+			if p == slash || strings.HasPrefix(p, slash+"/") {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	entries, err := os.ReadDir(root)
+
+	if err != nil {
+		return nil
+	}
+
 	var apps []App
 
-	_ = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+	for _, e := range entries {
+		if !e.IsDir() || skipDir(e.Name()) {
+			continue
+		}
+
+		name := e.Name()
+
+		if isAppDirOrAncestor(name) || !hasProtoFiles(filepath.Join(root, name)) {
+			continue
+		}
+
+		apps = append(apps, App{Name: name, Path: name})
+	}
+
+	return apps
+}
+
+// hasProtoFiles zwraca true, gdy w poddrzewie dir znajdzie się jakikolwiek plik .proto.
+func hasProtoFiles(dir string) bool {
+	found := false
+
+	_ = filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return nil
 		}
 
 		if d.IsDir() {
-			if path != root && skipDir(d.Name()) {
+			if path != dir && skipDir(d.Name()) {
 				return filepath.SkipDir
 			}
 
 			return nil
 		}
 
-		if !strings.HasSuffix(d.Name(), ".proto") {
-			return nil
+		if strings.HasSuffix(d.Name(), ".proto") {
+			found = true
+
+			return filepath.SkipAll
 		}
-
-		rel, err := filepath.Rel(root, path)
-
-		if err != nil {
-			return nil
-		}
-
-		top := strings.SplitN(filepath.ToSlash(rel), "/", 2)[0]
-
-		if top == "" || top == filepath.ToSlash(rel) || seen[top] {
-			return nil
-		}
-
-		seen[top] = true
-		apps = append(apps, App{Name: top, Path: top})
 
 		return nil
 	})
 
-	return apps
+	return found
 }
 
 func skipDir(name string) bool {

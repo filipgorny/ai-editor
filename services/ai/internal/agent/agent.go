@@ -84,12 +84,26 @@ func (a *Agent) SetProvider(provider string) (string, error) {
 	return p.Name(), nil
 }
 
-const toolsDesc = `Masz narzędzia (skille). read_file/list_dir/get_graph WYKONUJE APLIKACJA —
+// screensDesc opisuje ekrany aplikacji oraz blok <currentView> dołączany do KAŻDEGO
+// promptu — JSON z tym, co użytkownik aktualnie widzi (ekran, otwarty plik lub zaznaczony
+// element diagramu kodu) oraz listą dostępnych komend (do skilla run_command).
+const screensDesc = `Aplikacja ma ekrany (views): editor (edytor kodu w oknach), diagram (graf kodu / Code diagram),
+deployment (diagram wdrożenia rysowany kształtami SVG), messages (czat z AI), tasks (zadania + Jira),
+review (przegląd zmian), terminal, browser.
+Do KAŻDEJ wiadomości dołączam blok <currentView>...</currentView> z JSON-em opisującym, co użytkownik
+WIDZI w tej chwili: pole "screen" = aktualny ekran; "file" = ścieżka otwartego pliku (gdy to plik);
+"element" = zaznaczony element Code diagram ({kind,name,file}); "commands" = lista komend aplikacji.
+Używaj tego do rozwiązywania słów "to/ten/tutaj" — nie pytaj o oczywisty kontekst, jeśli jest w <currentView>.`
+
+const toolsDesc = `Masz narzędzia (skille). read_file/list_dir/get_graph/run_command WYKONUJE APLIKACJA —
 NIE czytaj plików samodzielnie, proś o nie skillem:
 - read_file: czyta zawartość pliku. args = ścieżka pliku (użyj otwartego pliku z kontekstu, jeśli pasuje).
 - list_dir: listuje katalog (poznanie struktury). args = ścieżka katalogu.
 - get_graph: zwraca strukturę grafu zależności projektu (węzły/krawędzie). args = puste.
 - check_events: zwraca eventy powiązane z plikiem/nodem. args = ścieżka pliku albo id node'a.
+- run_command: WYKONUJE komendę aplikacji (np. dodanie kształtu na diagramie SVG). args = "nazwa:argument"
+  (np. "add-shape:amazon/ec2,API"). Listę dostępnych komend i ich parametrów masz w <currentView>.commands.
+  Używaj run_command, gdy użytkownik prosi o akcję w aplikacji, a nie tylko o odpowiedź tekstową.
 - ask_user: zadaj użytkownikowi pytanie z wariantami odpowiedzi (modal). Użyj GDY masz wątpliwości
   albo prompt jest długi/niejednoznaczny — zamiast zgadywać. args = JSON: {"question":"...","options":["...","..."]}.
   Wynik = wybrana odpowiedź użytkownika.
@@ -110,7 +124,7 @@ func (a *Agent) Run(ctx context.Context, start *aiv1.AskRequest, emit Emit, skil
 
 	// 1) Plan przed wykonaniem.
 	plan, err := a.prov().Generate(ctx, llm.Request{
-		System:      "Jesteś agentem-asystentem kodu. Ułóż zwięzły plan (numerowane kroki) realizacji zadania. Zwróć sam plan.",
+		System:      "Jesteś agentem-asystentem kodu. " + screensDesc + "\nUłóż zwięzły plan (numerowane kroki) realizacji zadania. Zwróć sam plan.",
 		Prompt:      prompt + "\n" + ctxInfo,
 		Temperature: 0.2,
 		MaxTokens:   300,
@@ -129,7 +143,7 @@ func (a *Agent) Run(ctx context.Context, start *aiv1.AskRequest, emit Emit, skil
 
 	for step := 0; step < a.maxSteps; step++ {
 		decision, err := a.prov().Generate(ctx, llm.Request{
-			System:      toolsDesc,
+			System:      screensDesc + "\n\n" + toolsDesc,
 			Prompt:      fmt.Sprintf("Zadanie: %s\n%sDotychczasowe wyniki:\n%s\nNastępna akcja (JSON):", prompt, ctxInfo, hist.String()),
 			Temperature: 0.1,
 			MaxTokens:   600,
@@ -249,7 +263,7 @@ func (a *Agent) ResetHistory(session string) {
 
 func (a *Agent) runTool(ctx context.Context, skill SkillFunc, tool, args string) string {
 	switch tool {
-	case "read_file", "list_dir", "get_graph", "ask_user":
+	case "read_file", "list_dir", "get_graph", "ask_user", "run_command":
 		out, err := skill(tool, args)
 
 		if err != nil {

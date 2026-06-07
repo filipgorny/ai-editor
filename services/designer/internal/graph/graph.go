@@ -29,8 +29,9 @@ func NewBuilder(db *gorm.DB) *Builder {
 // "contains", tworząc drzewko wg ścieżek.
 type folderTree struct {
 	g       *gatewayv1.Graph
-	ids     map[string]string // dirpath -> nodeID
-	baseDir string            // absolutna baza (do pola File folderów)
+	ids     map[string]string        // dirpath -> nodeID
+	baseDir string                   // absolutna baza (do pola File folderów)
+	modules map[string]store.Element // dirpath -> module element (a dir that declares a @Module)
 }
 
 func newFolderTree(g *gatewayv1.Graph, rootName, baseDir string) *folderTree {
@@ -41,22 +42,36 @@ func newFolderTree(g *gatewayv1.Graph, rootName, baseDir string) *folderTree {
 	return &folderTree{g: g, ids: map[string]string{".": rootID}, baseDir: baseDir}
 }
 
+// ensure returns the node id for a directory, creating it (and its ancestors) on demand. A
+// directory that declares a NestJS module (present in t.modules) becomes a "module" node —
+// so entering an app shows modules, and directories without a module declaration stay plain
+// "folder" nodes. This is what makes the tree read as modules/sub-modules, not raw folders.
 func (t *folderTree) ensure(dir string) string {
 	if id, ok := t.ids[dir]; ok {
 		return id
 	}
 
 	parent := t.ensure(filepath.Dir(dir))
-	id := "folder:" + dir
 
-	t.g.Nodes = append(t.g.Nodes, &gatewayv1.Node{
-		Id: id, Kind: "folder", Name: filepath.Base(dir), File: filepath.Join(t.baseDir, dir),
-	})
+	var node *gatewayv1.Node
 
-	t.ids[dir] = id
-	t.g.Edges = append(t.g.Edges, &gatewayv1.Edge{From: parent, To: id, Label: "contains"})
+	if m, ok := t.modules[dir]; ok {
+		node = &gatewayv1.Node{
+			Id: "module:" + dir, Kind: "module", Name: m.Name, File: m.File,
+			Functions: m.Functions, Framework: m.Framework,
+			AbsFile: filepath.Join(t.baseDir, m.File),
+		}
+	} else {
+		node = &gatewayv1.Node{
+			Id: "folder:" + dir, Kind: "folder", Name: filepath.Base(dir), File: filepath.Join(t.baseDir, dir),
+		}
+	}
 
-	return id
+	t.g.Nodes = append(t.g.Nodes, node)
+	t.ids[dir] = node.Id
+	t.g.Edges = append(t.g.Edges, &gatewayv1.Edge{From: parent, To: node.Id, Label: "contains"})
+
+	return node.Id
 }
 
 // contains podpina węzeł childID pod folder katalogu dir.
@@ -79,14 +94,23 @@ func (b *Builder) BuildApps(ctx context.Context, projectID int64, folder string)
 	for _, a := range apps {
 		nodeID := fmt.Sprintf("app:%d", a.ID)
 
+		// Kind + language + framework come from the scanner's classifiers (persisted on the
+		// App row). Older rows without a kind default to "app".
+		kind := a.Kind
+
+		if kind == "" {
+			kind = "app"
+		}
+
 		g.Nodes = append(g.Nodes, &gatewayv1.Node{
 			Id:        nodeID,
-			Kind:      "app",
+			Kind:      kind,
 			Name:      a.Name,
 			File:      a.Path,
 			App:       a.Name,
 			AppId:     a.ID,
 			Framework: a.Framework,
+			Language:  a.Language,
 		})
 
 		tree.contains(filepath.Dir(a.Path), nodeID)
@@ -125,6 +149,7 @@ func (b *Builder) BuildSingleApp(ctx context.Context, projectID int64, folder st
 		App:       app.Name,
 		AppId:     app.ID,
 		Framework: app.Framework,
+		Language:  app.Language,
 	})
 
 	return g, nil
@@ -175,9 +200,33 @@ func (b *Builder) BuildAppGraph(ctx context.Context, appID int64) (*gatewayv1.Gr
 	g := &gatewayv1.Graph{ProjectId: app.ProjectID, Folder: proj.Folder}
 	tree := newFolderTree(g, app.Name, appDir)
 
+	// A directory that declares a @Module becomes a module node (folderTree.ensure). Map each
+	// such directory to its module element so the tree folds it in instead of showing a folder
+	// with a separate module node inside.
+	tree.modules = map[string]store.Element{}
+
+	for _, e := range elements {
+		if e.Kind == "module" {
+			tree.modules[filepath.Dir(e.File)] = e
+		}
+	}
+
 	index := map[string]string{}
 
 	for _, e := range elements {
+		// Module elements are represented by their directory's node (created via ensure), not
+		// as a separate child — so the module IS the folder, with its controllers/services and
+		// sub-modules nested beneath it.
+		if e.Kind == "module" {
+			id := tree.ensure(filepath.Dir(e.File))
+
+			if _, exists := index[e.Name]; !exists {
+				index[e.Name] = id
+			}
+
+			continue
+		}
+
 		nodeID := e.Kind + ":" + e.Name
 
 		g.Nodes = append(g.Nodes, &gatewayv1.Node{

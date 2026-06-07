@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v7.34.1
-// source: proto/scanner/v1/scanner.proto
+// source: scanner/v1/scanner.proto
 
 package scannerv1
 
@@ -57,11 +57,11 @@ func (x Level) String() string {
 }
 
 func (Level) Descriptor() protoreflect.EnumDescriptor {
-	return file_proto_scanner_v1_scanner_proto_enumTypes[0].Descriptor()
+	return file_scanner_v1_scanner_proto_enumTypes[0].Descriptor()
 }
 
 func (Level) Type() protoreflect.EnumType {
-	return &file_proto_scanner_v1_scanner_proto_enumTypes[0]
+	return &file_scanner_v1_scanner_proto_enumTypes[0]
 }
 
 func (x Level) Number() protoreflect.EnumNumber {
@@ -70,7 +70,7 @@ func (x Level) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Level.Descriptor instead.
 func (Level) EnumDescriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{0}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{0}
 }
 
 type LinksRequest struct {
@@ -83,7 +83,7 @@ type LinksRequest struct {
 
 func (x *LinksRequest) Reset() {
 	*x = LinksRequest{}
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[0]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -95,7 +95,7 @@ func (x *LinksRequest) String() string {
 func (*LinksRequest) ProtoMessage() {}
 
 func (x *LinksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[0]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -108,7 +108,7 @@ func (x *LinksRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LinksRequest.ProtoReflect.Descriptor instead.
 func (*LinksRequest) Descriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{0}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *LinksRequest) GetPath() string {
@@ -141,7 +141,7 @@ type CodeLink struct {
 
 func (x *CodeLink) Reset() {
 	*x = CodeLink{}
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[1]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -153,7 +153,7 @@ func (x *CodeLink) String() string {
 func (*CodeLink) ProtoMessage() {}
 
 func (x *CodeLink) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[1]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -166,7 +166,7 @@ func (x *CodeLink) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CodeLink.ProtoReflect.Descriptor instead.
 func (*CodeLink) Descriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{1}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *CodeLink) GetFromLine() uint32 {
@@ -220,7 +220,7 @@ type LinksResponse struct {
 
 func (x *LinksResponse) Reset() {
 	*x = LinksResponse{}
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[2]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -232,7 +232,7 @@ func (x *LinksResponse) String() string {
 func (*LinksResponse) ProtoMessage() {}
 
 func (x *LinksResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[2]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -245,7 +245,7 @@ func (x *LinksResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LinksResponse.ProtoReflect.Descriptor instead.
 func (*LinksResponse) Descriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{2}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *LinksResponse) GetLinks() []*CodeLink {
@@ -265,7 +265,7 @@ type ScanRequest struct {
 
 func (x *ScanRequest) Reset() {
 	*x = ScanRequest{}
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[3]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -277,7 +277,7 @@ func (x *ScanRequest) String() string {
 func (*ScanRequest) ProtoMessage() {}
 
 func (x *ScanRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[3]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -290,7 +290,7 @@ func (x *ScanRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScanRequest.ProtoReflect.Descriptor instead.
 func (*ScanRequest) Descriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{3}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ScanRequest) GetPath() string {
@@ -310,7 +310,7 @@ type ScanAppRequest struct {
 
 func (x *ScanAppRequest) Reset() {
 	*x = ScanAppRequest{}
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[4]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -322,7 +322,7 @@ func (x *ScanAppRequest) String() string {
 func (*ScanAppRequest) ProtoMessage() {}
 
 func (x *ScanAppRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[4]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -335,7 +335,7 @@ func (x *ScanAppRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScanAppRequest.ProtoReflect.Descriptor instead.
 func (*ScanAppRequest) Descriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{4}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ScanAppRequest) GetAppId() int64 {
@@ -363,7 +363,7 @@ type LogLine struct {
 
 func (x *LogLine) Reset() {
 	*x = LogLine{}
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[5]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -375,7 +375,7 @@ func (x *LogLine) String() string {
 func (*LogLine) ProtoMessage() {}
 
 func (x *LogLine) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[5]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -388,7 +388,7 @@ func (x *LogLine) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogLine.ProtoReflect.Descriptor instead.
 func (*LogLine) Descriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{5}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *LogLine) GetLevel() Level {
@@ -418,7 +418,7 @@ type ProjectDetected struct {
 
 func (x *ProjectDetected) Reset() {
 	*x = ProjectDetected{}
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[6]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -430,7 +430,7 @@ func (x *ProjectDetected) String() string {
 func (*ProjectDetected) ProtoMessage() {}
 
 func (x *ProjectDetected) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[6]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -443,7 +443,7 @@ func (x *ProjectDetected) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProjectDetected.ProtoReflect.Descriptor instead.
 func (*ProjectDetected) Descriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{6}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ProjectDetected) GetProjectId() int64 {
@@ -484,13 +484,15 @@ type AppDetected struct {
 	Path          string                 `protobuf:"bytes,4,opt,name=path,proto3" json:"path,omitempty"`           // względem roota projektu
 	Framework     string                 `protobuf:"bytes,5,opt,name=framework,proto3" json:"framework,omitempty"` // "nestjs" | "" gdy nierozpoznany
 	HasPlugin     bool                   `protobuf:"varint,6,opt,name=has_plugin,json=hasPlugin,proto3" json:"has_plugin,omitempty"`
+	Language      string                 `protobuf:"bytes,7,opt,name=language,proto3" json:"language,omitempty"` // "typescript" | "go" | … (classifier verdict)
+	Kind          string                 `protobuf:"bytes,8,opt,name=kind,proto3" json:"kind,omitempty"`         // "app" (runnable) | "package" (library), classifier verdict
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AppDetected) Reset() {
 	*x = AppDetected{}
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[7]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -502,7 +504,7 @@ func (x *AppDetected) String() string {
 func (*AppDetected) ProtoMessage() {}
 
 func (x *AppDetected) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[7]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -515,7 +517,7 @@ func (x *AppDetected) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AppDetected.ProtoReflect.Descriptor instead.
 func (*AppDetected) Descriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{7}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *AppDetected) GetAppId() int64 {
@@ -560,6 +562,20 @@ func (x *AppDetected) GetHasPlugin() bool {
 	return false
 }
 
+func (x *AppDetected) GetLanguage() string {
+	if x != nil {
+		return x.Language
+	}
+	return ""
+}
+
+func (x *AppDetected) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
 type Module struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -575,7 +591,7 @@ type Module struct {
 
 func (x *Module) Reset() {
 	*x = Module{}
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[8]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -587,7 +603,7 @@ func (x *Module) String() string {
 func (*Module) ProtoMessage() {}
 
 func (x *Module) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[8]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -600,7 +616,7 @@ func (x *Module) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Module.ProtoReflect.Descriptor instead.
 func (*Module) Descriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{8}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Module) GetId() int64 {
@@ -667,7 +683,7 @@ type Controller struct {
 
 func (x *Controller) Reset() {
 	*x = Controller{}
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[9]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -679,7 +695,7 @@ func (x *Controller) String() string {
 func (*Controller) ProtoMessage() {}
 
 func (x *Controller) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[9]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -692,7 +708,7 @@ func (x *Controller) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Controller.ProtoReflect.Descriptor instead.
 func (*Controller) Descriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{9}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *Controller) GetId() int64 {
@@ -758,7 +774,7 @@ type Service struct {
 
 func (x *Service) Reset() {
 	*x = Service{}
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[10]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -770,7 +786,7 @@ func (x *Service) String() string {
 func (*Service) ProtoMessage() {}
 
 func (x *Service) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[10]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -783,7 +799,7 @@ func (x *Service) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Service.ProtoReflect.Descriptor instead.
 func (*Service) Descriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{10}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Service) GetId() int64 {
@@ -841,7 +857,7 @@ type Component struct {
 
 func (x *Component) Reset() {
 	*x = Component{}
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[11]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -853,7 +869,7 @@ func (x *Component) String() string {
 func (*Component) ProtoMessage() {}
 
 func (x *Component) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[11]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -866,7 +882,7 @@ func (x *Component) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Component.ProtoReflect.Descriptor instead.
 func (*Component) Descriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{11}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *Component) GetId() int64 {
@@ -917,7 +933,7 @@ type FileDescribed struct {
 
 func (x *FileDescribed) Reset() {
 	*x = FileDescribed{}
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[12]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -929,7 +945,7 @@ func (x *FileDescribed) String() string {
 func (*FileDescribed) ProtoMessage() {}
 
 func (x *FileDescribed) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[12]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -942,7 +958,7 @@ func (x *FileDescribed) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileDescribed.ProtoReflect.Descriptor instead.
 func (*FileDescribed) Descriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{12}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *FileDescribed) GetFileId() int64 {
@@ -984,7 +1000,7 @@ type ScanDone struct {
 
 func (x *ScanDone) Reset() {
 	*x = ScanDone{}
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[13]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -996,7 +1012,7 @@ func (x *ScanDone) String() string {
 func (*ScanDone) ProtoMessage() {}
 
 func (x *ScanDone) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[13]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1009,7 +1025,7 @@ func (x *ScanDone) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScanDone.ProtoReflect.Descriptor instead.
 func (*ScanDone) Descriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{13}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ScanDone) GetAppsScanned() int32 {
@@ -1044,7 +1060,7 @@ type Link struct {
 
 func (x *Link) Reset() {
 	*x = Link{}
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[14]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1056,7 +1072,7 @@ func (x *Link) String() string {
 func (*Link) ProtoMessage() {}
 
 func (x *Link) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[14]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1069,7 +1085,7 @@ func (x *Link) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Link.ProtoReflect.Descriptor instead.
 func (*Link) Descriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{14}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *Link) GetTarget() string {
@@ -1102,7 +1118,7 @@ type Element struct {
 
 func (x *Element) Reset() {
 	*x = Element{}
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[15]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1114,7 +1130,7 @@ func (x *Element) String() string {
 func (*Element) ProtoMessage() {}
 
 func (x *Element) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[15]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1127,7 +1143,7 @@ func (x *Element) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Element.ProtoReflect.Descriptor instead.
 func (*Element) Descriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{15}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *Element) GetFramework() string {
@@ -1196,7 +1212,7 @@ type ScanEvent struct {
 
 func (x *ScanEvent) Reset() {
 	*x = ScanEvent{}
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[16]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1208,7 +1224,7 @@ func (x *ScanEvent) String() string {
 func (*ScanEvent) ProtoMessage() {}
 
 func (x *ScanEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_scanner_v1_scanner_proto_msgTypes[16]
+	mi := &file_scanner_v1_scanner_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1221,7 +1237,7 @@ func (x *ScanEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScanEvent.ProtoReflect.Descriptor instead.
 func (*ScanEvent) Descriptor() ([]byte, []int) {
-	return file_proto_scanner_v1_scanner_proto_rawDescGZIP(), []int{16}
+	return file_scanner_v1_scanner_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ScanEvent) GetEvent() isScanEvent_Event {
@@ -1325,11 +1341,11 @@ func (*ScanEvent_Done) isScanEvent_Event() {}
 
 func (*ScanEvent_Element) isScanEvent_Event() {}
 
-var File_proto_scanner_v1_scanner_proto protoreflect.FileDescriptor
+var File_scanner_v1_scanner_proto protoreflect.FileDescriptor
 
-const file_proto_scanner_v1_scanner_proto_rawDesc = "" +
+const file_scanner_v1_scanner_proto_rawDesc = "" +
 	"\n" +
-	"\x1eproto/scanner/v1/scanner.proto\x12\n" +
+	"\x18scanner/v1/scanner.proto\x12\n" +
 	"scanner.v1\"<\n" +
 	"\fLinksRequest\x12\x12\n" +
 	"\x04path\x18\x01 \x01(\tR\x04path\x12\x18\n" +
@@ -1358,7 +1374,7 @@ const file_proto_scanner_v1_scanner_proto_rawDesc = "" +
 	"project_id\x18\x01 \x01(\x03R\tprojectId\x12\x16\n" +
 	"\x06folder\x18\x02 \x01(\tR\x06folder\x12\x19\n" +
 	"\bgit_path\x18\x03 \x01(\tR\agitPath\x12\x12\n" +
-	"\x04kind\x18\x04 \x01(\tR\x04kind\"\xa8\x01\n" +
+	"\x04kind\x18\x04 \x01(\tR\x04kind\"\xd8\x01\n" +
 	"\vAppDetected\x12\x15\n" +
 	"\x06app_id\x18\x01 \x01(\x03R\x05appId\x12\x1d\n" +
 	"\n" +
@@ -1367,7 +1383,9 @@ const file_proto_scanner_v1_scanner_proto_rawDesc = "" +
 	"\x04path\x18\x04 \x01(\tR\x04path\x12\x1c\n" +
 	"\tframework\x18\x05 \x01(\tR\tframework\x12\x1d\n" +
 	"\n" +
-	"has_plugin\x18\x06 \x01(\bR\thasPlugin\"\xb1\x01\n" +
+	"has_plugin\x18\x06 \x01(\bR\thasPlugin\x12\x1a\n" +
+	"\blanguage\x18\a \x01(\tR\blanguage\x12\x12\n" +
+	"\x04kind\x18\b \x01(\tR\x04kind\"\xb1\x01\n" +
 	"\x06Module\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x15\n" +
 	"\x06app_id\x18\x02 \x01(\x03R\x05appId\x12\x12\n" +
@@ -1438,20 +1456,20 @@ const file_proto_scanner_v1_scanner_proto_rawDesc = "" +
 	"\x05Links\x12\x18.scanner.v1.LinksRequest\x1a\x19.scanner.v1.LinksResponseB?Z=github.com/filipgorny/ai-architect/proto/scanner/v1;scannerv1b\x06proto3"
 
 var (
-	file_proto_scanner_v1_scanner_proto_rawDescOnce sync.Once
-	file_proto_scanner_v1_scanner_proto_rawDescData []byte
+	file_scanner_v1_scanner_proto_rawDescOnce sync.Once
+	file_scanner_v1_scanner_proto_rawDescData []byte
 )
 
-func file_proto_scanner_v1_scanner_proto_rawDescGZIP() []byte {
-	file_proto_scanner_v1_scanner_proto_rawDescOnce.Do(func() {
-		file_proto_scanner_v1_scanner_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_scanner_v1_scanner_proto_rawDesc), len(file_proto_scanner_v1_scanner_proto_rawDesc)))
+func file_scanner_v1_scanner_proto_rawDescGZIP() []byte {
+	file_scanner_v1_scanner_proto_rawDescOnce.Do(func() {
+		file_scanner_v1_scanner_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_scanner_v1_scanner_proto_rawDesc), len(file_scanner_v1_scanner_proto_rawDesc)))
 	})
-	return file_proto_scanner_v1_scanner_proto_rawDescData
+	return file_scanner_v1_scanner_proto_rawDescData
 }
 
-var file_proto_scanner_v1_scanner_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_proto_scanner_v1_scanner_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
-var file_proto_scanner_v1_scanner_proto_goTypes = []any{
+var file_scanner_v1_scanner_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_scanner_v1_scanner_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_scanner_v1_scanner_proto_goTypes = []any{
 	(Level)(0),              // 0: scanner.v1.Level
 	(*LinksRequest)(nil),    // 1: scanner.v1.LinksRequest
 	(*CodeLink)(nil),        // 2: scanner.v1.CodeLink
@@ -1471,7 +1489,7 @@ var file_proto_scanner_v1_scanner_proto_goTypes = []any{
 	(*Element)(nil),         // 16: scanner.v1.Element
 	(*ScanEvent)(nil),       // 17: scanner.v1.ScanEvent
 }
-var file_proto_scanner_v1_scanner_proto_depIdxs = []int32{
+var file_scanner_v1_scanner_proto_depIdxs = []int32{
 	2,  // 0: scanner.v1.LinksResponse.links:type_name -> scanner.v1.CodeLink
 	0,  // 1: scanner.v1.LogLine.level:type_name -> scanner.v1.Level
 	15, // 2: scanner.v1.Element.links:type_name -> scanner.v1.Link
@@ -1494,12 +1512,12 @@ var file_proto_scanner_v1_scanner_proto_depIdxs = []int32{
 	0,  // [0:9] is the sub-list for field type_name
 }
 
-func init() { file_proto_scanner_v1_scanner_proto_init() }
-func file_proto_scanner_v1_scanner_proto_init() {
-	if File_proto_scanner_v1_scanner_proto != nil {
+func init() { file_scanner_v1_scanner_proto_init() }
+func file_scanner_v1_scanner_proto_init() {
+	if File_scanner_v1_scanner_proto != nil {
 		return
 	}
-	file_proto_scanner_v1_scanner_proto_msgTypes[16].OneofWrappers = []any{
+	file_scanner_v1_scanner_proto_msgTypes[16].OneofWrappers = []any{
 		(*ScanEvent_Log)(nil),
 		(*ScanEvent_Project)(nil),
 		(*ScanEvent_App)(nil),
@@ -1511,18 +1529,18 @@ func file_proto_scanner_v1_scanner_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_scanner_v1_scanner_proto_rawDesc), len(file_proto_scanner_v1_scanner_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_scanner_v1_scanner_proto_rawDesc), len(file_scanner_v1_scanner_proto_rawDesc)),
 			NumEnums:      1,
 			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_proto_scanner_v1_scanner_proto_goTypes,
-		DependencyIndexes: file_proto_scanner_v1_scanner_proto_depIdxs,
-		EnumInfos:         file_proto_scanner_v1_scanner_proto_enumTypes,
-		MessageInfos:      file_proto_scanner_v1_scanner_proto_msgTypes,
+		GoTypes:           file_scanner_v1_scanner_proto_goTypes,
+		DependencyIndexes: file_scanner_v1_scanner_proto_depIdxs,
+		EnumInfos:         file_scanner_v1_scanner_proto_enumTypes,
+		MessageInfos:      file_scanner_v1_scanner_proto_msgTypes,
 	}.Build()
-	File_proto_scanner_v1_scanner_proto = out.File
-	file_proto_scanner_v1_scanner_proto_goTypes = nil
-	file_proto_scanner_v1_scanner_proto_depIdxs = nil
+	File_scanner_v1_scanner_proto = out.File
+	file_scanner_v1_scanner_proto_goTypes = nil
+	file_scanner_v1_scanner_proto_depIdxs = nil
 }

@@ -43,6 +43,8 @@ export type AppEventMap = {
   'editor:load-error': { path: string }
   'editor:fullscreen': { path: string; on: boolean }
   'editor:ai-edit': { path: string }
+  // Re-read a file from disk into its open editor (F5). Empty path = reload every open editor.
+  'editor:reload': { path: string }
 
   // — AI agent —
   'agent:start': { prompt: string; dir: string }

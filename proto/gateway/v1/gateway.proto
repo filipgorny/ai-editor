@@ -501,6 +501,7 @@ message Node {
   int64 app_id = 8;             // dla węzłów-serwisów (kind="service") w grafie monorepo
   string framework = 9;        // framework aplikacji (dla węzłów-serwisów)
   string abs_file = 10;        // absolutna ścieżka pliku (do otwarcia w edytorze)
+  string language = 11;        // język aplikacji/pakietu (dla węzłów app/package)
 }
 
 // Edge to połączenie kreską między bytami.

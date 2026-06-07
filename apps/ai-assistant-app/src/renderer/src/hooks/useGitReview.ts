@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { appBus } from '../events'
-import { type GitState, type BlameMode, type ReviewStatus } from '../components/GitContext'
+import { type GitState, type BlameMode, type ReviewStatus } from '@/common/GitContext'
 import type { ViewKey } from '../views/types'
 
 export function useGitReview(folder: string, activeView: ViewKey, gitBlame: BlameMode) {

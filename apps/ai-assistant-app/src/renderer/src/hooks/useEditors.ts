@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { appBus } from '../events'
-import { type EditorTarget, EDITOR_FADE_MS } from '../components/CodeEditor'
+import { type EditorTarget, EDITOR_FADE_MS } from '@/common/editor/CodeEditor'
 import type { ViewKey } from '../views/types'
 
 // EditorScope — which view's INDEPENDENT editor workspace a set of open files belongs to.

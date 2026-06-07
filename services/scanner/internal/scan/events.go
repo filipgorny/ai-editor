@@ -8,7 +8,7 @@ import (
 
 	"github.com/filipgorny/ai-architect/plugins"
 	scannerv1 "github.com/filipgorny/ai-architect/proto/scanner/v1"
-	"github.com/filipgorny/ai-architect/services/scanner/internal/framework"
+	"github.com/filipgorny/ai-architect/services/scanner/internal/classifiers"
 	"github.com/filipgorny/ai-architect/services/scanner/internal/workspace"
 )
 
@@ -38,14 +38,16 @@ func projectEvent(folder, gitPath, kind string) *scannerv1.ScanEvent {
 	}
 }
 
-func appEvent(app workspace.App, res framework.Resolution) *scannerv1.ScanEvent {
+func appEvent(app workspace.App, cls classifiers.Result, hasPlugin bool) *scannerv1.ScanEvent {
 	return &scannerv1.ScanEvent{
 		Event: &scannerv1.ScanEvent_App{
 			App: &scannerv1.AppDetected{
 				Name:      app.Name,
 				Path:      app.Path,
-				Framework: res.Framework,
-				HasPlugin: res.HasPlugin,
+				Framework: cls.Framework,
+				Language:  cls.Language,
+				Kind:      cls.Kind,
+				HasPlugin: hasPlugin,
 			},
 		},
 	}

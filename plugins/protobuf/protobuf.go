@@ -26,8 +26,15 @@ func (p *Plugin) Framework() string {
 	return "protobuf"
 }
 
-// Detect uznaje katalog za protobufowy, gdy zawiera jakikolwiek plik .proto.
+// Detect uznaje katalog za pakiet Protobuf, gdy zawiera pliki .proto, a JEDNOCZEŚNIE
+// nie jest projektem JS/Go (brak package.json i go.mod). Dzięki temu apka TypeScript
+// czy serwis Go, które trzymają u siebie .proto, NIE są błędnie oznaczane jako protobuf —
+// pakiet protobuf to katalog dedykowany modelom.
 func (p *Plugin) Detect(appDir string) bool {
+	if exists(filepath.Join(appDir, "package.json")) || exists(filepath.Join(appDir, "go.mod")) {
+		return false
+	}
+
 	return hasProtoFiles(appDir)
 }
 
@@ -118,13 +125,14 @@ func collectMember(el *plugins.Element, kind, line string) {
 	}
 }
 
-// protoKind mapuje słowo kluczowe proto na rodzaj bytu grafu.
+// protoKind mapuje słowo kluczowe proto na rodzaj bytu grafu: service → "service",
+// message/enum → "model" (dedykowany rodzaj modelu danych).
 func protoKind(keyword string) string {
 	if keyword == "service" {
 		return "service"
 	}
 
-	return "class"
+	return "model"
 }
 
 func current(stack []frame) *frame {
@@ -208,4 +216,10 @@ func relPath(root, path string) string {
 	}
 
 	return rel
+}
+
+func exists(path string) bool {
+	_, err := os.Stat(path)
+
+	return err == nil
 }

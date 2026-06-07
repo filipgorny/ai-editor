@@ -32,7 +32,7 @@ func Default() Config {
 
 	c.Server.Addr = "127.0.0.1:50051"
 	c.AIAddr = "127.0.0.1:50071"
-	c.Plugins = []string{"nestjs", "react", "go", "protobuf"}
+	c.Plugins = []string{"nestjs", "react", "vite", "go", "protobuf", "typescript"}
 	c.Scan.DescribeFiles = false // drill = same encje (szybko); opis plików opcjonalny
 
 	return c

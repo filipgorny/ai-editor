@@ -1,4 +1,5 @@
 import { AppNode } from './AppNode'
+import { PackageNode } from './PackageNode'
 import { ClassNode } from './ClassNode'
 import { FolderNode } from './FolderNode'
 import { Component } from './Component'
@@ -7,6 +8,7 @@ import { FunctionNode } from './FunctionNode'
 import { Dependency, DependencyKind } from './Dependency'
 import { Func } from './Func'
 import { Graph } from './Graph'
+import { Model } from './Model'
 import { Module } from './Module'
 import { Node } from './Node'
 import { Project } from './Project'
@@ -26,6 +28,7 @@ interface RawNode {
   route?: string
   appId?: number
   framework?: string
+  language?: string
   absFile?: string
 }
 
@@ -65,6 +68,7 @@ export class GatewayMapper {
     const n = GatewayMapper.byKind(raw, funcs)
 
     n.framework = raw.framework ?? ''
+    n.language = raw.language ?? ''
     n.absFile = raw.absFile ?? ''
 
     return n
@@ -78,6 +82,9 @@ export class GatewayMapper {
       case 'app':
         return new AppNode(raw.id, raw.name, raw.file, raw.app, raw.appId ?? 0)
 
+      case 'package':
+        return new PackageNode(raw.id, raw.name, raw.file, raw.app, raw.appId ?? 0)
+
       case 'component':
         return new Component(raw.id, raw.name, raw.file, raw.app, funcs)
 
@@ -89,6 +96,9 @@ export class GatewayMapper {
 
       case 'class':
         return new ClassNode(raw.id, raw.name, raw.file, raw.app, funcs)
+
+      case 'model':
+        return new Model(raw.id, raw.name, raw.file, raw.app, funcs)
 
       case 'function':
         return new FunctionNode(raw.id, raw.name, raw.file, raw.app, funcs)

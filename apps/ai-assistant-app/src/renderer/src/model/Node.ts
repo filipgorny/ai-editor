@@ -10,13 +10,17 @@ export type NodeKind =
   | 'controller'
   | 'service'
   | 'app'
+  | 'package'
   | 'component'
   | 'class'
   | 'function'
+  | 'model'
 
 export abstract class Node {
   // framework źródłowy (nestjs|react|...) — ustawiany przez mapper, do etykiety/ikony.
   framework = ''
+  // język (typescript|go|...) — ustawiany przez mapper; pokazywany z ikoną obok frameworka.
+  language = ''
   // absolutna ścieżka pliku — do otwarcia w edytorze.
   absFile = ''
 

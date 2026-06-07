@@ -47,6 +47,9 @@ importers:
       '@grpc/proto-loader':
         specifier: ^0.7.13
         version: 0.7.15
+      '@lezer/highlight':
+        specifier: ^1.2.3
+        version: 1.2.3
       '@mui/icons-material':
         specifier: ^5.16.7
         version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.30)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.30)(react@18.3.1))(@types/react@18.3.30)(react@18.3.1))(@types/react@18.3.30)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.30)(react@18.3.1)
@@ -56,6 +59,9 @@ importers:
       '@replit/codemirror-vim':
         specifier: ^6.3.0
         version: 6.3.0(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/search@6.7.0)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
+      '@uiw/codemirror-themes':
+        specifier: ^4.25.10
+        version: 4.25.10(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)
       '@uiw/codemirror-themes-all':
         specifier: ^4.25.10
         version: 4.25.10(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.43.0)

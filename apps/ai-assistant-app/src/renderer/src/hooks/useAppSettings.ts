@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { appBus } from '../events'
 import { accentBy } from '../styles/accents'
-import type { BlameMode } from '../components/GitContext'
+import type { BlameMode } from '@/common/GitContext'
 
 export function useAppSettings(onNeedClaudeLogin: () => void) {
   // globalne ustawienia edytorów (wspólne dla wszystkich okien)

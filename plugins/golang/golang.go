@@ -217,7 +217,9 @@ func isGoSource(name string) bool {
 		return false
 	}
 
-	return !strings.HasSuffix(name, "_test.go")
+	// Pomijamy testy oraz kod GENEROWANY (protobuf: *.pb.go, *_grpc.pb.go) — to nie jest
+	// ręcznie pisany kod serwisu, a obecność .pb.go nie czyni katalogu modeli serwisem Go.
+	return !strings.HasSuffix(name, "_test.go") && !strings.HasSuffix(name, ".pb.go")
 }
 
 func collectGoFiles(appDir string) []string {

@@ -4,7 +4,7 @@
 
 import type { ComponentType } from 'react'
 import type { Graph, Node } from '../model'
-import type { EditorTarget } from '../components/CodeEditor'
+import type { EditorTarget } from '@/common/editor/CodeEditor'
 import type { appBus } from '../events/bus'
 
 // ViewKey — stable identity of a view; also the ALT+<n> ordinal and the bus payload value.
